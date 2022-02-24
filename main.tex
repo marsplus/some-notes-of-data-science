@@ -1,0 +1,79 @@
+\documentclass{article}
+\usepackage[a4paper, left=1.2in,right=1.2in,top=1.2in,bottom=1.2in]{geometry}
+\usepackage{tikz}
+\usepackage[sort, numbers]{natbib}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{bbm}
+\usepackage{bm}
+\usepackage{nicefrac}
+\usepackage{ifthen}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{amsfonts,amsthm}
+\usepackage[hyphens]{url}
+\usepackage{xspace}
+\usepackage{mathtools}
+\usepackage{color-edits}
+\usepackage[hidelinks]{hyperref}
+
+\title{Miscellaneous Basics of Data Science }
+\author{Sixie Yu}
+\date{ }
+\setlength{\parindent}{0em}
+\setlength{\parskip}{0.5em}
+
+\newtheorem{defn}{Definition}[section]
+\newtheorem{assump}{Assumption}[section]
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{example}{Example}[section]
+\newtheorem{lemma}{Lemma}[section]
+
+
+\allowdisplaybreaks
+\DeclareMathOperator{\argmax}{arg\,max}
+\DeclareMathOperator{\argmin}{arg\,min}
+\DeclareMathSymbol{\R}{\mathord}{AMSb}{"52}
+\DeclarePairedDelimiter\norm{\lVert}{\rVert}
+\providecommand{\myeq}[1]{\ensuremath{ \stackrel{\mathclap{\normalfont#1}}{=}} \xspace}
+
+\providecommand{\SET}[1]{\ensuremath{\{ #1 \}}\xspace}
+\providecommand{\Set}[2]{\ensuremath{\SET{#1 \mid #2}}\xspace}
+\providecommand{\SetCard}[1]{\ensuremath{| #1 |}\xspace}
+\providecommand{\Abs}[1]{\ensuremath{| #1 |}\xspace} 
+\providecommand{\Trace}[1]{\ensuremath{\text{Tr}\left( #1 \right)}\xspace} 
+\providecommand{\Sign}[1]{\ensuremath{\text{sign}\left( #1 \right)}\xspace} 
+\providecommand{\ndata}{\ensuremath{N}\xspace}  % the number of data points
+\providecommand{\nfeat}{\ensuremath{p}\xspace}  % the number of features
+\providecommand{\EXP}[1]{\ensuremath{ \text{exp}\left( #1 \right) }\xspace}  % the exponential function
+\providecommand{\E}{\ensuremath{\mathbbm{E}}\xspace}  % the expectation symbol
+\providecommand{\Tr}{\ensuremath{\mathbbm{\text{trace}}}\xspace}  % the trace operator
+\providecommand{\Sign}[1]{\ensuremath{\text{sign}\left(#1 \right)}\xspace}  % the sign function
+
+
+            
+\setlength{\parskip}{1em}
+\begin{document}
+\maketitle
+\tableofcontents
+
+\section{ML Basics}
+\input{sections/ml}
+
+\section{Deep Learning}
+\input{sections/dl}
+
+
+\section{Optimization}
+\input{sections/opt}
+
+
+\bibliographystyle{plainnat}
+\bibliography{main.bib}
+\end{document}
+
+
+

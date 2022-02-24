@@ -1,0 +1,564 @@
+
+
+In this section, a data matrix is represented by $\bm{X} \in \R^{\ndata \times \nfeat}$, with \ndata the number of data points and \nfeat the number of features. 
+The sample covariance matrix is given by $\bm{S} = \bm{X}^\top \bm{X} / \ndata$.
+A sample data with labels is denoted with $\mathcal{S}=\SET{(\bm{x}_1, y_1), \ldots, (\bm{x}_\ndata, y_\ndata)}$.
+When the context is clear we also use $\mathcal{S}$ to refer an unlabeled data. 
+
+\subsection{Common Loss Functions}
+In this section, we focus on two discrete distributions $p$ and $q$ , defined on the same set $\mathcal{X}$.
+    \begin{itemize}
+        \item KL divergence: $D_\text{KL}(p || q) = \sum_{i \in \mathcal{X}}^{}{p(i) \log \frac{p(i)}{q(i)}}$.
+        \item Entropy:  $H(p) = -\sum_{i \in \mathcal{X}}^{}{p(i) \log p(i)}$, which captures the uncertainty of the underlying even set.
+        \item Cross entropy: 
+            \begin{equation*}
+               H(p, q) = H(p) + D_\text{KL}(p || q) =  -\sum_{i \in \mathcal{X}}^{}{p(i) \log p(i)} + \sum_{i \in \mathcal{X}}^{}{p(i) \log \frac{p(i)}{q(i)}} =  -\sum_{i \in \mathcal{X}}^{}{p(i) \log q(i)}.
+            \end{equation*}
+        \item Information gain from $q$ to $p$: $H(q) - H(p)$. 
+        \item Mean squared error: $\frac{1}{\ndata}\sum_{i=1}^{\ndata}{(y_i - \hat{y}_i)^2}$.
+        \item Upper-bounds on 0-1 loss:
+            \begin{itemize}
+                \item Exponential loss: $e^{-y \cdot f(\bm{x})}$.
+                \item Hinge loss: $\max\SET{1 - y \cdot f(\bm{x}), 0}$.
+                \item Logistic loss: $\log_2\left( 1 + e^{-y \cdot f(\bm{x})}\right)$. 
+            \end{itemize}
+    \end{itemize}
+    
+
+
+\subsection{Bias-Complexity Tradeoff}
+One fundamental reason that the so-called ``bias-complexity'' tradeoff arises is the No-Free-Lunch theorem; see Theorem 5.1 at \cite{shalev2014understanding} for the formal statement and proof.
+Intuitively, the No-Free-Lunch theorem shows that we can't find a predictor that is good at every learning task. 
+As a result, we need to encode some prior knowledge about the underlying task (i.e., the distribution over the input domain $\mathcal{X} \times \mathcal{Y}$) into the learning process.
+One way to encode the knowledge is choosing a particular hypothesis set $\mathcal{H}$ to work with, e.g., $\mathcal{H}$ can be the set of linear predictors.
+
+The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $L(h)$, which (informally) consists of two terms:
+    \begin{equation}
+        L(h) = L_\text{bias} + L_\text{est}.
+    \end{equation}
+\begin{itemize}
+    \item The first term measures the bias of the hypothesis set $\mathcal{H}$: $L_\text{bias} = \argmin_{h \in \mathcal{H}} L(h)$.
+          Intuitively, if $\mathcal{H}$ is some complicated hypothesis set, e.g., deep neural networks, the bias will be very small; however, a very small bias would not always be good, as the complicated hypothesis set is the root of overfitting.
+          
+    \item Informally, the second term decomposes into
+        \begin{equation}
+            L_\text{est} \approx \underbrace{L_{\mathcal{S}}(h)}_{\text{training error on $\mathcal{S}$}} + f(\text{model and sample complexity}).
+        \end{equation}
+    Thus, a complicated model with have high model complexity, which makes $f(\cdot)$ large.
+    In addition, a complicated model tends to overfit to the training set; as a result, the training error $L_\mathcal{S}(h)$ will change a lot for different $\mathcal{S}$ --- this refers to the ``variance'' in the famous Bias-Variance tradeoff.
+    
+    \item How the Bias-Variance tradeoff arises
+        \begin{equation}
+            \begin{aligned}
+                    & \text{reduce bias} \implies \text{complicated $\mathcal{H}$} \implies \text{overfitting} \implies \text{large variance} \\
+                    & \text{reduce variance} \implies \text{simple $\mathcal{H}$}   \implies \text{underfitting} \implies \text{large bias}.
+            \end{aligned}
+        \end{equation}
+\end{itemize}
+
+
+\subsection{Cross-Validation}
+    We usually use $K$-fold cross-validation to choose the hyper-parameters of the model, in order to avoid overfitting.
+    To select the value of $K$, we can generate a curve where the size of each fold is plotted against the prediction accuracy. 
+    The curve should have some diminishing return property, that is, at some point increasing the size of a fold (or equivalently decreasing $K$) does not benefit prediction; we then settle to the point; see~\cite{hastie2009elements}(p.243) for more details.
+
+
+
+\subsection{Precision, Recall, and some Other Measures}
+    The quizzes here are instructive: \url{https://developers.google.com/machine-learning/crash-course/classification/check-your-understanding-accuracy-precision-recall}.
+    \begin{itemize}
+        \item Precision: $\frac{TP}{TP + FP}$; what proportion of identified positives was actually positives?
+        \item Recall: $\frac{TP}{TP + FN}$; what proportion of true positives that was correctly identified?
+        \item F1 score: $\left( \frac{\text{Precision}^{-1} + \text{Recall}^{-1}}{2} \right)^{-1}$; a measure to consider both precision and recall.
+        \item ROC curve: evaluating a binary classification model at different thresholds and plotting the false positive rates (as x-axis) against the true positive rates (as y-axis).
+        \item AUC: the area under the ROC curve. Intuitively, AUC gives us the probability that the model ranks a random positive example higher than a random negative example.
+            \begin{enumerate}
+                \item AUC is scale-invariant: it does not depend on the actual magnitudes of the output; in other words, only the ranking of the outputs matter.
+                \item AUC measures the quality of the prediction irrespective of what threshold is choose: this may not be desirable if we have different costs for false positives and false negative (e.g., spam detection).
+            \end{enumerate}
+    \end{itemize}
+
+
+\subsubsection{MLE and MAP}
+    \begin{itemize}
+        \item The optimization problem of MLE: $\bm{\theta}^\ast \in  \argmin_{\bm{\theta}} p(\mathcal{S} | \bm{\theta})$, where $p(\mathcal{S}| \bm{\theta})$ is the likelihood of data $\mathcal{S}$.
+        \item The optimization problem of MAP: $\bm{\theta}^\ast \in  \argmin_{\bm{\theta}} p(\bm{\theta} | \mathcal{S})$, where $p(\bm{\theta} | \mathcal{S}) \propto p(\bm{\theta})p(\mathcal{S} | \bm{\theta})$.
+        \item If we have some prior knowledge about the parameter $\bm{\theta}$, then MAP is a good choice; otherwise, go ahead and use MLE. 
+    \end{itemize}
+    
+
+\subsection{Overfitting}
+
+
+
+
+\subsection{Singular Value Decomposition (SVD)}
+    \begin{itemize}
+        \item Given a data matrix $\bm{X} \in \R^{\ndata \times \nfeat}$, where \ndata is the number of data points and \nfeat the number of features.
+        The SVD is: $\bm{X} = \bm{U} \bm{D} \bm{V}^\top$; $\bm{U} \in \R^{\ndata \times \nfeat}$ and the columns of $\bm{U}$ span the column space of $\bm{X}$; $\bm{V} \in \R^{\nfeat \times \nfeat}$ and the columns of $\bm{V}$ span the row space of.
+        Both $\bm{U}$ and $\bm{V}$ are orthonormal matrices. 
+        $\bm{D}$ is a diagonal matrix with some diagonal entries possibly zeros.
+    \end{itemize}
+    
+    
+\subsection{Principal Component Analysis (PCA)}
+    \begin{itemize}
+        \item Given a data matrix $\bm{X} \in \R^{\ndata \times \nfeat}$, PCA is to do en  eigen-decomposition of the matrix $\bm{X}^\top \bm{X}$ (i.e., an unnormalized version of the sample covariance matrix $\bm{S}$) as follows:
+            \begin{equation}
+                \bm{X}^\top \bm{X} = \left( \bm{U}\bm{D}\bm{V}^\top \right)^\top \left( \bm{U}\bm{D}\bm{V}^\top \right) = \bm{V} \bm{D}^2 \bm{V}^\top,
+            \end{equation}
+        where $\bm{V}^{-1} = \bm{V}^\top$. The diagonal entries of $\bm{D}^2$ are ranked in descending order w.r.t. the magnitudes.
+        \item The first principal component is $\bm{z}_1 = \bm{X} \bm{v}_1$, i.e., the projection of the data matrix to the first column vector of $\bm{V}$; $\bm{z}_1$ is also the direction with the maximum sample variance.
+        
+        \item Notice that $\bm{X} \bm{v}_1 = d_1 \bm{u}_1$ (since $\bm{X} \bm{v}_1 = \bm{U} \bm{D} \bm{V}^\top \bm{v}_1$...), where $d_1$ is the first diagonal entry of $\bm{D}$ and $\bm{u}_1$ the first column vector of $\bm{U}$; thus, the first principal component is parallel to $\bm{u}_1$.
+    \end{itemize}
+
+
+\subsection{Regressions}
+    \subsubsection{Linear Regression}\label{ML:linear-regression}
+        \begin{itemize}
+            \item The optimization problem: $\hat{\bm{\beta}} \in \argmin_{\bm{\beta}} \norm{\bm{X} \bm{\beta} - \bm{y}}_2^2$.
+            \item The objective function: $L = \bm{\beta}^\top \bm{X}^\top \bm{X} \bm{\beta} - 2 \bm{\beta}^\top \bm{X}^\top \bm{y} - \bm{y}^\top \bm{y}$.
+            \item The objective function is convex w.r.t. $\beta$. Thus, the first-order optimality condition is: 
+                \begin{equation}
+                    \frac{\partial L}{\partial \bm{\beta}^\top} =  2 \bm{X}^\top \bm{X} \bm{\beta} - 2\bm{X}^\top \bm{y} = \bm{0}.
+                \end{equation}
+            Setting the derivative to zero we have: $\hat{\bm{\beta}} = (\bm{X}^\top \bm{X})^{-1} \bm{X}^\top \bm{y}$.
+            \item Further discussion: Chapter 3.2 of~\cite{hastie2009elements}.
+        \end{itemize}
+    
+    \subsubsection{Ridge Regression}
+        \begin{itemize}
+            \item The optimization problem: $\hat{\bm{\beta}} \in \argmin_{\bm{\beta}} \norm{\bm{X} \bm{\beta} - \bm{y}}_2^2 + \lambda\norm{\bm{\beta}}_2^2$.
+            \item The objective function: $L = \bm{\beta}^\top \bm{X}^\top \bm{X} \bm{\beta} - 2 \bm{\beta}^\top \bm{X}^\top \bm{y} - \bm{y}^\top \bm{y} + \lambda \bm{\beta}^\top \bm{\beta}$.
+            \item The objective function is convex w.r.t. $\bm{\beta}$. So setting the first-order derivative to zero leads to: $\hat{\bm{\beta}} = (\bm{X}^\top \bm{X} + \lambda \bm{I})^{-1} \bm{X}^\top \bm{y}$.
+            \item NOTICE: when solving a ridge regression, we need to standardize (e.g., divided each column with the corresponding largest value)  and center the input $\bm{X}$. In addition, the intercept term is usually left out when solving the optimization problem and estimated separately by $\beta_0 = \frac{1}{\ndata}\sum_{i=1}^{\ndata}{y_i}$.
+            \item Intuitively, the solution $\hat{\bm{\beta}}$ of a ridge regression shrinks the solution of a vanilla linear regression.
+            \item The $L_2$ regularization has two benefits: 1) control model complexity (i.e., low variance); 2) improve robustness of $\bm{\beta}$ to the data. Further discussion: Chapter 3.4 of~\cite{hastie2009elements}.
+        \end{itemize}
+        
+    \subsubsection{Lasso Regression}
+        \begin{itemize}
+            \item The optimization problem: $\hat{\bm{\beta}} \in \argmin_{\bm{\beta}} \norm{\bm{X} \bm{\beta} - \bm{y}}_2^2 + \lambda \sum_{j=1}^{\nfeat}{\Abs{\beta_j}}$.
+            \item The general idea to solve Lasso is to utilize proximal gradient descent.
+            See this note for deatails: \url{https://www.stat.cmu.edu/~ryantibs/convexopt-S15/scribes/08-prox-grad-scribed.pdf}.
+            \item A commonly used algorithm to solve Lasso is Iterative Soft-Thresholding Algorithm (ISTA). 
+            \item ISTA algorithm is as follows:
+                \begin{enumerate}
+                    \item Let $g(\bm{x}) = \norm{\bm{X} \bm{\beta} - \bm{y}}_2^2$. Then $\frac{d g}{d \bm{\beta}^\top} = -2\bm{X}^\top(\bm{y} - \bm{X}\bm{\beta})$.
+                    \item The iterate at step $t$ is:
+                        \begin{equation}
+                            \bm{\beta}^t = S_{\eta \lambda}\left( 
+                                \bm{\beta}^{t-1} - \eta \frac{d g}{d \bm{\beta}^\top} 
+                            \right) = S_{\eta \lambda}\left( 
+                                \bm{\beta}^{t-1} + \eta \bm{X}^\top(\bm{y} - \bm{X}\bm{\beta}) 
+                            \right),
+                        \end{equation}
+                    where $\eta$ is the learning rate; $S_{\eta \lambda}(\cdot)$ is the soft-thresholding operator with threshold $\eta \lambda$. 
+                \end{enumerate}
+        \end{itemize}
+    
+    \subsubsection{$L_1$ Regularization v.s. $L_2$ Regularization}
+        \begin{itemize}
+            \item $L_2$ regularization tends to shrink the learned parameters while $L_1$ squeezes some parameters to exactly zeros.
+            \item $L_1$ makes the optimization a bit more challenging, as the proximal gradient descent needs to be applied.
+            \item From robust optimization perspective, $L_1$ and $L_2$ correspond to two ways of constructing uncertainty sets. 
+        \end{itemize}
+    
+\subsection{Classification}
+        \subsubsection{Bayes Optimal Classifier}
+            In binary classification setting, the Bayes Optimal Classifier is defined as:
+                \begin{equation}
+                    h(\bm{x}) = \begin{cases} 1, & p(y=1 | \bm{x}) \ge 0.5 \\
+                                              0, & p(y=1 | \bm{x}) < 0.5.
+                    \end{cases}
+                \end{equation}      
+            It is optimal because no classifier can have lower misclassification rate than $h(\bm{x})$.
+        \subsubsection{Logistic Regression (LR)}
+            \begin{itemize}
+                \item The general formulation of LR for $K$ classes is as follows (with the bias term separately estimated):
+                    \begin{equation}
+                        \begin{aligned}
+                            & P(y=k | \bm{x}) = \frac{ \EXP{\beta_{k0} + \bm{\beta}_k^\top \bm{x} }}{1 + \sum_{l=1}^{K-1}{\EXP{\beta_{l0} + \bm{\beta}_l^\top \bm{x} } }} \\
+                            & P(y=K | \bm{x}) = \frac{1}{1 + \sum_{l=1}^{K-1}{\EXP{\beta_{l0} + \bm{\beta}_l^\top \bm{x} } }}.
+                        \end{aligned}
+                    \end{equation}
+                \item In the case of $K=2$ classes, the likelihood function for \ndata samples is:
+                    \begin{equation}
+                        L = \prod_{i=1}^{\ndata}{p(y=1 | \bm{x}_i)^{y_i} \left( 1-p(y=0 | \bm{x}_i) \right)^{1-y_i} },
+                    \end{equation}
+                and the corresponding log-likelihood function is:
+                    \begin{equation}
+                        \begin{aligned}
+                        \log L & = \sum_{i=1}^{\ndata}{\left( y_i \log\frac{\EXP{\bm{\beta}^\top\bm{x}_i}}{1 + \EXP{\bm{\beta}^\top \bm{x}_i }}  + (1-y_i)\log\frac{1}{1+\EXP{\bm{\beta}^\top \bm{x}_i}} \right) }  \\
+                              & = \sum_{i=1}^{\ndata}{\left( y_i \bm{\beta}^\top \bm{x}_i -\log(1 + \EXP{\bm{\beta}^\top \bm{x}_i} \right)}.
+                        \end{aligned}
+                    \end{equation}
+                \item Computing the derivative of $\log L$ w.r.t. $\bm{\beta}$ leads to: 
+                $\frac{\partial \log L}{\partial \bm{\beta}^\top} = \sum_{i=1}^{\ndata}{\left( y_i - p(y=1|\bm{x}_i) \right) \bm{x}_i }$.
+                \item We usually maximize the log-likelihood by second-order method, e.g., Newton's method, as follows:
+                    \begin{equation}
+                        \bm{\beta}^t = \bm{\beta}^{t-1} - \left[ \frac{\partial^2 \log L}{\partial \bm{\beta}^\top \partial \bm{\beta}} \right]^{-1} \frac{\partial \log L}{\partial \bm{\beta}^\top}.
+                    \end{equation}
+                \item The second-order derivative is computed as follows:
+                    \begin{equation}
+                        \begin{aligned}
+                            \frac{\partial^2 \log L}{\partial \bm{\beta}^\top \partial \bm{\beta}} & = -\sum_{i=1}^{\ndata}{\bm{x}_i \frac{\partial p(y=1 | \bm{x}_i)}{\partial \bm{\beta}}   }  \\
+                            & = -\sum_{i=1}^{\ndata}{\left( \bm{x}_i \bm{x}_i^\top p(y=1 | \bm{x}_i) \left( 1 - p(y=1 | \bm{x}_i)\right) \right)},
+                        \end{aligned}
+                    \end{equation}
+                where $\frac{\partial p(y=1 | \bm{x}_i)}{\partial \bm{\beta}} = \frac{\partial \left( 1 - 1 / (1 + \EXP{\bm{\beta}^\top \bm{x}_i})\right)}{\partial \bm{\beta}} = p(y=1 | \bm{x}_i) \bm{x}_i^\top$.
+                \item Define $\bm{W}$ as a diagonal matrix with the $i$-th diagonal entry being $p(y=1| \bm{x}_i)(1 - p(y=1 | \bm{x}_i))$ and $\bm{p}$ a vector with the $i$-th entry being $p(y=1|\bm{x}_i)$.
+                The first- and second-order derivatives are as follows:
+                    \begin{equation}
+                        \begin{aligned}
+                            \frac{\partial \log L}{\partial \bm{\beta}^\top} & = \bm{X}^\top (\bm{y} - \bm{p}) \\
+                            \frac{\partial^2 \log L}{\partial \bm{\beta}^\top \partial \bm{\beta}} & = -\bm{X}^\top \bm{W} \bm{X}.
+                        \end{aligned}
+                    \end{equation}  
+                \item Using the above matrix notations to re-write the iterative updating rule:
+                    \begin{equation}
+                        \begin{aligned}
+                            \bm{\beta}^t & = \bm{\beta}^{t-1} + \left(\bm{X}^\top \bm{W} \bm{X}\right)^{-1} \bm{X}^\top (\bm{y} - \bm{p}) \\
+                                         & = \left(\bm{X}^\top \bm{W} \bm{X}\right)^{-1}\bm{X}^\top \bm{W} \bm{X} \bm{\beta}^{t-1} + \left(\bm{X}^\top \bm{W} \bm{X}\right)^{-1} \bm{X}^\top \bm{W} \bm{W}^{-1} (\bm{y} - \bm{p}) \\
+                                         & = \left(\bm{X}^\top \bm{W} \bm{X}\right)^{-1}\bm{X}^\top \bm{W} \left( \underbrace{\bm{X}\bm{\beta}^{t-1} + \bm{W}^{-1}(\bm{y} - \bm{p})}_{:=\bm{z}} \right) \\
+                                         & = \left(\bm{X}^\top \bm{W} \bm{X}\right)^{-1}\bm{X}^\top \bm{W} \bm{z}.
+                        \end{aligned}
+                    \end{equation}
+                The last step is called \emph{Iteratively Reweighted Least Square}.
+                Compare it with the update rule of linear regression, i.e., $\left( \bm{X}^\top \bm{X}\right)^{-1} \bm{X}^\top \bm{y}$.
+            \end{itemize}
+            
+    \subsection{Naive Bayes (NB)}
+        NB is based on Bayes Theorem: 
+            \begin{equation}
+                \begin{aligned}
+                    p(y=k | \bm{x}) & = \frac{p(y=k) p(\bm{x} | y=k)}{p(\bm{x})} \\
+                    & \propto p(y=k) p(x_1, \ldots, x_{\nfeat} | y=k) \\
+                    & \approx p(y=k) \prod_{i=1}^{\nfeat}{p(X_i = x_i | y=k)}.
+                \end{aligned}
+            \end{equation}
+        When the features are discrete, we estimate $p(y=k)$ and $p(X_i = x_i | y=k)$ for all $i$ and $k$ from training data.
+        When the features are continuous, the conditional probability $p(X_i = x_i | y=k)$ is usually modeled by a one-dimensional Gaussian distribution, i.e., $\mathcal{N}(x_i; \mu_{ki}, \sigma_{ki})$, where $\mu_{ki}$ and $\sigma_{ki}$ are estimated from data.
+        
+    \subsection{SVM}
+        For convenience we discuss linear SVM in the case of separable data $\mathcal{S}$.
+        Let $\mathcal{H}$ be the hypothesis set of linear classifiers, i.e., $\mathcal{H}=\Set{\Sign{\bm{w}^\top \bm{x} + b}}{\bm{w}, b}$.
+        In $\R^\nfeat$, a hyperplane is represented as follows:
+            \begin{equation}
+                \bm{w}^\top \bm{x} + b = 0.
+            \end{equation}
+        Since the data is separable, there must be a hyperplane that does not pass any data.
+        As a result, to avoid scaling issues (i.e., two hypotheses $(\bm{w}_1, b_1)$ and $(\bm{w}_2, b_2)$ correspond to the same hyperplane, but they have different magnitudes), we focus on a specific hyperplane $(\bm{w}, b)$ that satisfies the following:
+            \begin{equation}
+                \min_{(\bm{x}, y) \in \mathcal{S}} \Abs{\bm{w}^\top \bm{x} + b} = 1.
+            \end{equation}
+        
+        The margin $\rho$ of an SVM is defined as the smallest distance of a data point to the separating hyperplane, i.e., 
+            \begin{equation}
+                \rho = \min_{(\bm{x}, y) \in \mathcal{S}} \frac{\Abs{\bm{w}^\top \bm{x} + b}}{\norm{\bm{w}}} = \frac{1}{\norm{\bm{w}}}.
+            \end{equation}
+        Recall that one motivation of SVM is to find the separating hyperplane with the largest margin; intuitively, such a hyperplane provides the largest cushion.
+        Thus, the optimization problem of the SVM is as follows:
+            \begin{equation}
+                \begin{aligned}
+                    & \min_{\bm{w}, b} & & \frac{1}{2}\norm{\bm{w}}^2 \\
+                    & s.t.             & & y_i \cdot (\bm{w}^\top \bm{x}_i + b) \ge 1, \forall i,
+                \end{aligned}
+            \end{equation}
+        where the constraints ensure that every sample is correctly classified.
+        The Lagrange function of the above optimization is:
+            \begin{equation}
+                L(\bm{w}, b, \bm{\alpha}) = \frac{1}{2}\norm{\bm{w}}^2 - \sum_{i=1}^{\ndata}{\alpha_i \left[ y_i \cdot (\bm{w}^\top \bm{x}_i + b) - 1\right]}.
+            \end{equation}
+        The KKT conditions are:
+            \begin{equation}
+                \begin{aligned}
+                    \nabla_{\bm{w}} L & = \bm{w} - \sum_{i=1}^{\ndata}{\alpha_i y_i \bm{x}_i} = 0 \\
+                    \nabla_{b} L & = -\sum_{i=1}^{\ndata}{\alpha_i y_i} = 0 \\
+                    a_i & = 0 \text{ or } y_i(\bm{w}^\top \bm{x} + b) = 1, \forall i.
+                \end{aligned}
+            \end{equation}
+        Several things from the KKT conditions:
+            \begin{itemize}
+                \item From the first condition: the weight vector $\bm{w}$ is a linear combination of $\bm{x}_i$; however, only those $\bm{x}_i$ with $\alpha_i \ne 0$ contribute to the combination.
+                \item From the third condition: for those data such that $\alpha_i \ne 0$, we know $\Abs{\bm{w}^\top \bm{x} + b} = 1$, i.e., they are on the marginal hyperplanes. These data are called the \emph{support vectors}, which completely decide the solution $(\bm{w}, b)$.
+            \end{itemize}
+        The dual of the original optimization problem is as follows:
+            \begin{equation}
+                \begin{aligned}
+                    & \max_{\bm{\alpha}} & & \sum_{i=1}^{\ndata}{\alpha_i} - \frac{1}{2}\sum_{i,j=1}^{\ndata}{\alpha_i \alpha_j y_i y_j \bm{x}_i^\top \bm{x}_j} \\
+                    & s.t. & & \alpha_i \ge 0, \sum_{i=1}^{\ndata}{\alpha_i y_i} = 0.
+                \end{aligned}
+            \end{equation}
+        We know that the support vectors are on the marginal hyperplanes, which are parallel to the separating hyperplane $(\bm{w}, b)$.
+        Thus, for the support vectors we have $\bm{w}^\top \bm{x}_i + b = y_i$.
+        As a result, we have $b = y_i - \sum_{j=1}^{\ndata}{\alpha_i y_i (\bm{x}_j^\top \bm{x}_i) }$.
+    
+    
+\subsection{Boosting}
+The intuition behind boosting is to generate a strong classifier (the one with small generalization error) by combining a bunch of weak classifiers. 
+A typical algorithm of boosting is called AdabBoost; it typically consists of $T$ iterations of boosting, where a weak classifier is picked in each iteration; finally, the $T$ weak classifiers are combined in a way that a strong classifier is generated. 
+The pseudocode of AdaBoost is displayed in Algorithm~\ref{adaboost:algo}, which is extracted from~\cite{mohri2018foundations}.
+
+\begin{algorithm}[ht]
+\caption{Pseudocode for AdaBoost}\label{adaboost:algo}
+\begin{algorithmic}[1]
+\State Input: \ndata labeled samples $\mathcal{S}=\SET{(\bm{x}_1, y_1), \ldots, (\bm{x}_\ndata, y_\ndata)}$, where $y_i \in \SET{-1, 1}$
+\For{$i=1,\ldots, \ndata$}
+    \State $D_1(i) = 1 / \ndata$ \Comment{the weights on the \ndata samples are initially uniform}
+\EndFor
+\For{$t=1,\ldots, T$} \Comment{doing $T$ iterations of boosting}
+    \State $h_t \leftarrow \argmin_{h \in \mathcal{H}} \sum_{i=1}^{\ndata}{D_t(i) \mathbbm{1}[h(\bm{x}_i \ne y_i)]}$; the error of $h_t$ is $\epsilon_t$. \label{adaboost:pick-classifier}
+    \State $\alpha_t = \frac{1}{2}\log \frac{1-\epsilon_t}{\epsilon_t}$ \label{adaboost:weight-classifier}
+    \State $Z_t = 2 \left[ \epsilon_t(1 - \epsilon_t) \right]^{1/2}$ \Comment{the normalization constant to make sure that $D_t(i)$ sums to one}
+    \For{$i=1,\ldots, \ndata$} \label{adaboost:weight-sample}
+        \State $D_{t+1}(i) = \frac{D_t(i)\EXP{-\alpha_t y_i h_t(\bm{x}_i)}}{Z_t}$ \Comment{update the weight associated with each sample}
+    \EndFor
+\EndFor
+\State $g = \sum_{t=1}^{T}{\alpha_t h_t}$ \Comment{generate a strong classifier by combining weak learners}
+\State return $h=\text{sign}(g)$
+\end{algorithmic}
+\end{algorithm}
+
+There are several key questions:
+    \begin{enumerate}
+        \item How to pick a weak class in a particular iteration $t$? The answer is intuitive: picking the classifier $h \in \mathcal{H}$ that attains the smallest empirical error on the data, as showed in step \ref{adaboost:pick-classifier}.
+        It is worth mentioning that the empirical error is weighted by $D(i), \ldots, D(\ndata)$.
+        \item How to combine these picked weak classifiers? In AdaBoost, the strong classifier is just a linear combination of $h_1, \ldots, h_T$.
+        \item How to set the weight $\alpha_t$ associated with each weak classifier? The values of $\alpha_1, \ldots, \alpha_T$ are selected such that an upper-bound on the empirical error of $g$ is minimized. See the proof of Theorem 6.1 at~\cite{mohri2018foundations}.
+    \end{enumerate}
+
+    \subsubsection{Boosting Trees (BT)}\label{sec:boosting-trees}
+        BT is a boosting framework where the weak learners are either classification or regression trees.
+        BT is based on the \emph{Forward Stagewise Additive Modeling} described in~\cite{hastie2009elements} (p342), which is a good framework to unify both classification trees (e.g., AdaBoost) and regression trees (e.g., boosting trees with real-valued output).
+        The framework is to find a linear combination of a set of $K$ learners such that some loss is minimized, i.e., 
+            \begin{equation}
+                \min_{\SET{\theta_i}_{i=1}^{K}, \SET{\beta_i}_{i=1}^{K} } \sum_{i=1}^{\ndata}{L\left( y_i, \sum_{j=1}^{K}{\beta_j f(\bm{x}_i; \theta_j)} \right)},
+            \end{equation}
+        where $\SET{\theta_i}_{i=1}^{K}$ are model parameters for the learners and $\SET{\beta_i}_{i=1}^{K}$ are the weights to combine them together.
+        It is usually hard to solve the optimization above; instead, an iterative greedy approach is used, where each iteration learns a single learner and the weight associated with it, i.e., 
+            \begin{equation}\label{eq:forward-stagewise-add-model}
+                \min_{\theta_m, \beta_m} \sum_{i=1}^{\ndata}{
+                    L\left( y_i, F_{m-1}(\bm{x}_i) + \beta_m f(\bm{x}_i; \theta_m) \right)
+                },
+            \end{equation}
+        where $F_{m-1}(\bm{x}_i) = \sum_{j=1}^{m-1}{\beta_m f(\bm{x}_i; \theta_j)}$ is the combination of the learners that have been learned in the previous $m-1$ iterations. 
+        
+        \paragraph{Adaboost.} An instantiation of \eqref{eq:forward-stagewise-add-model} with the loss function $L(\cdot)$ replaced by the exponential loss leads to the AdaBoost algorithm.
+        In the $m$-th iteration:
+            \begin{equation}
+                \begin{aligned}
+                    L & = \sum_{i=1}^{\ndata}{ \EXP{ - y_i \cdot \left[F_{m-1}(\bm{x}_i) + \beta_m f(\bm{x}_i; \theta_m) \right] } }\\
+                      & = \sum_{i=1}^{\ndata}{\underbrace{\EXP{-y_i \cdot F_{m-1}(\bm{x}_i)}}_{\text{the weight of $\bm{x}_i$ at iteration $m$}} \cdot \EXP{-y_i \cdot \beta_m f(\bm{x}_i; \theta_m)} }\\
+                      & = \sum_{i=1}^{\ndata}{w_i^{(m)} \cdot \EXP{-y_i \cdot \beta_m f(\bm{x}_i; \theta_m)}} \\
+                      & = \sum_{i:y_i = f(\bm{x}_i;\theta_m)}^{}{w_i^{(m)} \EXP{-\beta_m}} + \sum_{i:y_i \ne f(\bm{x}_i;\theta_m)}^{}{w_i^{(m)} \EXP{\beta_m}} \\
+                      & = \sum_{i=1}^{\ndata}{w^{(m)}_i e^{-\beta_m} \left( 1- \mathbbm{1}[y_i \ne f(\bm{x}_i; \theta_m)] \right)} + \sum_{i=1}^{\ndata}{w^{(m)}_i e^{\beta_m} \mathbbm{1}[y_i \ne f(\bm{x}_i; \theta_m)]} \\
+                      & = \sum_{i=1}^{\ndata}{w^{(m)}_i e^{-\beta_m}} - \sum_{i=1}^{\ndata}{w^{(m)}_i e^{-\beta_m} \mathbbm{1}[y_i \ne f(\bm{x}_i; \theta_m)]} + \sum_{i=1}^{\ndata}{w^{(m)}_i e^{\beta_m} \mathbbm{1}[y_i \ne f(\bm{x}_i; \theta_m)]} \\
+                      & = (e^{\beta_m} - e^{-\beta_m}) \underbrace{\sum_{}^{}{w^{(m)}_i \mathbbm{1}[y_i \ne f(\bm{x}_i; \theta_m)]}}_{\epsilon_m: \text{weighted empirical error}} + e^{-\beta_m}.
+                \end{aligned}
+            \end{equation}
+        Fixing $\beta_m$, the AdaBoost picks the learner that minimizes the weighted error $\epsilon_m$, i.e., $\theta_m = \argmin_{\theta} \epsilon_m$.
+        After obtaining the best learner at iteration $m$, the corresponding error $\epsilon_m$ is known.
+        Then, the value of $\beta_m$ is obtained by solving the following convex programming:
+        \begin{equation}
+            \beta_m = \argmin_{\beta} (e^{\beta_m} - e^{-\beta_m}) \cdot \epsilon_m + e^{-\beta_m}.
+        \end{equation}
+         Some practical considerations:
+        \begin{itemize}
+            \item In practice $f(\bm{x}_i; \theta_m)$ is usually implemented as a stump, i.e., a tree with a single level.
+            Thus, minimizing $\epsilon_m$ consists of two steps: 1) pick a particular feature and 2) pick a threshold for the feature, such that the resulting weighted empirical error $\epsilon_m$ is minimized.
+        \end{itemize}
+        
+        \paragraph{Gradient Boosting (GB).} 
+        \textbf{The discussion in the section is specific for XGBoost.}  
+        GB is another instantiation of the Forward Stagewise Additive Modeling framework.
+        Unlike the exponential loss used in AdaBoost, GB uses Mean 
+        Squared Error (MSE) as the loss function; this is because MSE is friendly to Taylor expansion. 
+        The optimization problem that GB solves at iteration $m$ is as follows:
+            \begin{equation}\label{GB-model}
+                \min_{f^{(m)}} \sum_{i=1}^{\ndata}{
+                    \underbrace{\left( y_i - (\hat{y}^{(m-1)}_i + f^{(m)}(\bm{x}_i)) \right)^2}_{:=L(y_i, \hat{y}_i^{(m)}) } + R(f^{(m)}),
+                }
+            \end{equation}
+        where $f^{(m)}$ is the learner that we are looking for; $R(f^{(m)})$ is a regularization term on the learner's complexity.
+        We approximate the loss $L(y_i, \hat{y}_i^{(m)})$ with its second-order Taylor expansion at $\hat{y}^{(m-1)}_i$:
+            \begin{equation}
+                L(y_i, \hat{y}_i^{(m)}) \approx L(y_i, \hat{y}^{(m-1)}_i) + g_i \cdot f^{(m)}(\bm{x}_i) + \frac{1}{2} h_i \cdot (f^{(m)}(\bm{x}_i))^2,
+            \end{equation}
+        where $f^{(m)}(\bm{x}_i) = (\hat{y}_i^{(m)} - \hat{y}_i^{(m-1)})$, $g_i = \frac{\partial L(y_i, \hat{y}_i^{(m-1)})}{\partial \hat{y}_i^{(m-1)} }$, and $h_i = \frac{\partial^2 L(y_i, \hat{y}_i^{(m-1)})}{\partial^2 \hat{y}_i^{(m-1)} }$; this is the reason for the name ``Gradient''.
+        We regularize the complexity of $f^{(m)}$ by the follow:
+            \begin{equation}
+                R(f^{(m)}) = \gamma T + \frac{\lambda}{2}\sum_{i=1}^{T}{s_i},
+            \end{equation}
+        where $T$ is the number of leaves and $s_i$ is the final score at each leave; for regression problems $s_i$ is the mean of the target values of the points that belong to the region associated with the leave; for classification problems $s_i$ is the probability of the most likely class.
+        Then, the optimization problem of GB (i.e., \eqref{GB-model}) can be approximated by solving the following:
+            \begin{equation}
+                \begin{aligned}
+                    \tilde{L} & = \sum_{i=1}^{\ndata}{
+                        \left[
+                            g_i \cdot f^{(m)}(\bm{x}_i) + \frac{1}{2} h_i \cdot (f^{(m)}(\bm{x}_i))^2 
+                        \right] + \gamma T + \frac{\lambda}{2}\sum_{i=1}^{T}{s_i}
+                    } \\
+                    & \quad \quad \text{$s_j = f^{(m)}(\bm{x}_i)$ if $i \in \mathcal{I}_j$} \\
+                    & = \sum_{j=1}^{T}{
+                        \left[ \underbrace{\left(\sum_{i \in \mathcal{I}_j}^{}{g_i} \right)}_{:=G_j} s_j + \frac{1}{2}\left( \underbrace{\sum_{i \in \mathcal{I}_j}^{}{h_i}}_{:=H_j} + \lambda \right)s_j^2
+                        \right] + \gamma T 
+                    } \\
+                    & = \sum_{j=1}^{T}{ \left[ G_j s_j + \frac{1}{2} H_j s_j^2 \right] } + \gamma T.
+                \end{aligned}
+            \end{equation}
+        When $s_j = -\frac{G_j}{H_j + \lambda}$, the loss $\tilde{L}$ attains its minimum value, which is also called the structure score of $f^{(m)}$:
+            \begin{equation}
+                \text{structure score of $f^{(m)}$}= -\frac{1}{2}\sum_{j=1}^{T}{\frac{G_j^2}{H_j + \lambda}} + \gamma T.
+            \end{equation}
+        Ideally, in each iteration we would like to enumerate all possible tree structures and pick the one that has the smallest structure score; however, this is too expensive.
+        Instead, GB grows a \emph{single} tree by iteratively splitting a node into the left and right nodes (just as how we splitted in decision trees).
+        We choose the feature $i$ that maximizes the following gain as the splitting feature:
+            \begin{equation}
+                \frac{1}{2}\left[ \frac{G_L^2}{H_L + \lambda} + \frac{G_R^2}{H_R + \lambda} - \frac{(G_L + G_R)^2}{H_L +  H_R + \lambda}  \right] - \gamma
+            \end{equation}
+        Check out this excellent article about GB: \url{https://xgboost.readthedocs.io/en/stable/tutorials/model.html}.
+        The Wikipedia has a good introduction for generic GB: \url{https://en.wikipedia.org/wiki/Gradient_boosting}.
+        
+        \paragraph{Generic GB v.s. XGBoost.}
+        In each iteration of a generic GB, the first-order gradient of the loss w.r.t. the output of the learner so far is used as supervised information to train a weak learner; however, XGBoost uses both the first- and the second-order gradient information.
+        
+        
+        
+        
+    
+        
+    
+    
+    
+\subsubsection{Bagging}
+
+Another technique with the idea of combining weak learners to generate a strong learner is \emph{bagging}.
+Intuitively, given a dataset $\mathcal{S}$ with \ndata samples, bagging consists of three steps:
+    \begin{enumerate}
+        \item Bootstrap: sample $k$ subsets of $\mathcal{S}$ with replacement. 
+        \item Parallel training: training $k$ weak learners on the subsets in paralle. 
+        \item Aggregation: given a test sample, aggregate the $k$ weak learners by computing (in the case of regression tasks) their average or (in the case of classification tats) the majority voting.
+    \end{enumerate}
+A key advantage of bagging is to reduce variance.
+Check out this website for more details: \url{https://www.ibm.com/cloud/learn/bagging}.
+
+
+
+\subsection{Clustering}
+    \subsubsection{K-Means Clustering}
+        \begin{itemize}
+             
+            \item Given an unlabeled data $\mathcal{S}=\SET{\bm{x}_1, \ldots, \bm{x}_\ndata}$, the loss function that K-Means clustering minimizes is:
+            \begin{equation}
+                \min_{\bm{c}_1, \ldots, \bm{c}_R} \sum_{i=1}^{R}{
+                    \sum_{j \in \mathcal{C}_i}^{}{\norm{\bm{x}_j - \bm{c}_i}}
+                },
+            \end{equation}
+            where $\bm{c}_1, \ldots, \bm{c}_R$ are the cluster centers that are  randomly initialized.
+            
+            \item The K-Means alternates the two steps until convergence: 1) assign each sample to a cluster and 2) update the centers of the $R$ clusters
+            Formally, the steps are as follows:
+            \begin{enumerate}
+                \item Assign $\bm{x}_i$ to cluster $k \in \argmin_{j=1,\ldots, R}\norm{\bm{x}_i - \bm{c}_j}_2^2$.
+                \item Update the center of each cluster, i.e., $\bm{c}_k = \frac{\sum_{j \in \mathcal{C}_k}^{}{\bm{x}_j}}{\SetCard{\mathcal{C}_k}}$.
+            \end{enumerate}
+            \item Notice that K-Means clustering can also be used as a classification algorithm. 
+            \item The above two steps can be thought of as an instantiation of the famous EM algorithm; as a result, the resulting solutions (i.e., the clustering centers) are only sub-optimal w.r.t. the loss function.
+        \end{itemize}
+    
+    \subsubsection{Spectral Clustering}
+        Given an unlabeled data $\mathcal{S}=\SET{\bm{x}_1, \ldots, \bm{x}_\ndata}$, we can think of the \ndata instances as \ndata vertices of a graph.
+        An edge between a pair of vertices $(i, j)$ represents a similarity measure between $\bm{x}_i$ and $\bm{x}_j$.
+        The adjacency matrix $\bm{A}$ of the graph encodes the similarity between points, i.e., $A_{i,j}$ is the similarity between $i$ and $j$.
+        The objective of the spectral clustering is to find $K$ clusters $\mathcal{C}_1, \ldots, \mathcal{C}_K$ of the vertices, such that within cluster (resp. between cluster) similarity is maximized (resp. minimized).
+        One way to capture the objective is by minimizing the following loss function:
+            \begin{equation}
+                L = \sum_{i=1}^{K}{\frac{1}{\SetCard{\mathcal{C}_i}} \sum_{u \in \mathcal{C}_i, v \notin \mathcal{C}_i}^{}{A_{u, v}}}.
+            \end{equation}
+        Let $\bm{H} \in \R^{\ndata \times K}$ be the matrix encoding which cluster a point belongs to, i.e., $H_{i,j}=\frac{1}{\sqrt{\SetCard{\mathcal{C}_j}}}$ if $\bm{x}_i$ belongs to cluster $\mathcal{C}_j$.
+        Note that the columns of $\bm{H}$ are orthogonal with each other. 
+        Let $\bm{h}_i$ be the i-th column of $\bm{H}$.
+        The loss function $L$ can also be formulated with the Laplacian of the underlying graph:
+            \begin{equation}
+                \begin{aligned}
+                    L  = \Tr\left( \bm{H}^\top \bm{L} \bm{H}  \right) = \sum_{i=1}^{K}{\bm{h}_i^\top \bm{L} \bm{h}_i} 
+                      = \sum_{i=1}^{K}{\bm{h}_i^\top \left( \bm{D} - \bm{A} \right) \bm{h}_i} & = \sum_{i=1}^{K}{\left(   \sum_{k \in \mathcal{C}_i}^{}{d_k \frac{1}{\SetCard{\mathcal{C}_i}}} - \sum_{u, v \in \mathcal{C}_i}^{}{\frac{1}{\SetCard{\mathcal{C}_i}}A_{u, v}} 
+                      \right)} \\
+                      & =   \sum_{i=1}^{K}{\left( \frac{1}{\SetCard{\mathcal{C}_i}} \left[ \sum_{k \in \mathcal{C}_i}^{}{d_k} - \sum_{u, v \in \mathcal{C}_i}^{}{A_{u, v}} \right] \right)} \\
+                      & = \sum_{i=1}^{K}{\frac{1}{\SetCard{\mathcal{C}_i}} \sum_{u \in \mathcal{C}_i, v\notin \mathcal{C}_i}^{}{A_{u,v}}}.
+                \end{aligned}
+            \end{equation}
+        Minimizing $L$ directly is usually intractable since it is an integer programming.
+        Instead, we use the following procedure to obtain an approximate solution~\cite{shalev2014understanding}:
+            \begin{enumerate}
+                \item Get the SVD of $\bm{L}$ and set $\bm{U} \in \R^{\ndata \times K}$ as the matrix whose columns are the $K$ eigenvectors corresponding to the $K$ \emph{smallest} eigenvalues of $\bm{L}$.
+                \item The $K$ clusters $\mathcal{C}_1,\ldots, \mathcal{C}_K$ are obtained by running a K-Means clustering on the rows of $\bm{U}$.
+            \end{enumerate}
+        
+        
+\subsection{K-Nearest Neighbor (KNN)}
+One thing worth noting about the KNN model is that the parameter $K$ is inversely related to the model complexity, i.e., 
+    \begin{itemize}
+        \item When $K$ is small, e.g., $K=1$, the model is complicated. So the bias is small; however, the variance will be large, that is, the prediction of a fixed instance varies a lot when the training data changes. 
+        \item When $K$ is large, the bias is large and the variance is small.
+    \end{itemize}
+
+
+\subsection{Decision Trees}
+    \subsubsection{Theoretical Background}
+    \begin{itemize}
+        \item A decision tree with $k$ leaves can shatter a set of $k$ instances; thus, if we allow for a tree with arbitrary size, overfitting is an issue.
+        \item We often use \emph{minimum description length} (MDL) to measure the complexity of a decision tree. Notice that before applying MDL, we need to have a countable hypothesis set $\mathcal{H}$ and some description language (e.g., binary strings) to describe the hypothesis in $\mathcal{H}$.
+        \item The generalization error $L_\mathcal{D}(h)$ of the decision tree $h$ satisfies the following:
+            \begin{equation}
+                L_\mathcal{D}(h) \le \underbrace{L_\mathcal{S}(h)}_{\text{empirical error}} + \sqrt{\frac{\SetCard{h} + \log(2/\delta)}{2m}},
+            \end{equation}
+        where $\SetCard{h}$ is the complexity of $h$.
+        Based on~\cite{shalev2014understanding}(page 251), a binary decision tree with $n$ nodes can be described by $(n+1)\log_2(\nfeat+2)$ bits, where $\nfeat$ is the feature dimension.
+        Thus, the second term on the right-hand side becomes:
+            \begin{equation}
+                \sqrt{\frac{\SetCard{h} + \log(2/\delta)}{2m}} = \sqrt{\frac{(n+1)\log_2(\nfeat+2) + \log(2/\delta)}{2m}}.
+            \end{equation}
+        \item A general learning framework to learn a decision tree is as follows:
+            \begin{equation}
+                h^\ast \in \argmin_{h \in \mathcal{H}} L_{\mathcal{D}}(h).
+            \end{equation}
+    \end{itemize}
+
+    \subsubsection{Algorithms}
+    \paragraph{ID3 Algorithm.} Some high-level description of the classic ID3 algorithm on a dataset with binary features is as follows.
+    The $\text{ID3}(\mathcal{X}, \mathcal{F})$ has two inputs: 1) the data $\mathcal{X}$ and 2) the features $\mathcal{F}$.
+    Intuitively, we pick a feature $j \in \mathcal{F}$ based on some gain measures; then, we split $\mathcal{X}$ into two subsets depending on whether $j$-th feature is one or zero; finally, we recursively run ID3 on each subset  with the new feature set $\mathcal{F} \setminus \SET{j}$, i.e., $\text{ID3}(\mathcal{X}_1, \mathcal{F} \setminus \SET{j})$ and $\text{ID3}(\mathcal{X}_0, \mathcal{F} \setminus \SET{j})$, where $\mathcal{X}_1 = \Set{\bm{x}}{x_j = 1}$ (similar definition applies for $\mathcal{X}_0$).
+    The C4.5 algorithm is similar to the ID3. 
+    Check out \cite{shalev2014understanding} page 253 for details. 
+
+    \paragraph{Regression Tree (or CART).} 
+    When features are of continuous values, a regression tree is different from a decision tree in two major ways:
+        \begin{itemize}
+            \item The way we split a node: suppose we split feature $j$ with threshold $\theta_j$.
+            Let $\mathcal{X}_l$ and $\mathcal{X}_r$ be the splitted subsets. 
+            The target value associated with a sample $i$ is represented by $y_i$.
+            The gain of this split is called \emph{variance reduction}:
+            $\text{Var}(y_i | i \in \mathcal{X}) - (\text{Var}(y_i | i \in \mathcal{X}_l) + \text{Var}(y_i | i \in \mathcal{X}_r))$; for example, $\text{Var}(y_i | i \in \mathcal{X}) = \frac{1}{\SetCard{\mathcal{X}}}\sum_{i \in \mathcal{X}}^{}{(y_i - \bar{y}_i)^2}$; intuitively, how much variance we can reduce by splitting at a particular feature.
+            \item The way we predict the target value of a testing sample: given a testing sample, the prediction is done by traversing the sample from the root down to a leaf.
+            The leaf corresponds to a subset of samples; thus, the prediction is the average of the samples' target values.
+            Check out the detailed implementations of decision trees: \url{https://github.com/ddbourgin/numpy-ml/blob/master/numpy_ml/trees/dt.py}.
+        \end{itemize}
+    
+    \paragraph{Random Forests (RF).} It is worth noting that RF is similar to Boosting Trees (BT) from a modeling perspective, i.e., they are both an ensemble of decision trees.
+    The difference is in the training method:
+        \begin{itemize}
+            \item Training BT is more complicated than training RF, which uses a framework called \emph{Forward Stagewise Additive Modeling}; see \ref{sec:boosting-trees} for details.
+            In addition, BT usually trains a single tree.
+            \item RF is trained by bootstrapping subsets from the original data and training a decision tree on every subset. 
+            The final output is the average of the decision trees.
+        \end{itemize}
+
+
+
+\subsection{Expectation-Maximization Algorithm (EM)}
+
+
+

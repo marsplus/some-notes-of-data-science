@@ -1,0 +1,137 @@
+\subsection{Common Activation Function}
+    \begin{itemize}
+        \item Sigmoid: it is rarely used in practice anymore because: 1) it is easily saturated at the left and right ends, which makes gradients zeros; 2) the output is not zero-centered (it is $0.5$ centered), which is undesirable.
+        \item Tanh: it is zero-centered, but the saturation issues still exist.
+        \item ReLU: it is popular nowadays. However, it could make some neurons ``dead'', i.e., not activated in most of the training process.
+        \item Some others including Leaky ReLU, Maxout, etc. See: \url{https://cs231n.github.io/neural-networks-1/#actfun}.
+    \end{itemize}
+
+
+
+\subsection{Variational Autoencoder (VAE)}
+Let $\bm{x}$ represent the input data and $\bm{z}$ the hidden values. 
+VAE can be interpreted from a Bayesian perspective as follows:
+    \begin{enumerate}
+        \item We sample a hidden vector $\bm{z}$ from its prior distribution, i.e., $\bm{z} \sim p_{\bm{\theta}}(\bm{z})$.
+        \item We generate a output $\bm{x}$ by sampling from the posterior distribution conditioned on the hidden vector from the previous step:  $\bm{x} \sim p_{\bm{\theta}}(\bm{x} | \bm{z})$.
+    \end{enumerate}
+With this two-step framework, a standard way to learn $\bm{\theta}$ is maximum likelihood estimation:
+    \begin{equation}
+        \bm{\theta}^\ast \in \argmax_{\bm{\theta}} \underbrace{ \int_{}^{}{p_{  \bm{\theta}}(\bm{x} | \bm{z}) p_{\bm{\theta}}(\bm{z})} d \bm{z} }_{\text{the likelihood of $\bm{x}$, i.e., $p_{\bm{\theta}}(\bm{x})$}}.
+    \end{equation}
+However, the integral is hard to evaluate as enumerating all $\bm{z}$ is difficult.
+Instead, the VAE paper does the following:
+    \begin{itemize}
+        \item The encoder: learn a distribution $q_{\bm{\phi}}(\bm{z} | \bm{x})$, which enables us to sample a hidden vector $\bm{z}$ given an input $\bm{x}$.
+        This is an application of \emph{variational inference}, i.e., using parameterized $q_{\bm{\phi}}(\bm{z} | \bm{x})$ to approximate the true posterior $p(\bm{z} | \bm{x})$.
+        \item The decoder: learn another distribution $p_{\bm{\theta}}(\bm{x} | \bm{z})$, which can be used to generate an output given the sampled hidden vector $\bm{z}$.
+    \end{itemize}
+The learning becomes maximizing the following:
+    \begin{equation}\label{vae:obj}
+        \log p_{\bm{\theta}}(\bm{x}) - D_\text{KL}(q_{\bm{\phi}}(\bm{z} | \bm{x}) || p_{\bm{\theta}}(\bm{z} | \bm{x})) = 
+        \underbrace{\E_{\bm{z} \sim q_{\bm{\phi}}(\bm{z} | \bm{x})}\left[ p_{\bm{\theta}}(\bm{x} | \bm{z}) \right]}_{(\ast)} - \underbrace{D_\text{KL}(q_{\bm{\phi}}(\bm{z} | \bm{x}) || p_{\bm{\theta}}(\bm{z}))}_{(\diamond)}.
+    \end{equation}
+The left-hand side is called Evidence Lower Bound (ELBO), as it is a lower bound of the log-likelihood of $\bm{x}$, i.e.,
+    \begin{equation}
+        \log p_{\bm{\theta}}(\bm{x}) - D_\text{KL}(q_{\bm{\phi}}(\bm{z} | \bm{x})  ||  p_{\bm{\theta}}(\bm{x} | \bm{z})) \le \log p_{\bm{\theta}}(\bm{x}).
+    \end{equation}
+
+\paragraph{How to optimize the ELBO?} VAE is actually a model with both hidden variables (i.e., $\bm{z}$) and learnable parameters (i.e., those parameters $\bm{\theta}, \bm{\phi}$, etc.). 
+A conventional approach to learn such a model is by using the famous EM algorithm. 
+However, with the \emph{reparameterization trick} and the power of automatic differentiation tools, we can use gradient descent methods to learn a VAE.
+A brief description of the optimization is as follows:
+    \begin{itemize}
+        \item To maximize $(\ast)$, we sample a set of hidden vectors $\bm{z}$ (the encoding part), which enables us to generate a set of vectors $\bm{x}^\prime$. We then minimize the $L_2$ distance between $\bm{x}$ and the sampled $\bm{x}^\prime$.
+        \item The minimization of $(\diamond)$ may have closed-form solution, as derived in the VAE paper.
+    \end{itemize}
+Check out this fantastic blog for more details: \url{https://lilianweng.github.io/lil-log/2018/08/12/from-autoencoder-to-beta-vae.html}.
+Another example implementation based on PyTorch is: \url{https://github.com/ethanluoyc/pytorch-vae/blob/master/vae.py}.
+
+\subsection{RNN, GRU and LSTM}
+This section is based on the excellent book: \url{https://d2l.ai/chapter_recurrent-neural-networks/bptt.html}.
+% Let us first consider a one-dimensional RNN encoded as follows:
+%     \begin{equation}
+%         \begin{aligned}
+%             h_t & = f(x_t, h_{t-1}, w_h) \\
+%             o_t & = g(h_t, w_o).
+%         \end{aligned}
+%     \end{equation}
+% The first equation models the ``hidden-to-hidden'' transition, where $x_t$ is the input data to the hidden layer and $w_h$ the parameter of the transition.
+% Notice that the parameter of the ``input-to-hidden'' transition is included into $w_h$ for now.
+% The second equation models the ``hidden-to-output'' transition.
+% The loss function evaluated on a $T$-step sequence is as follows:
+%     \begin{equation}
+%         L(x_1, \ldots, x_T, y_1, \ldots, y_T, w_h, w_o) = \frac{1}{T}\sum_{i=1}^{T}{\ell(y_t, o_t)}.
+%     \end{equation}
+% We need to compute two derivatives:
+%     \begin{equation}
+%         \begin{aligned}
+%             \frac{\partial L}{\partial w_o} & = \frac{1}{T}\sum_{i=1}^{T}{\frac{\partial \ell(y_t, o_t)}{\partial w_o}} = \frac{1}{T}\sum_{i=1}^{T}{\frac{\partial \ell(y_t, o_t)}{\partial o_t} \frac{\partial g(h_t, w_o)}{\partial w_o}} \\
+%             \frac{\partial L}{\partial w_h} & = \frac{1}{T}\sum_{i=1}^{T}{\frac{\partial \ell(y_t, o_t)}{\partial w_h}} = \frac{1}{T}\sum_{i=1}^{T}{\frac{\partial \ell(y_t, o_t)}{\partial o_t} \frac{\partial g(h_t, w_o)}{\partial h_t}} \frac{\partial h_t}{\partial w_h}.
+%         \end{aligned}
+%     \end{equation}
+% The first derivative is direct to compute. 
+% For the second derivative, the computation of $\frac{\partial h_t}{\partial w_h}$ is tricky, since it involves a recursive computation:
+%     \begin{equation}\label{rnn:simple-grad}
+%         \frac{\partial h_t}{\partial w_h} = \frac{\partial f(x_t, h_{t-1}, w_h)}{\partial w_h} + \frac{\partial f(x_t, h_{t-1}, w_h)}{\partial h_{t-1}} \frac{\partial h_{t-1}}{\partial w_h},
+%     \end{equation}
+% where $h_{t-1}$ depends on $w_h$ through its previous hidden state $h_{t-2}$.
+% We abstract the above recursive structure as three sequences $\SET{a_t}, \SET{b_t}, \SET{c_t}$, satisfying the following:
+%     \begin{equation}\label{rnn:simple-series}
+%         \begin{aligned}
+%             a_t & = b_t + c_t \cdot a_{t-1} \\
+%             a_0 & = 0,
+%         \end{aligned}
+%     \end{equation}
+% where $a_t = \frac{\partial h_t}{\partial w_h}$, $b_t =  \frac{\partial f(x_t, h_{t-1}, w_h)}{\partial w_h}$ and $c_t = \frac{\partial f(x_t, h_{t-1}, w_h)}{\partial h_{t-1}}$.
+% By setting $t=1$, the second term on the right-hand side of \eqref{rnn:simple-grad} should be zero, since there is no hidden state before $h_1$; this gives us the initial condition $a_0 = 0$.
+% For any $t \ge 1$ we expand \eqref{rnn:simple-series}, which leads to:
+%     \begin{equation}\label{rnn:key}
+%         a_t = b_t + \sum_{i=1}^{t-1}{ \left( \prod_{j=i+1}^{t}{c_j} \right) b_i }.
+%     \end{equation}
+% The above formulate will help us a lot when we actually compute the gradients of RNN.
+
+Consider a RNN with the following transitions:
+    \begin{equation}
+        \begin{aligned}
+            \bm{h}_t & = \bm{W}_{hx} \bm{x}_t + \bm{W}_{hh} \bm{h}_{t-1} \\
+            \bm{o}_t & = \bm{W}_{qh} \bm{h}_t.
+        \end{aligned}
+    \end{equation}
+The loss funciton is $L=\frac{1}{T}\sum_{i=1}^{T}{\ell(y_t, \bm{o}_t)}$.
+The tricky part is to compute $\frac{\partial L}{\partial \bm{h}_t}$.
+When $t=T$, this is easy:
+    \begin{equation}
+        \frac{\partial L}{\partial \bm{h}_T} = \text{prod}\left( \frac{\partial L}{\partial \bm{o}_T}, \frac{\partial \bm{o}_T}{\partial \bm{h}_T}  \right) = \bm{W}_{qh}^\top \frac{\partial L}{\partial \bm{o}_T},
+    \end{equation}
+where $\frac{\partial L}{\partial \bm{o}_T}$ is direct to compute. 
+When $t < T$, the loss $L$ depends on $\bm{h}_t$ and $\bm{h}_{t+1}$ (and recursively $\bm{h}_{t+2}$, etc.):
+    \begin{equation}\label{rnn-grad}
+        \begin{aligned}
+            \frac{\partial L}{\partial \bm{h}_t} & = \text{prod}\left( \frac{\partial L}{\partial \bm{h}_{t+1}}, \frac{\partial \bm{h}_{t+1}}{\partial  \bm{h}_{t}} \right) + \text{prod}\left( \frac{\partial L}{\partial \bm{o}_t} , \frac{\partial \bm{o}_t}{\partial \bm{h}_t} \right) \\
+            & = \bm{W}_{hh}^\top \frac{\partial L}{\partial \bm{h}_{t+1}} + \bm{W}_{qh}^\top \frac{\partial L}{\partial \bm{o}_t} \\
+            & = \bm{W}_{hh}^\top\left( \bm{W}_{hh}^\top \frac{\partial L}{\partial \bm{h}_{t+2}} +  \bm{W}_{qh}^\top \frac{\partial L}{\partial \bm{o}_{t+1}} \right) + \bm{W}_{qh}^\top \frac{\partial L}{\partial \bm{o}_t} \\
+            & = \bm{W}_{hh}^\top \bm{W}_{hh}^\top \left( \bm{W}_{hh}^\top \frac{\partial L}{\partial \bm{h}_{t+3}} +  \bm{W}_{qh}^\top \frac{\partial L}{\partial \bm{o}_{t+2}}\right) + \bm{W}_{hh}^\top \bm{W}_{qh}^\top \frac{\partial L}{\partial \bm{o}_{t+1}}  + \bm{W}_{qh}^\top \frac{\partial L}{\partial \bm{o}_t} \\
+            & = \left( \bm{W}_{hh}^\top \right)^{T-t} \bm{W}_{qh}^\top \frac{\partial L}{\partial \bm{o}_T} + \left( \bm{W}_{hh}^\top \right)^{T-t-1}\bm{W}_{qh}^\top \frac{\partial L}{\partial \bm{o}_{T-1}} +, \ldots, + \left( \bm{W}_{hh}^\top \right)^{T-T} \bm{W}_{qh}^\top \frac{\partial L}{\partial \bm{o}_t} \\
+            & = \sum_{i=t}^{T}{\left( \bm{W}_{hh}^\top \right)^{T-i} \bm{W}_{qh}^\top  } \left( \frac{\partial L}{\partial \bm{o}_{T+t-i} } \right).
+        \end{aligned}
+    \end{equation}
+The so-called ``gradient explosion'' and ``gradient vanishing'' are clear from the last step of \eqref{rnn-grad}:
+    \begin{itemize}
+        \item Gradient explosion: $\left(\bm{W}_{hh}^\top \right)^{T-i}$ will become 
+        very large when some eigenvalues of $\bm{W}_{hh}$ have absolute values greater than one, which makes $\frac{\partial L}{\partial \bm{h}_t}$ very large.
+        \item Gradient vanishing: $\left(\bm{W}_{hh}^\top \right)^{T-i}$ will become very small when some eigenvalues of $\bm{W}_{hh}$ have absolute values less than one, which makes $\frac{\partial L}{\partial \bm{h}_t}$ very small.
+    \end{itemize}
+    
+\subsubsection{GRU}
+    Gated Recurrent Units (GRU) are designed to 1) capture long- and short-term dependencies and 2) mitigate gradient explosion/vanishing.
+    \begin{itemize}
+        \item Reset gates: used to reset the hidden states in order to capture short-term dependencies by forgetting long-term dependencies.
+        \item Update gates: used to maintain long-term dependencies by deciding whether to update the hidden states; in the extreme case, the hidden states can keep unchanged throughout the whole sequence.
+    \end{itemize}
+    
+\subsubsection{LSTM}
+    LSTM was designed to solve similar issues as that of GRU.
+    There are three gates in a LSTM: input gates, output gates and forget gates. 
+    There is also a cell to store information called memory cells.
+    Check out this tutorial: \url{https://d2l.ai/chapter_recurrent-modern/lstm.html}.

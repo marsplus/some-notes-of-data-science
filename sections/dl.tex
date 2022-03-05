@@ -7,6 +7,104 @@
     \end{itemize}
 
 
+\subsection{Optimization in Deep Learning}
+    \subsubsection{Local Minimum/Maximum and Saddle Points}
+    Let the loss function at a point $\bm{x}$ be $L(\bm{x})$.
+    Suppose $\bm{x}$ is the a point where the gradients become zeros, i.e., $\nabla_{\bm{x}}L(\bm{x}) = \bm{0}$.
+    We can determine whether $\bm{x}$ is a local minimum/maximum from the Hessian matrix $\bm{H}$:
+        \begin{itemize}
+            \item If all eigenvalues of $\bm{H}$ are positive, then $\bm{x}$ is a local minimum.
+            \item If all eigenvalues of $\bm{H}$ are negative, then $\bm{x}$ is a local maximum.
+            \item If the eigenvalues of $\bm{H}$ include both positives and negatives, then $\bm{x}$ is a saddle point.
+        \end{itemize}
+        
+    \subsubsection{Gradient Descent (GD) in One-dimensional Case}
+    Consider a one-dimensional function: $f(x): \R \rightarrow \R$.
+    Do a first-order Taylor expansion of $f(x + \epsilon)$ at $x$ gives us:
+        \begin{equation}
+                f(x + \epsilon) \approx f(x) + \epsilon f'(x) + O(\epsilon^2).
+        \end{equation}
+    We want to choose $\epsilon$ such that the value of $f(x + \epsilon)$ is decreased compared with the value of $f(x)$.
+    A natural choice is $\epsilon = -\eta f'(x)$.
+    The right-hand side becomes $f(x) - \eta (f'(x))^2 + O(\epsilon^2)$: when $\epsilon$ is not too large such that $O(\epsilon^2)$ is not significant, we have:
+        \begin{equation}
+            f(x - \eta f'(x)) \approx f(x) - \eta (f'(x))^2 \le f(x).
+        \end{equation}
+    This justifies the choice of setting $\epsilon$ to the negative of the first-order derivative.
+    Notice that the value of the learning rate $\eta$ is important.
+    If $\eta$ is too large and the second-order term $O(\epsilon^2)$ becomes significant, moving toward the direction $-\eta f'(x)$ may not decrease the function value.
+    
+    \subsubsection{Newton's Method}\label{newton-method}
+        Consider a function $f(\bm{x}): \R^\nfeat \rightarrow \R$.
+        We do a second-order Taylor expansion of $f(\bm{x} + \bm{\epsilon})$ at $f(\bm{x})$ as follows:
+            \begin{equation}
+                f(\bm{x} + \bm{\epsilon}) \approx f(\bm{x}) + \bm{\epsilon}^{\top} \nabla f(\bm{x}) + \frac{1}{2} \bm{\epsilon}^\top \nabla^2 f(\bm{x}) \bm{\epsilon}.
+            \end{equation}
+        When at a minimum, we have $\nabla_{\bm{\epsilon}} f(\bm{x}+\bm{\epsilon}) = \bm{0}$; otherwise, there must be a direction $\bm{\epsilon}'$ where we can further minimize the function.
+        Substituting into the Taylor expansion leads to 
+            \begin{equation}
+                \nabla_{\bm{\epsilon}}\left[ f(\bm{x}) + \bm{\epsilon}^{\top} \nabla f(\bm{x}) + \frac{1}{2} \bm{\epsilon}^\top \nabla^2 f(\bm{x}) \bm{\epsilon}\right] = \bm{0} \implies \bm{\epsilon} = -\bm{H}^{-1} \nabla f(\bm{x}).
+            \end{equation}
+        As a result, the update rule in Newton's method is as follows:
+            \begin{equation}
+                \bm{x} \leftarrow \bm{x} - \eta \bm{H}^{-1} \nabla f(\bm{x}),
+            \end{equation}
+        which shows how the Hessian matrix comes into play.
+    
+    
+    
+    \subsubsection{GD, SGD, and Mini-Batch SGD}
+        The loss function is $L = \frac{1}{\ndata}\sum_{i=1}^{\ndata}{f(\bm{x}_i)}$.
+        \begin{itemize}
+            \item GD: compute the gradients over the entire dataset, i.e., $\nabla L = \sum_{i=1}^{\ndata}{\nabla f(\bm{x}_i)}$, which costs $O(\ndata)$ and might be too expensive when \ndata is large.
+            \item SGD: randomly pick an index $i \in \SET{1, \ldots, \ndata}$ and compute $\nabla f(\bm{x}_i)$. This costs $O(1)$ but may oscillate a lot.
+            \item Mini-batch SGD: instead of picking a single index, mini-batch SGD picks a subset $\mathcal{M} \subseteq \SET{1, \ldots, \ndata}$ uniformly at random and then computes $\sum_{i \in \mathcal{M}}^{}{\nabla f(\bm{i})}$.
+            There are two benefits of mini-batch SGD: 1) it is more computationally efficient than both GD and SGD; 2) it reduces variance by averaging the gradients over a mini-batch.
+        \end{itemize}
+        
+    \subsubsection{Common Optimizers in DL}
+        \begin{itemize}
+            \item Momentum: the key idea is to leverage historical gradients. Let $\bm{g}_t$ be the gradient at step $t$:
+                \begin{equation}
+                    \begin{aligned}
+                        \bm{v}_t & = \beta  \bm{v}_{t-1} + \bm{g}_t \text{ (recursively taking past gradients into account)}\\
+                        \bm{\theta}_t & = \bm{\theta}_{t-1} - \eta_t \bm{v}_t,
+                    \end{aligned}
+                \end{equation}
+            where $\beta \in (0, 1)$. By tuning the value of $\beta$, we can take either long- or short-range gradients into account.
+            \item Adagrad: recall from Section~\ref{newton-method} that the inverse of the Hessian matrix is used to precondition the gradients. 
+            However, computing the Hessian and its inverse is prohibitively expensive. 
+            Adagrad uses the following updating rule:
+                \begin{equation}
+                    \begin{aligned}
+                        \bm{s}_t & = \bm{s}_{t-1} + \bm{g}_t^2  \text{ ($\bm{s}_t$ keeps track of the variance of the gradients)}\\
+                        \bm{\theta}_t & = \bm{\theta}_{t-1} - \frac{\eta}{\sqrt{\bm{s}_t + \bm{\epsilon}}} \odot \bm{g}_t,
+                    \end{aligned}
+                \end{equation}
+            where $\bm{g}_t^2$ is element-wise squares and $\bm{\epsilon} > \bm{0}$ ensures we do not divide by zeros.
+            The intuition is that we can use the variance of the gradients as a cheap proxy for the scale of the Hessian. 
+            \item RMSProp: the $\bm{s}_t$ in Adagrad may grow very large. A simple fix of RMSProp is as follows with $\gamma \in (0, 1)$:
+                \begin{equation}
+                    \begin{aligned}
+                        \bm{s}_t & = \gamma \bm{s}_{t-1} + (1 - \gamma) \bm{g}_t^2  \\
+                        \bm{\theta}_t & = \bm{\theta}_{t-1} - \frac{\eta}{\sqrt{\bm{s}_t + \bm{\epsilon}}} \odot \bm{g}_t.
+                    \end{aligned}
+                \end{equation}
+            Another benefit of RMSProp is that the learning rate $\eta$ is decoupled from the scaling of $\bm{g}_t$.
+            \item Adam: the key idea is to keep track of both the momentum and the second-order moments of the gradients.
+            The updating rule of Adam is as follows:
+                \begin{equation}
+                    \begin{aligned}
+                        \bm{v}_t & = \beta_1 \bm{v}_{t-1} + (1 - \beta_1) \bm{g}_{t} \text{ (keep track of momentum)} \\
+                        \bm{s}_t & = \beta_2 \bm{s}_{t-1} + (1-\beta_2) \bm{g}_t^2 \text{ (keep track of second-order moments)} \\
+                        \hat{\bm{v}}_t & = \frac{\bm{v}_t}{1 - \beta_1^t}, \hat{\bm{s}}_t = \frac{\bm{s}_t}{1 - \beta_2^t} \text{ (re-normalization)} \\
+                        \bm{\theta}_t & = \bm{\theta}_{t-1}  - \eta \frac{\hat{\bm{v}}_t}{\sqrt{\hat{\bm{s}}_t} +\bm{\epsilon}}.
+                    \end{aligned}
+                \end{equation}
+        \end{itemize}
+        
+    
+
 
 \subsection{Variational Autoencoder (VAE)}
 Let $\bm{x}$ represent the input data and $\bm{z}$ the hidden values. 
@@ -41,8 +139,8 @@ A conventional approach to learn such a model is by using the famous EM algorith
 However, with the \emph{reparameterization trick} and the power of automatic differentiation tools, we can use gradient descent methods to learn a VAE.
 A brief description of the optimization is as follows:
     \begin{itemize}
-        \item To maximize $(\ast)$, we sample a set of hidden vectors $\bm{z}$ (the encoding part), which enables us to generate a set of vectors $\bm{x}^\prime$. We then minimize the $L_2$ distance between $\bm{x}$ and the sampled $\bm{x}^\prime$.
-        \item The minimization of $(\diamond)$ may have closed-form solution, as derived in the VAE paper.
+        \item To maximize $(\ast)$, we sample a set of hidden vectors $\bm{z}$ (the encoding part), which enables us to generate a set of vectors $\bm{x}^\prime$ through the decoder. We then minimize the $L_2$ distance between $\bm{x}$ and the sampled $\bm{x}^\prime$.
+        \item The minimization of $(\diamond)$ may have closed-form solution; one example is given  in the VAE paper.
     \end{itemize}
 Check out this fantastic blog for more details: \url{https://lilianweng.github.io/lil-log/2018/08/12/from-autoencoder-to-beta-vae.html}.
 Another example implementation based on PyTorch is: \url{https://github.com/ethanluoyc/pytorch-vae/blob/master/vae.py}.
@@ -116,11 +214,13 @@ When $t < T$, the loss $L$ depends on $\bm{h}_t$ and $\bm{h}_{t+1}$ (and recursi
             & = \sum_{i=t}^{T}{\left( \bm{W}_{hh}^\top \right)^{T-i} \bm{W}_{qh}^\top  } \left( \frac{\partial L}{\partial \bm{o}_{T+t-i} } \right).
         \end{aligned}
     \end{equation}
-The so-called ``gradient explosion'' and ``gradient vanishing'' are clear from the last step of \eqref{rnn-grad}:
+The so-called ``gradient explosion'' and ``gradient vanishing'' manifest themselves from the last step of \eqref{rnn-grad}.
+They result from repeated multiplications of $\bm{W}_{hh}$:
     \begin{itemize}
         \item Gradient explosion: $\left(\bm{W}_{hh}^\top \right)^{T-i}$ will become 
         very large when some eigenvalues of $\bm{W}_{hh}$ have absolute values greater than one, which makes $\frac{\partial L}{\partial \bm{h}_t}$ very large.
         \item Gradient vanishing: $\left(\bm{W}_{hh}^\top \right)^{T-i}$ will become very small when some eigenvalues of $\bm{W}_{hh}$ have absolute values less than one, which makes $\frac{\partial L}{\partial \bm{h}_t}$ very small.
+        \item How to mitigate gradient explosion/vanishing: 1) gradient clipping, i.e., in each iteration projecting the gradients back to a $L_2$ norm ball; 2) detach the gradients after a fixed number of time steps.
     \end{itemize}
     
 \subsubsection{GRU}
@@ -135,3 +235,71 @@ The so-called ``gradient explosion'' and ``gradient vanishing'' are clear from t
     There are three gates in a LSTM: input gates, output gates and forget gates. 
     There is also a cell to store information called memory cells.
     Check out this tutorial: \url{https://d2l.ai/chapter_recurrent-modern/lstm.html}.
+    
+    
+\subsection{Deepwalk and Node2vec}
+    Deepwalk and Node2vec are unsupervised methods to learn node embedding.
+    Suppose we have a graph $G=(V, E)$ with $\ndata$ nodes.
+    We would like to learn an embedding $\bm{z}_i \in \R^\nfeat$ for each node $i$, such that $\bm{z}^{\top}_i \bm{z}_j$ is large when $i$ and $j$ are connected.
+    Let $f(i): V \rightarrow \R^\nfeat$ be the function mapping a node to its embedding.
+    We represent the neighborhood (not necessarily 1-hop neighbors) of a node $i$ by $\mathcal{N}_{s}(i)$, where $s$ is the  strategy that we use to generate the neighborhood (e.g., random walk).
+    Deepwalk and Node2vec solve the following maximum likelihood estimation:
+        \begin{equation}
+            \max_{f} \sum_{i=1}^{\ndata}{ \log p\left(\mathcal{N}_s(i) | f(i) \right)} \approx \sum_{i=1}^{\ndata}{ \sum_{j \in \mathcal{N}_s(i)}^{}{\log p(j | f(i))} },
+        \end{equation}
+    where the approximation utilizes the conditional independence assumption.
+    The probability $p(j | f(i))$ is usually parameterized as follows:
+        \begin{equation}
+            p(j | f(i)) = \frac{\EXP{\bm{z}_j^\top \bm{z}_i}}{\sum_{k\in V}^{}{\EXP{\bm{z}_k^\top \bm{z}_i}}}.
+        \end{equation}
+    Intuitively, if nodes $j$ frequently occur in random walks started from $i$, the two nodes should be similar in some sense with each other; the softmax is used to capture the similarity.
+    Computing the softmax above is very expensive due to the summation in the denominator.
+    One solution is to utilize the idea of \emph{negative sampling} to do approximation:
+        \begin{equation}
+            \log \frac{\EXP{\bm{z}_j^\top \bm{z}_i}}{\sum_{k\in V}^{}{\EXP{\bm{z}_k^\top \bm{z}_i}}} \approx \log\left( \sigma(\bm{z}_j^\top \bm{z}_i) \right)  - \sum_{k\in \mathcal{M}}^{}{\log\left( \sigma(\bm{z}_k^\top \bm{z}_i) \right)},
+        \end{equation}
+    where $\sigma(\cdot)$ is the sigmoid function.
+    The set $\mathcal{M}$ is a small subset of nodes sampled from the graph with probability proportional to nodes' degrees. 
+    
+    
+    \subsection{GNN}
+        Two key operations in a GNN are:
+        \begin{itemize}
+            \item Message passing: a node $u$ generates some messages from its embedding, i.e., $\bm{m}_u^{(l)} = \text{MSG}^{(l)}(\bm{h}_u^{(l-1)})$. The operation $\text{MSG}^{(l)}$ can be as simple as matrix multiplication, e.g., $\bm{W}^{(l)} \cdot \bm{h}^{(l-1)}_u$.
+            \item Aggregation: a node $v$ generates its embedding at layer $l$ by aggregating the messages from its neighbors, i.e., $\bm{h}_v^{(l)} = \text{AGG}^{(l)}\left( \Set{\bm{m}_u^{(l)} }{u \in \mathcal{N}_v} \right)$.
+        \end{itemize}
+        
+        \paragraph{Over-smoothing.} The embedding of a node depends on a concept called \emph{receptive field}, which is the set of nodes where messages are aggregated (e.g., the $k$-hop neighborhood).
+        Intuitively, over-smoothing means that the receptive fields of each node are highly overlapped with each other, such that the nodes' embeddings are converging to the same values.
+        Over-smoothing can result from stacking too many layers of GNN.
+        Some solutions include:
+            \begin{itemize}
+                \item Limit the number of layers; a good strategy to estimate the number of layers needed is to compute the diameter of the graph.
+                \item Increase the expressive power, e.g., adding some MLP layers before/after the GNN, or resorting to some attention mechanisms.
+                \item Add skip connections.
+            \end{itemize}
+            
+            
+\subsection{Dropout}
+    Intuitively, we zero out some neurons during training with probability $p$.
+    However, we need to adjust the outputs of the remained neurons such that their expectations do not change.
+    For any neuron $h$, the adjusted output is as follows:
+        \begin{equation}
+            h' = \begin{cases}
+                    0, & \text{with prob. $p$} \\
+                    \frac{h}{1-p}, & \text{with prob. $1-p$}.
+                 \end{cases}
+        \end{equation}
+    As a result, the expected output is $\EXP{h'} = h$, which is the same as if there were no dropout.
+    When testing we do not zero out any neuron and the forward pass is the same as usual.
+    
+\subsection{Batch Normalization (BN)}
+    BN is used to center and re-scale the inputs to each layer based on statistics computed from mini-batches, which may speed-up the convergence.
+    Formally, BN is the following operations:
+        \begin{equation}
+            \text{BN}(\bm{x}) = \bm{\gamma} \odot \frac{\bm{x} - \hat{\bm{\mu}} }{\hat{\bm{\sigma}}} + \bm{\beta},
+        \end{equation}
+    where $\hat{\bm{\mu}}$ and $\hat{\bm{\sigma}}$ are sample mean and standard deviation estimated from the mini-batch.
+    Notice that when training the mean and standard deviation of BN are computed from mini-batches, however, when testing those statistics are computed from the entire dataset.
+        
+    

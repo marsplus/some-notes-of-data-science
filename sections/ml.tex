@@ -14,7 +14,7 @@ In this section, we focus on two discrete distributions $p$ and $q$ , defined on
             \begin{equation*}
                H(p, q) = H(p) + D_\text{KL}(p || q) =  -\sum_{i \in \mathcal{X}}^{}{p(i) \log p(i)} + \sum_{i \in \mathcal{X}}^{}{p(i) \log \frac{p(i)}{q(i)}} =  -\sum_{i \in \mathcal{X}}^{}{p(i) \log q(i)}.
             \end{equation*}
-        \item Information gain from $q$ to $p$: $H(q) - H(p)$. 
+        \item Information gain from $q$ to $p$: $H(q) - H(p)$.
         \item Mean squared error: $\frac{1}{\ndata}\sum_{i=1}^{\ndata}{(y_i - \hat{y}_i)^2}$.
         \item Upper-bounds on 0-1 loss:
             \begin{itemize}
@@ -25,12 +25,20 @@ In this section, we focus on two discrete distributions $p$ and $q$ , defined on
     \end{itemize}
     
 
+\subsection{Common Data Preprocessing}
+    \begin{itemize}
+        \item Standardization: subtract the mean and divided by the standard deviation. 
+        \item Whitening: do a PCA and then project the data to the principal components, which removes correlation between features. 
+    \end{itemize}
+    
+
 
 \subsection{Bias-Complexity Tradeoff}
 One fundamental reason that the so-called ``bias-complexity'' tradeoff arises is the No-Free-Lunch theorem; see Theorem 5.1 at \cite{shalev2014understanding} for the formal statement and proof.
 Intuitively, the No-Free-Lunch theorem shows that we can't find a predictor that is good at every learning task. 
 As a result, we need to encode some prior knowledge about the underlying task (i.e., the distribution over the input domain $\mathcal{X} \times \mathcal{Y}$) into the learning process.
 One way to encode the knowledge is choosing a particular hypothesis set $\mathcal{H}$ to work with, e.g., $\mathcal{H}$ can be the set of linear predictors.
+However, encoding our prior is also the root of bias.
 
 The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $L(h)$, which (informally) consists of two terms:
     \begin{equation}
@@ -45,7 +53,7 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
             L_\text{est} \approx \underbrace{L_{\mathcal{S}}(h)}_{\text{training error on $\mathcal{S}$}} + f(\text{model and sample complexity}).
         \end{equation}
     Thus, a complicated model with have high model complexity, which makes $f(\cdot)$ large.
-    In addition, a complicated model tends to overfit to the training set; as a result, the training error $L_\mathcal{S}(h)$ will change a lot for different $\mathcal{S}$ --- this refers to the ``variance'' in the famous Bias-Variance tradeoff.
+    In addition, a complicated model tends to overfit to the training set; as a result, the training error $L_\mathcal{S}(h)$ will change a lot for different training data--- this refers to the ``variance'' in the famous Bias-Variance tradeoff.
     
     \item How the Bias-Variance tradeoff arises
         \begin{equation}
@@ -55,6 +63,9 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
             \end{aligned}
         \end{equation}
 \end{itemize}
+
+    \subsubsection{A Derivation of Bias-Variance Trade-off}
+        Check out this lecture: \url{https://www.cs.cornell.edu/courses/cs4780/2018fa/lectures/lecturenote12.html}.
 
 
 \subsection{Cross-Validation}
@@ -68,18 +79,21 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
     The quizzes here are instructive: \url{https://developers.google.com/machine-learning/crash-course/classification/check-your-understanding-accuracy-precision-recall}.
     \begin{itemize}
         \item Precision: $\frac{TP}{TP + FP}$; what proportion of identified positives was actually positives?
+        \item Top-k Precision: this is usually used in fraud/anomaly detection. Specifically, the predictive model gives a list of $k$ suspicious entries.
+        Then, $\text{top-k precision} = \frac{\text{TP out of the $k$ entries}}{k}$.
         \item Recall: $\frac{TP}{TP + FN}$; what proportion of true positives that was correctly identified?
         \item F1 score: $\left( \frac{\text{Precision}^{-1} + \text{Recall}^{-1}}{2} \right)^{-1}$; a measure to consider both precision and recall.
         \item ROC curve: evaluating a binary classification model at different thresholds and plotting the false positive rates (as x-axis) against the true positive rates (as y-axis).
         \item AUC: the area under the ROC curve. Intuitively, AUC gives us the probability that the model ranks a random positive example higher than a random negative example.
             \begin{enumerate}
                 \item AUC is scale-invariant: it does not depend on the actual magnitudes of the output; in other words, only the ranking of the outputs matter.
-                \item AUC measures the quality of the prediction irrespective of what threshold is choose: this may not be desirable if we have different costs for false positives and false negative (e.g., spam detection).
+                \item AUC measures the quality of the prediction irrespective of what threshold is chosen: this may not be desirable if we have different costs for false positives and false negative (e.g., spam detection).
             \end{enumerate}
     \end{itemize}
+    
 
 
-\subsubsection{MLE and MAP}
+\subsection{MLE and MAP}
     \begin{itemize}
         \item The optimization problem of MLE: $\bm{\theta}^\ast \in  \argmin_{\bm{\theta}} p(\mathcal{S} | \bm{\theta})$, where $p(\mathcal{S}| \bm{\theta})$ is the likelihood of data $\mathcal{S}$.
         \item The optimization problem of MAP: $\bm{\theta}^\ast \in  \argmin_{\bm{\theta}} p(\bm{\theta} | \mathcal{S})$, where $p(\bm{\theta} | \mathcal{S}) \propto p(\bm{\theta})p(\mathcal{S} | \bm{\theta})$.
@@ -88,7 +102,15 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
     
 
 \subsection{Overfitting}
-
+    Intuitively, overfitting means that a model has low error on training set but poor performance when testing on unseen data.
+    Cross-validation is a good tool to assess a model's generalization ability and detect overfitting.
+    The following are commonly used methods to combat overfitting:
+        \begin{itemize}
+            \item Get more data.
+            \item Regularization $ \rightarrow $ reducing model complexity $ \rightarrow $ reducing variance $ \rightarrow $ reducing overfitting.
+            \item Ensemble methods: random forests, bagging, etc.
+            \item Feature selection $ \rightarrow $ reducing model complexity.
+        \end{itemize}
 
 
 
@@ -107,7 +129,7 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
             \begin{equation}
                 \bm{X}^\top \bm{X} = \left( \bm{U}\bm{D}\bm{V}^\top \right)^\top \left( \bm{U}\bm{D}\bm{V}^\top \right) = \bm{V} \bm{D}^2 \bm{V}^\top,
             \end{equation}
-        where $\bm{V}^{-1} = \bm{V}^\top$. The diagonal entries of $\bm{D}^2$ are ranked in descending order w.r.t. the magnitudes.
+        where $\bm{V}^{-1} = \bm{V}^\top$. The diagonal entries of $\bm{D}^2$ are ranked in descending order.
         \item The first principal component is $\bm{z}_1 = \bm{X} \bm{v}_1$, i.e., the projection of the data matrix to the first column vector of $\bm{V}$; $\bm{z}_1$ is also the direction with the maximum sample variance.
         
         \item Notice that $\bm{X} \bm{v}_1 = d_1 \bm{u}_1$ (since $\bm{X} \bm{v}_1 = \bm{U} \bm{D} \bm{V}^\top \bm{v}_1$...), where $d_1$ is the first diagonal entry of $\bm{D}$ and $\bm{u}_1$ the first column vector of $\bm{U}$; thus, the first principal component is parallel to $\bm{u}_1$.
@@ -254,12 +276,12 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
                 \min_{(\bm{x}, y) \in \mathcal{S}} \Abs{\bm{w}^\top \bm{x} + b} = 1.
             \end{equation}
         
-        The margin $\rho$ of an SVM is defined as the smallest distance of a data point to the separating hyperplane, i.e., 
+        The margin $\rho$ of an SVM is defined as the smallest distance of any data point to the separating hyperplane, i.e., 
             \begin{equation}
                 \rho = \min_{(\bm{x}, y) \in \mathcal{S}} \frac{\Abs{\bm{w}^\top \bm{x} + b}}{\norm{\bm{w}}} = \frac{1}{\norm{\bm{w}}}.
             \end{equation}
-        Recall that one motivation of SVM is to find the separating hyperplane with the largest margin; intuitively, such a hyperplane provides the largest cushion.
-        Thus, the optimization problem of the SVM is as follows:
+        One motivation of SVM is to find the separating hyperplane with the largest margin; intuitively, such a hyperplane provides the largest cushion/protection.
+        Thus, the optimization problem of the SVM is formulated below:
             \begin{equation}
                 \begin{aligned}
                     & \min_{\bm{w}, b} & & \frac{1}{2}\norm{\bm{w}}^2 \\
@@ -267,7 +289,7 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
                 \end{aligned}
             \end{equation}
         where the constraints ensure that every sample is correctly classified.
-        The Lagrange function of the above optimization is:
+        The Lagrange function of the above optimization is as follows where $\alpha_i \ge 0$:
             \begin{equation}
                 L(\bm{w}, b, \bm{\alpha}) = \frac{1}{2}\norm{\bm{w}}^2 - \sum_{i=1}^{\ndata}{\alpha_i \left[ y_i \cdot (\bm{w}^\top \bm{x}_i + b) - 1\right]}.
             \end{equation}
@@ -282,24 +304,25 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
         Several things from the KKT conditions:
             \begin{itemize}
                 \item From the first condition: the weight vector $\bm{w}$ is a linear combination of $\bm{x}_i$; however, only those $\bm{x}_i$ with $\alpha_i \ne 0$ contribute to the combination.
-                \item From the third condition: for those data such that $\alpha_i \ne 0$, we know $\Abs{\bm{w}^\top \bm{x} + b} = 1$, i.e., they are on the marginal hyperplanes. These data are called the \emph{support vectors}, which completely decide the solution $(\bm{w}, b)$.
+                \item From the third condition: for those data such that $\alpha_i \ne 0$, we know $\Abs{\bm{w}^\top \bm{x} + b} = 1$, i.e., they are on the marginal hyperplanes.
+                These data are called the \emph{support vectors}, which completely decide the solution $(\bm{w}, b)$.
             \end{itemize}
         The dual of the original optimization problem is as follows:
             \begin{equation}
                 \begin{aligned}
-                    & \max_{\bm{\alpha}} & & \sum_{i=1}^{\ndata}{\alpha_i} - \frac{1}{2}\sum_{i,j=1}^{\ndata}{\alpha_i \alpha_j y_i y_j \bm{x}_i^\top \bm{x}_j} \\
+                    & \max_{\bm{\alpha}} & & \sum_{i=1}^{\ndata}{\alpha_i} - \frac{1}{2}\sum_{i,j=1}^{\ndata}{\alpha_i \alpha_j y_i y_j (\bm{x}_i^\top \bm{x}_j) } \\
                     & s.t. & & \alpha_i \ge 0, \sum_{i=1}^{\ndata}{\alpha_i y_i} = 0.
                 \end{aligned}
             \end{equation}
         We know that the support vectors are on the marginal hyperplanes, which are parallel to the separating hyperplane $(\bm{w}, b)$.
-        Thus, for the support vectors we have $\bm{w}^\top \bm{x}_i + b = y_i$.
-        As a result, we have $b = y_i - \sum_{j=1}^{\ndata}{\alpha_i y_i (\bm{x}_j^\top \bm{x}_i) }$.
+        Thus, for any support vector $\bm{x}_i$ we have $\bm{w}^\top \bm{x}_i + b = y_i$.
+        It follows that $b = y_i - \sum_{j=1}^{\ndata}{\alpha_i y_i (\bm{x}_j^\top \bm{x}_i) }$.
     
     
 \subsection{Boosting}
 The intuition behind boosting is to generate a strong classifier (the one with small generalization error) by combining a bunch of weak classifiers. 
-A typical algorithm of boosting is called AdabBoost; it typically consists of $T$ iterations of boosting, where a weak classifier is picked in each iteration; finally, the $T$ weak classifiers are combined in a way that a strong classifier is generated. 
-The pseudocode of AdaBoost is displayed in Algorithm~\ref{adaboost:algo}, which is extracted from~\cite{mohri2018foundations}.
+A typical algorithm of boosting is called AdabBoost; it typically consists of $T$ iterations of boosting, where a weak classifier is picked in each iteration; finally, the $T$ weak classifiers are combined in a way that a strong classifier (with small error) is generated. 
+The pseudocode of AdaBoost is displayed in Algorithm~\ref{adaboost:algo}~\cite{mohri2018foundations}.
 
 \begin{algorithm}[ht]
 \caption{Pseudocode for AdaBoost}\label{adaboost:algo}
@@ -317,7 +340,7 @@ The pseudocode of AdaBoost is displayed in Algorithm~\ref{adaboost:algo}, which 
     \EndFor
 \EndFor
 \State $g = \sum_{t=1}^{T}{\alpha_t h_t}$ \Comment{generate a strong classifier by combining weak learners}
-\State return $h=\text{sign}(g)$
+\State return $h=\Sign{g}$
 \end{algorithmic}
 \end{algorithm}
 
@@ -331,19 +354,19 @@ There are several key questions:
 
     \subsubsection{Boosting Trees (BT)}\label{sec:boosting-trees}
         BT is a boosting framework where the weak learners are either classification or regression trees.
-        BT is based on the \emph{Forward Stagewise Additive Modeling} described in~\cite{hastie2009elements} (p342), which is a good framework to unify both classification trees (e.g., AdaBoost) and regression trees (e.g., boosting trees with real-valued output).
+        BT is based on the \emph{Forward Stagewise Additive Modeling} described in~\cite{hastie2009elements} (p.342), which is a great framework to unify both classification trees (e.g., AdaBoost) and regression trees (e.g., boosting trees with real-valued output).
         The framework is to find a linear combination of a set of $K$ learners such that some loss is minimized, i.e., 
             \begin{equation}
                 \min_{\SET{\theta_i}_{i=1}^{K}, \SET{\beta_i}_{i=1}^{K} } \sum_{i=1}^{\ndata}{L\left( y_i, \sum_{j=1}^{K}{\beta_j f(\bm{x}_i; \theta_j)} \right)},
             \end{equation}
         where $\SET{\theta_i}_{i=1}^{K}$ are model parameters for the learners and $\SET{\beta_i}_{i=1}^{K}$ are the weights to combine them together.
-        It is usually hard to solve the optimization above; instead, an iterative greedy approach is used, where each iteration learns a single learner and the weight associated with it, i.e., 
+        It is usually hard to solve the optimization above; instead, an iterative greedy approach is used, where each iteration learns both a single learner and the weight associated with it, i.e., 
             \begin{equation}\label{eq:forward-stagewise-add-model}
                 \min_{\theta_m, \beta_m} \sum_{i=1}^{\ndata}{
                     L\left( y_i, F_{m-1}(\bm{x}_i) + \beta_m f(\bm{x}_i; \theta_m) \right)
                 },
             \end{equation}
-        where $F_{m-1}(\bm{x}_i) = \sum_{j=1}^{m-1}{\beta_m f(\bm{x}_i; \theta_j)}$ is the combination of the learners that have been learned in the previous $m-1$ iterations. 
+        where $F_{m-1}(\bm{x}_i) = \sum_{j=1}^{m-1}{\beta_m f(\bm{x}_i; \theta_j)}$ combines the learners that have been learned so far. 
         
         \paragraph{Adaboost.} An instantiation of \eqref{eq:forward-stagewise-add-model} with the loss function $L(\cdot)$ replaced by the exponential loss leads to the AdaBoost algorithm.
         In the $m$-th iteration:
@@ -355,11 +378,12 @@ There are several key questions:
                       & = \sum_{i:y_i = f(\bm{x}_i;\theta_m)}^{}{w_i^{(m)} \EXP{-\beta_m}} + \sum_{i:y_i \ne f(\bm{x}_i;\theta_m)}^{}{w_i^{(m)} \EXP{\beta_m}} \\
                       & = \sum_{i=1}^{\ndata}{w^{(m)}_i e^{-\beta_m} \left( 1- \mathbbm{1}[y_i \ne f(\bm{x}_i; \theta_m)] \right)} + \sum_{i=1}^{\ndata}{w^{(m)}_i e^{\beta_m} \mathbbm{1}[y_i \ne f(\bm{x}_i; \theta_m)]} \\
                       & = \sum_{i=1}^{\ndata}{w^{(m)}_i e^{-\beta_m}} - \sum_{i=1}^{\ndata}{w^{(m)}_i e^{-\beta_m} \mathbbm{1}[y_i \ne f(\bm{x}_i; \theta_m)]} + \sum_{i=1}^{\ndata}{w^{(m)}_i e^{\beta_m} \mathbbm{1}[y_i \ne f(\bm{x}_i; \theta_m)]} \\
-                      & = (e^{\beta_m} - e^{-\beta_m}) \underbrace{\sum_{}^{}{w^{(m)}_i \mathbbm{1}[y_i \ne f(\bm{x}_i; \theta_m)]}}_{\epsilon_m: \text{weighted empirical error}} + e^{-\beta_m}.
+                      & = (e^{\beta_m} - e^{-\beta_m}) \underbrace{\sum_{i=1}^{\ndata}{w^{(m)}_i \mathbbm{1}[y_i \ne f(\bm{x}_i; \theta_m)]}}_{\epsilon_m: \text{weighted empirical error}} + e^{-\beta_m}.
                 \end{aligned}
             \end{equation}
         Fixing $\beta_m$, the AdaBoost picks the learner that minimizes the weighted error $\epsilon_m$, i.e., $\theta_m = \argmin_{\theta} \epsilon_m$.
-        After obtaining the best learner at iteration $m$, the corresponding error $\epsilon_m$ is known.
+        Notice that $\epsilon_m$ does not depend on $\beta_m$.
+        After obtaining the best learner at iteration $m$, the corresponding error $\epsilon_m$ is fixed.
         Then, the value of $\beta_m$ is obtained by solving the following convex programming:
         \begin{equation}
             \beta_m = \argmin_{\beta} (e^{\beta_m} - e^{-\beta_m}) \cdot \epsilon_m + e^{-\beta_m}.
@@ -371,7 +395,7 @@ There are several key questions:
         \end{itemize}
         
         \paragraph{Gradient Boosting (GB).} 
-        \textbf{The discussion in the section is specific for XGBoost.}  
+        \textbf{The discussion in this paragraph is specific for XGBoost.}  
         GB is another instantiation of the Forward Stagewise Additive Modeling framework.
         Unlike the exponential loss used in AdaBoost, GB uses Mean 
         Squared Error (MSE) as the loss function; this is because MSE is friendly to Taylor expansion. 
@@ -422,7 +446,8 @@ There are several key questions:
         The Wikipedia has a good introduction for generic GB: \url{https://en.wikipedia.org/wiki/Gradient_boosting}.
         
         \paragraph{Generic GB v.s. XGBoost.}
-        In each iteration of a generic GB, the first-order gradient of the loss w.r.t. the output of the learner so far is used as supervised information to train a weak learner; however, XGBoost uses both the first- and the second-order gradient information.
+        In each iteration of a generic GB, the first-order gradient of the loss w.r.t. the output of the learner so far is used as supervised information to train a weak learner, i.e., $f^{(m)}(\bm{x})$ should be close to $\frac{\partial L}{\partial f^{(m-1)}(\bm{x})}$.
+        However, XGBoost uses both the first- and the second-order gradient information.
         
         
         
@@ -470,14 +495,14 @@ Check out this website for more details: \url{https://www.ibm.com/cloud/learn/ba
     
     \subsubsection{Spectral Clustering}
         Given an unlabeled data $\mathcal{S}=\SET{\bm{x}_1, \ldots, \bm{x}_\ndata}$, we can think of the \ndata instances as \ndata vertices of a graph.
-        An edge between a pair of vertices $(i, j)$ represents a similarity measure between $\bm{x}_i$ and $\bm{x}_j$.
+        An edge between a pair of vertices $(i, j)$ represents the similarity measure between $\bm{x}_i$ and $\bm{x}_j$.
         The adjacency matrix $\bm{A}$ of the graph encodes the similarity between points, i.e., $A_{i,j}$ is the similarity between $i$ and $j$.
-        The objective of the spectral clustering is to find $K$ clusters $\mathcal{C}_1, \ldots, \mathcal{C}_K$ of the vertices, such that within cluster (resp. between cluster) similarity is maximized (resp. minimized).
+        The objective of the spectral clustering is to find $K$ clusters $\mathcal{C}_1, \ldots, \mathcal{C}_K$ of the vertices, such that the within cluster (resp. between cluster) similarity is maximized (resp. minimized).
         One way to capture the objective is by minimizing the following loss function:
             \begin{equation}
                 L = \sum_{i=1}^{K}{\frac{1}{\SetCard{\mathcal{C}_i}} \sum_{u \in \mathcal{C}_i, v \notin \mathcal{C}_i}^{}{A_{u, v}}}.
             \end{equation}
-        Let $\bm{H} \in \R^{\ndata \times K}$ be the matrix encoding which cluster a point belongs to, i.e., $H_{i,j}=\frac{1}{\sqrt{\SetCard{\mathcal{C}_j}}}$ if $\bm{x}_i$ belongs to cluster $\mathcal{C}_j$.
+        Let $\bm{H} \in \R^{\ndata \times K}$ be the matrix encoding which cluster a point belongs to, i.e., $H_{i,j}=\frac{1}{\sqrt{\SetCard{\mathcal{C}_j}}}$ if $\bm{x}_i$ belongs to cluster $\mathcal{C}_j$; otherwise $H_{i,j}=0$.
         Note that the columns of $\bm{H}$ are orthogonal with each other. 
         Let $\bm{h}_i$ be the i-th column of $\bm{H}$.
         The loss function $L$ can also be formulated with the Laplacian of the underlying graph:
@@ -501,8 +526,9 @@ Check out this website for more details: \url{https://www.ibm.com/cloud/learn/ba
 \subsection{K-Nearest Neighbor (KNN)}
 One thing worth noting about the KNN model is that the parameter $K$ is inversely related to the model complexity, i.e., 
     \begin{itemize}
-        \item When $K$ is small, e.g., $K=1$, the model is complicated. So the bias is small; however, the variance will be large, that is, the prediction of a fixed instance varies a lot when the training data changes. 
+        \item When $K$ is small, e.g., $K=1$, the model complexity is high. So the bias is small; however, the variance will be large, that is, the prediction of a testing instance varies a lot when the training data changes. 
         \item When $K$ is large, the bias is large and the variance is small.
+        \item The implementation of KNN utilizes a data structure called K-d tree. 
     \end{itemize}
 
 
@@ -541,7 +567,7 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
             Let $\mathcal{X}_l$ and $\mathcal{X}_r$ be the splitted subsets. 
             The target value associated with a sample $i$ is represented by $y_i$.
             The gain of this split is called \emph{variance reduction}:
-            $\text{Var}(y_i | i \in \mathcal{X}) - (\text{Var}(y_i | i \in \mathcal{X}_l) + \text{Var}(y_i | i \in \mathcal{X}_r))$; for example, $\text{Var}(y_i | i \in \mathcal{X}) = \frac{1}{\SetCard{\mathcal{X}}}\sum_{i \in \mathcal{X}}^{}{(y_i - \bar{y}_i)^2}$; intuitively, how much variance we can reduce by splitting at a particular feature.
+            $\text{Var}(y_i | i \in \mathcal{X}) - (\text{Var}(y_i | i \in \mathcal{X}_l) + \text{Var}(y_i | i \in \mathcal{X}_r))$; for example, $\text{Var}(y_i | i \in \mathcal{X}) = \frac{1}{\SetCard{\mathcal{X}}}\sum_{i \in \mathcal{X}}^{}{(y_i - \bar{y}_i)^2}$. Intuitively, we want to choose the feature $j$ as the splitting feature such that the resulting variance reduction is maximized.
             \item The way we predict the target value of a testing sample: given a testing sample, the prediction is done by traversing the sample from the root down to a leaf.
             The leaf corresponds to a subset of samples; thus, the prediction is the average of the samples' target values.
             Check out the detailed implementations of decision trees: \url{https://github.com/ddbourgin/numpy-ml/blob/master/numpy_ml/trees/dt.py}.
@@ -562,3 +588,49 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
 
 
 
+\subsection{Imbalanced Data}
+    Suppose we have a dataset with positive-to-negative ratio $1:200$, i.e., the number of negative samples is $200$ times than the number of positive samples.
+    A standard technique to combat the imbalance is \emph{Downsampling} and \emph{Upweighting}.
+        \begin{itemize}
+            \item Downsampling: we sample the negative instances every $10$ times, which results in the new positive-to-negative ratio $1:20$.
+            \item Upweighting: after downsampling, the weight of each negative instance needs to be increased by a factor of the downsampling ratio, i.e., $10$.
+        \end{itemize}
+        
+    \subsubsection{Cost-Sensitive Learning}
+        Another strategy to combat imbalanced data is through \emph{cost-sensitive} learning.
+        Consider binary classification settings.
+        Let $\mathcal{Y}_0$ and $\mathcal{Y}_1$ represent the majority and minority classes, respectively. 
+        Define the imbalance ratio as follows:
+            \begin{equation}
+                R = \frac{\SetCard{\mathcal{Y}_1}}{\SetCard{\mathcal{Y}_0}},
+            \end{equation}
+        which is usually smaller than $1$. 
+        Then, the costs of making different types of mistakes become:
+            \begin{equation}
+                \begin{aligned}
+                        \text{Cost(classify a minority sample to majority)} & = 1 \\
+                        \text{Cost(classify a majority sample to minority)} & = R.
+                \end{aligned}
+            \end{equation}
+        Intuitively, wrongly classifying a majority sample is less severe than wrongly classifying a minority sample.
+        
+
+\subsection{Ranking}
+    Consider a set of data $\mathcal{S}=\SET{(\bm{x}_1, \bm{x}'_1, y_1), \ldots, (\bm{x}_{\ndata}, \bm{x}'_{\ndata}, y_{\ndata})}$, where $y_i=+1$ (resp. $-1$) if $\bm{x}'_i$ should be ranked higher (resp. lower) than $\bm{x}_i$.
+    Given a hypothesis set $\mathcal{H}$, the ranking problem is to choose a hypothesis $h \in \mathcal{H}$ such that the mis-ranking error below is minimized:
+        \begin{equation}
+            R(h) = P_{(\bm{x}_i, \bm{x}'_i) \sim \mathcal{D}}\left[ y_i \cdot \left( h(\bm{x}'_i) - h(\bm{x}_i) \right) \le 0 \right].
+        \end{equation}
+    
+    \subsubsection{Ranking by SVM}
+        Let $\mathcal{H}=\Set{\bm{w}}{\bm{w}^\top \Phi(\bm{x})}$, where $\Phi(\bm{x})$ is some feature transformation on $\bm{x}$.
+        The problem of ranking is formulated as the following:
+            \begin{equation}
+                \begin{aligned}
+                    & \min_{\bm{w}, \bm{\xi}} & & \frac{1}{2}\norm{\bm{w}}_2^2 + C \sum_{i=1}^{\ndata}{\xi_i} \\
+                    & s.t. & & y_i \cdot \left[ \bm{w}^\top \left( \Phi(\bm{x}'_i) - \Phi(\bm{x}_i) \right) \right] \ge 1 - \xi_i, \forall i \\
+                    & & & \xi_i \ge 0, \forall i.
+                \end{aligned}
+            \end{equation}
+        The constraints encourage that $\bm{x}'_i$ is ranked higher than $\bm{x}_i$ (i.e., $\bm{w}^\top \left( \Phi(\bm{x}'_i) - \Phi(\bm{x}_i) \right) > 0$) if $y_i=+1$.
+        Some cushion $\xi_i$ is allowed, however, its magnitude is penalized in the objective function.

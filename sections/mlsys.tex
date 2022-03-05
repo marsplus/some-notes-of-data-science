@@ -1,0 +1,21 @@
+
+
+\subsection{A Case Study: Fraud Detection System}
+    \begin{enumerate}
+        \item Feature extractor: collecting features that are relevant to the problem.
+            \begin{itemize}
+                \item Credit-card fraud detection: some relevant features include: 1) the features that characterize a user's spending behavior, historical records, geographical attributes, etc. 2) merchants' historical payment records, e.g., typical spending amount, etc. 3) some time windows are needed to aggregate time-sensitive information for both users and merchants. 
+            \end{itemize}
+        \item Feature transformation: transforming the features to real values which ML models can be applied.
+            \begin{itemize}
+                \item Categorical features: binary values or one-hot encoding. 
+                \item Date and time: split a time frame (e.g., a day) into several time periods (e.g., morning, afternoon, etc.) and then use one-hot encoding. 
+                \item Geographical locations: transform all geographical locations into a unified coordinate system, e.g., the x-y plane.
+            \end{itemize}
+        \item Train/test/validation data: construct those datasets that are standard in a ML pipeline. 
+        \item Model evaluation: choose a suitable metric to evaluate the trained model.
+            \begin{itemize}
+                \item Threshold-based metric: precision, recall, top-$k$ precision, F1 score.
+                \item Threshold-free metric: ROC curve, AUC.
+            \end{itemize}
+    \end{enumerate}

@@ -1,0 +1,20 @@
+
+
+\subsection{Commonly used Matrix Differentiation}
+    We use the \emph{numerator layout} convention when discussing matrix differentiation.
+    Without specific note, all vectors are column vectors.
+    The numerator layout has the following rules:
+        \begin{enumerate}
+            \item The derivative of a scalar w.r.t. a row vector is a column vector, i.e., $\frac{\partial L}{\partial \bm{x}^\top} \in \R^{\nfeat \times 1}$.
+            \item The derivative of a scalar w.r.t. a column vector is a row vector, i.e., $\frac{\partial L}{\partial \bm{x} } \in \R^{1 \times \nfeat}$.
+            \item The derivative of a column vector w.r.t. a scalar is a column vector, i.e., $\frac{\partial \bm{x}}{\partial y } \in \R^{ \nfeat \times 1}$.
+            \item The derivative of a row vector w.r.t. a scalar is a row vector, i.e., $\frac{\partial \bm{x}^\top }{\partial y } \in \R^{ 1 \times \nfeat}$.
+        \end{enumerate}
+    The following are some commonly used differentiation operations:
+        \begin{itemize}
+            \item $\bm{y} = \bm{A} \bm{x} \implies \frac{\partial \bm{y}}{\partial \bm{x}} = \bm{A}$.
+            \item $\bm{y} = \bm{A} \cdot  \bm{x}(\bm{z}) \implies \frac{\partial \bm{y}}{\partial \bm{z}} = \frac{\partial \bm{y}}{\partial \bm{x}} \frac{\partial \bm{x}}{\partial \bm{z}} = \bm{A} \frac{\partial \bm{x}}{\partial \bm{z}}$.
+            \item $\alpha = \bm{y}^\top \bm{A} \bm{x} \implies \frac{\partial \alpha}{\partial \bm{x}} = \bm{y}^\top \bm{A}$ (this satisfies the 2nd rule above). For the special case $\alpha = \bm{x}^\top \bm{A} \bm{x}$, the derivative $\frac{\partial \alpha}{\partial \bm{x}} = \bm{x}^\top (\bm{A} + \bm{A}^\top)$. When $\bm{A}$ is symmetric, the derivative is $\frac{\partial \alpha}{\partial \bm{x}} = 2\bm{x}^\top \bm{A}$.
+            \item $\alpha = \bm{y}^\top(\bm{z}) \cdot \bm{x}(\bm{z}) \implies \frac{\partial \alpha}{\partial \bm{z}} = \bm{x}^\top \frac{\partial \bm{y}}{\partial \bm{z}} + \bm{y}^\top \frac{\partial \bm{x}}{\partial \bm{z}}$.
+            \item $\alpha = \bm{x}^\top(\bm{z}) \cdot \bm{x}(\bm{z}) \implies \frac{\partial \alpha}{\partial \bm{z}} = \bm{x}^\top \frac{\partial \bm{x}}{\partial \bm{z}} + \bm{x}^\top \frac{\partial \bm{x}}{\partial \bm{z}} = 2\bm{x}^\top \frac{\partial \bm{x}}{\partial \bm{z}}$.
+        \end{itemize}

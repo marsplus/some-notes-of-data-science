@@ -20,6 +20,14 @@
         \item Convergence rate for unconstrained, smooth and \emph{strongly} convex programming: $O(\gamma^k)$, where $k$ is the number of iterations and $0 < \gamma < 1$.
     \end{itemize}
     
+    \subsubsection{Subgradient Methods}
+    Given a function $f(\bm{x}): \R^\nfeat \rightarrow \R$ that is not differentiable at $\bm{x}_0$. 
+    The set of subgradients at $\bm{x}_0$ is denoted by $\partial f(\bm{x}_0)$, formally
+        \begin{equation}
+            \partial f(\bm{x}_0) = \Set{\bm{g} \in \R^\nfeat}{f(\bm{x}) \ge f(\bm{x}_0) + \bm{g}^\top (\bm{x} - \bm{x}_0), \forall \bm{x}}.
+        \end{equation}
+    Intuitively, this is the set of directions that never over-estimate the value of $f(\bm{x})$.
+    
     \subsubsection{Proximal (or Projected) Gradient Descent (PGD)}
     \begin{itemize}
         \item PGD is often used to solve the following optimization problem

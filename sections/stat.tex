@@ -1,0 +1,74 @@
+
+
+\subsection{Hypothesis Testing (HT)}
+    \subsubsection{P-Value}
+    A key step of HT is to choose a test statistic.
+    Given a set of data $\mathcal{X} = \SET{x_1, \ldots, x_\ndata}$, 
+    Let $T(\mathcal{X})$ be the test statistic computed on $\mathcal{X}$.
+    The null hypothesis and the alternative hypothesis are $H_0$ and $H_1$, respectively.
+    \begin{itemize}
+        \item P-value: the probability of observing (under $H_0$) a value of the test statistic that is the same or more extreme than $T(\mathcal{X})$, i.e., $P_{H_0}(T \ge T(\mathcal{X}))$. 
+        For the purpose of computing p-values, we need to know the distribution of the test statistic.
+        \item Interpreting a p-value: the smaller the p-value is, the stronger the evidence will be to reject the null hypothesis. However, the other direction is not true, i.e., we do not have strong evidence to support the null hypothesis when the p-value is large.
+    \end{itemize}
+    
+    \subsection{Some Common Tests}
+        \begin{itemize}
+            \item Welch's t-test: this is usually used to test if the means of two samples are equal.
+            The test statistic is: $T(\mathcal{D}) = \frac{\hat{\mu}_1 - \hat{\mu}_2}{\sqrt{ \hat{\text{se}}_1^2 +  \hat{\text{se}}_2^2  }}$, where $\hat{\mu}_1$ and $\hat{\mu}_2$ are sample means; $\hat{\text{se}}_1$ and $\hat{\text{se}}_2$ are estimated standard errors.
+            \item Pearson's $\chi^2$ test: this test is for multinomial data.
+        \end{itemize}
+    
+    \subsubsection{Test Two Distributions}
+     \emph{Kolmogorov-Smirnov test} is used to check if two arbitrary distributions are the same.
+     
+    
+    \subsection{Central Limit Theorem}
+    
+    \subsection{Law of Large Number}
+     
+     
+
+\subsection{Parametric Inference}
+    Given a dataset $\mathcal{D} = \SET{x_1, \ldots, x_\ndata}$, suppose $\hat{\theta}_{\mathcal{D}}$ is the estimation of $\theta$.
+    \begin{itemize}
+        \item Unbiased: $\mathbbm{E}_{\mathcal{D}}[\hat{\theta}_\mathcal{D} ] = \theta$.
+        \item Consistent: $\hat{\theta}_\mathcal{D} \rightarrow \theta$ in probability as $\SetCard{\mathcal{D}} \rightarrow \infty$.
+        \item Sampling distribution: $\hat{\theta}_\mathcal{D}$ is a random variable due to the randomness of sampling $\mathcal{D}$.
+        The distribution underlying $\hat{\theta}_\mathcal{D}$ is called the \emph{sampling distribution}.
+        \item Standard error (se) of $\hat{\theta}_\mathcal{D}$: the standard deviation of the sampling distribution.
+        \item Asymptotically normal (AN): if $\frac{\hat{\theta}_\mathcal{D} - \theta}{\text{se}} \rightarrow \mathcal{N}(0, 1)$ in distribution, then $\hat{\theta}_\mathcal{D}$ is called AN.
+        AN is useful when we need to compute a confidence interval of $\hat{\theta}_\mathcal{D}$.
+    \end{itemize}
+
+\subsubsection{MLE}
+    The MLE estimator is \emph{consistent} and \emph{asymptotically normal} (AN).
+    The AN property makes it easy to compute the confidence interval of an estimation, i.e., with an approximate $95\%$ confidence  the true $\theta$ belongs to the following interval
+        \begin{equation}
+            \left( \hat{\theta} - 2\hat{\text{se}},  \hat{\theta} + 2\hat{\text{se}} \right),
+        \end{equation}
+    where $\hat{\text{se}}$ is the estimated standard error.
+    The confidence interval comes from the AN, which we now discuss.
+    Define the fisher information of a parameter as follows:
+        \begin{equation}
+            I(\theta) = -\int \left( \frac{\partial^2 \log f(x; \theta)}{\partial \theta^2} f(x; \theta) \right) d x,
+        \end{equation}
+    where $f(x; \theta)$ is PDF of $x$.
+    The estimated standard error is computed as follows:
+        \begin{equation}
+            \hat{\text{se}} = \sqrt{\frac{1}{\ndata \cdot I(\hat{\theta})}}.
+        \end{equation}
+    Finally, the AN means that $\hat{\theta} \sim \mathcal{N}(\theta, \hat{\text{se}}^2 )$ approximately.
+    
+
+\subsection{Nonparametric Inference}
+    \begin{itemize}
+        \item Empirical CDF estimation: Given a dataset $\mathcal{X}=\SET{x_1, \ldots, x_\ndata}$.
+        The probability $P(X \le k)$ is estimated as follows:
+            \begin{equation}
+                P(X \le k) = \frac{1}{\ndata}\sum_{i=1}^{\ndata}{\mathbbm{1}
+                    \left[ x_i \le k \right]
+                }.
+            \end{equation}
+    \end{itemize}
+    

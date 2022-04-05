@@ -1,6 +1,6 @@
 
 
-\subsection{Commonly used Matrix Differentiation}
+\subsection{Commonly Used Matrix Differentiation}
     We use the \emph{numerator layout} convention when discussing matrix differentiation.
     Without specific note, all vectors are column vectors.
     The numerator layout has the following rules:
@@ -18,3 +18,18 @@
             \item $\alpha = \bm{y}^\top(\bm{z}) \cdot \bm{x}(\bm{z}) \implies \frac{\partial \alpha}{\partial \bm{z}} = \bm{x}^\top \frac{\partial \bm{y}}{\partial \bm{z}} + \bm{y}^\top \frac{\partial \bm{x}}{\partial \bm{z}}$.
             \item $\alpha = \bm{x}^\top(\bm{z}) \cdot \bm{x}(\bm{z}) \implies \frac{\partial \alpha}{\partial \bm{z}} = \bm{x}^\top \frac{\partial \bm{x}}{\partial \bm{z}} + \bm{x}^\top \frac{\partial \bm{x}}{\partial \bm{z}} = 2\bm{x}^\top \frac{\partial \bm{x}}{\partial \bm{z}}$.
         \end{itemize}
+        
+        
+        
+\subsection{Solving Linear Systems}
+    Suppose we need to solve a linear system $\bm{A} \bm{x} = \bm{b}$, where $\bm{A}$ is a real square matrix.
+    The standard way is as follows:
+        \begin{itemize}
+            \item LU decomposition: we first get the LU decomposition of $\bm{A}$, i.e., $\bm{A} = \bm{L} \bm{U}$, where $\bm{L}$ is a lower-triangular matrix and $\bm{U}$ a upper-triangular matrix.
+            With the decomposition, the problem is equivalent to solve $\bm{A} \bm{x} = \bm{L} \bm{U} \bm{x}$ for $\bm{x}$.
+            We first solve $\bm{L} \bm{y} = \bm{b}$ for $\bm{y}$; this is direct since $\bm{L}$ is a lower-triangular matrix.
+            Then, we solve $\bm{U} \bm{x} = \bm{y}$; this is also direct as $\bm{U}$ is a upper-triangular matrix.
+            \item If $\bm{A}$ is symmetric positive definite: in this case the LU decomposition simplifies to $\bm{A} = \bm{L} \bm{L}^\top$.
+        \end{itemize}
+        
+

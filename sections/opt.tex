@@ -1,10 +1,12 @@
 
 
 \subsection{Linear Programming (LP)}
+    Some useful things about LP:
     \begin{itemize}
         \item Polyhedron: A polyhedron $\mathcal{P}$ is a set that can be described by \Set{\bm{x} \in \R^n}{\bm{A} \bm{x} \ge \bm{b}}.
         \item Extreme point: A point $\bm{x}$ is an extreme point of a polyhedron $\mathcal{P}$ if we cannot find two other points $\bm{y}, \bm{z}$ (different from $\bm{x}$) and a scalar $\lambda \in [0, 1]$ such that $\bm{x} = \lambda \bm{y} + (1-\lambda) \bm{z}$.
         \item An LP attains optima at extreme points; see \cite{bertsimas1997introduction} at page 65 for a proof.
+        \item In general, the time complexity of solving an LP is $O(n^{3.5})$, where $n$ is the number of variables; see \url{https://en.wikipedia.org/wiki/Karmarkar%27s_algorithm}. 
     \end{itemize}
     
     
@@ -31,7 +33,7 @@
     \subsubsection{Proximal (or Projected) Gradient Descent (PGD)}
     \begin{itemize}
         \item PGD is often used to solve the following optimization problem
-            \begin{equation}
+            \begin{equation}\label{PGD}
                 \argmin_{\bm{\beta}} g(\bm{\beta}) + h(\bm{\beta}),
             \end{equation}
         where $g$ is smooth and convex while $h$ is convex but not smooth.  
@@ -41,9 +43,9 @@
             \begin{equation}
                 \text{prox}_h(\bm{x}) = \argmin_{\bm{z}} h(\bm{z}) + \frac{1}{2}\norm{\bm{x} - \bm{z}}^2_2.
             \end{equation}
-        \item For a couple of definition of $h$, the corresponding proximal mapping can be efficiently computed:
+        \item For a couple of instantiations of $h$, the corresponding proximal mapping can be efficiently computed:
             \begin{enumerate}
-                \item $h(\bm{x}) = \mathbbm{1}[\bm{x} \in \mathcal{C}]$: the indicator function of whether $\bm{x}$ is in $\mathcal{C}$. The proximal mapping simplifies to $\argmin_{\bm{u}}\norm{\bm{x} - \bm{u}}$. When $\mathcal{C}$ is a convex set, the problem of proximal mapping becomes a convex programming.
+                \item $h(\bm{x}) = \mathbbm{1}[\bm{x} \in \mathcal{C}]$: the indicator function of whether $\bm{x}$ is in $\mathcal{C}$. The proximal mapping simplifies to $\argmin_{\bm{z}}\norm{\bm{x} - \bm{z}}$. When $\mathcal{C}$ is a convex set, the problem of proximal mapping becomes a convex programming.
                 \item $h(\bm{x}) = t \norm{\bm{x}}_1$: the $L_1$ regularization on $\bm{x}$. In this case, the resulting proximal mapping is the famous \emph{soft thresholding} (which is the algorithm to solve Lasso), i.e., 
                     \begin{equation}
                         \text{prox}_h(\bm{x})_i = \begin{cases}
@@ -55,10 +57,15 @@
             \end{enumerate}
             
             
-        \item The iterative step of the proximal gradient method is as follows:
+        \item The iterative step of the proximal gradient method to solve \eqref{PGD} is as follows:
             \begin{equation}
                     \bm{x}^t = \text{prox}_{h, t_k}\left( \bm{x}^{t-1} - t_k \nabla g(\bm{x}^{t-1}) \right).
             \end{equation}
         The intuition of the iterative step is to approximate $g(\bm{\beta})$ with its second-order Taylor expansion evaluaated at $\bm{x}^{t-1}$.
         See the note for details: \url{https://people.eecs.berkeley.edu/~elghaoui/Teaching/EE227A/lecture18.pdf}.
+    \end{itemize}
+    
+\subsection{Matrix Norms}
+    \begin{itemize}
+        \item 
     \end{itemize}

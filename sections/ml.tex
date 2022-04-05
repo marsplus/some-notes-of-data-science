@@ -1,20 +1,25 @@
 
 
 In this section, a data matrix is represented by $\bm{X} \in \R^{\ndata \times \nfeat}$, with \ndata the number of data points and \nfeat the number of features. 
-The sample covariance matrix is given by $\bm{S} = \bm{X}^\top \bm{X} / \ndata$.
-A sample data with labels is denoted with $\mathcal{S}=\SET{(\bm{x}_1, y_1), \ldots, (\bm{x}_\ndata, y_\ndata)}$.
 When the context is clear we also use $\mathcal{S}$ to refer an unlabeled data. 
 
 \subsection{Common Loss Functions}
 In this section, we focus on two discrete distributions $p$ and $q$ , defined on the same set $\mathcal{X}$.
     \begin{itemize}
         \item KL divergence: $D_\text{KL}(p || q) = \sum_{i \in \mathcal{X}}^{}{p(i) \log \frac{p(i)}{q(i)}}$.
-        \item Entropy:  $H(p) = -\sum_{i \in \mathcal{X}}^{}{p(i) \log p(i)}$, which captures the uncertainty of the underlying even set.
+        \item Entropy:  $H(p) = -\sum_{i \in \mathcal{X}}^{}{p(i) \log p(i)}$, which captures the uncertainty of the underlying event set.
         \item Cross entropy: 
             \begin{equation*}
                H(p, q) = H(p) + D_\text{KL}(p || q) =  -\sum_{i \in \mathcal{X}}^{}{p(i) \log p(i)} + \sum_{i \in \mathcal{X}}^{}{p(i) \log \frac{p(i)}{q(i)}} =  -\sum_{i \in \mathcal{X}}^{}{p(i) \log q(i)}.
             \end{equation*}
-        \item Information gain from $q$ to $p$: $H(q) - H(p)$.
+            Minimizing cross entropy is equivalent to maximizing the likelihood of observed data.
+            Thus, when we update the model's parameters to minimize cross entropy, we are actually updating the model so as to maximize the data likelihood.
+        \item Information gain from $q$ to $p$ (or the reduction of uncertainty): $H(q) - H(p)$.
+        \item Mutual information (in discrete space): 
+            \begin{equation*}
+                I(X; Y) = D_\text{KL}\left( P_{X, Y} \, || \, P_X \cdot P_Y \right).
+            \end{equation*}
+        It measures the extent to which knowledge of one quantity reduces uncertainty about the other.
         \item Mean squared error: $\frac{1}{\ndata}\sum_{i=1}^{\ndata}{(y_i - \hat{y}_i)^2}$.
         \item Upper-bounds on 0-1 loss:
             \begin{itemize}
@@ -27,7 +32,7 @@ In this section, we focus on two discrete distributions $p$ and $q$ , defined on
 
 \subsection{Common Data Preprocessing}
     \begin{itemize}
-        \item Standardization: subtract the mean and divided by the standard deviation. 
+        \item Standardization: subtract the mean and divided by the standard deviation. The processed features have zero mean and unit variance.
         \item Whitening: do a PCA and then project the data to the principal components, which removes correlation between features. 
     \end{itemize}
     
@@ -65,6 +70,70 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
 \end{itemize}
 
     \subsubsection{A Derivation of Bias-Variance Trade-off}
+        Suppose we have a dataset $\mathcal{D}=\SET{(\bm{x}_1, y_1), \ldots, (\bm{x}_\ndata, y_\ndata)}$ with i.i.d. samples.
+        Consider a regression setting with squared error loss.
+        The following definitions will be useful later:
+            \begin{itemize}
+                \item Expected label given the features: 
+                    \begin{equation}
+                        \bar{y}(\bm{x}) = \mathbbm{E}_{y | \bm{x}}\left[ Y \right] = \int_{y}^{}{ y \cdot P(y | \bm{x}) \partial y}.
+                    \end{equation}
+                \item Expected test error given a hypothesis learned from $\mathcal{D}$:
+                    \begin{equation}
+                        \mathbbm{E}_{(\bm{x}, y) \sim P(\bm{x}, y)}\left[ (h_{\mathcal{D}}(\bm{x}) - y )^2 \right] = \int_{\bm{x}}^{}{ \int_{y}^{}{ (h_{\mathcal{D}}(\bm{x}) - y )^2 P(\bm{x}, y)   }     \partial \bm{x} \partial y}.
+                    \end{equation}
+                \item Expected classifier due to the randomness of sampling $\mathcal{D}$:
+                    \begin{equation}
+                        \bar{h}(\bm{x}) = \mathbbm{E}_{\mathcal{D} \sim P^n}\left[ h_{\mathcal{D}}(\bm{x}) \right] = \int_{\mathcal{D}}^{}{ h_{\mathcal{D}}(\bm{x})P(\mathcal{D}) \partial \mathcal{D}}.
+                    \end{equation}
+                \item Expected test error that we ultimately care about: 
+                    \begin{equation}\label{eq:bias-var-gen}
+                        \mathbbm{E}_{\bm{x}, y, \mathcal{D}}\left[ (h_{\mathcal{D}}(\bm{x}) - y )^2 \right] = \int_{\bm{x}}^{}{\int_{y}^{}{\int_{\mathcal{D}}^{}{        (h_{\mathcal{D}}(\bm{x}) - y )^2 P(\mathcal{D})P(\bm{x}, y) \partial \bm{x} \partial y \partial \mathcal{D}
+                        }}}.
+                    \end{equation}
+            \end{itemize}
+            
+        Now, we expand \eqref{eq:bias-var-gen} as follows:
+            \begin{equation}
+                \begin{aligned}
+                    \mathbbm{E}_{\bm{x}, y, \mathcal{D}}\left[ (h_{\mathcal{D}}(\bm{x}) - y )^2 \right] & = \mathbbm{E}_{\bm{x}, y, \mathcal{D}}\left[ \left( h_{\mathcal{D}}(\bm{x}) - \bar{h}(\bm{x}) + \bar{h}(\bm{x}) - y \right)^2 \right] \\
+                    & = \mathbbm{E}_{\bm{x}, y, \mathcal{D}}\left[ (h_{\mathcal{D}}(\bm{x}) - \bar{h}(\bm{x}))^2 \right] + \mathbbm{E}_{\bm{x}, y, \mathcal{D}}\left[ 2(h_{\mathcal{D}}(\bm{x}) - \bar{h}(\bm{x}))(\bar{h}(\bm{x}) - y) \right] + \mathbbm{E}_{\bm{x}, y, \mathcal{D}}\left[ (\bar{h}(\bm{x}) - y)^2 \right],
+                \end{aligned}
+            \end{equation}
+        where the middle term is zero becauses:
+            \begin{equation}
+                \begin{aligned}
+                      \mathbbm{E}_{\bm{x}, y, \mathcal{D}}\left[ 2(h_{\mathcal{D}}(\bm{x}) - \bar{h}(\bm{x}))(\bar{h}(\bm{x}) - y) \right] & = 2\mathbbm{E}_{\bm{x}, y}\left[ \mathbbm{E}_{\mathcal{D}}\left[ (h_{\mathcal{D}}(\bm{x}) - \bar{h}(\bm{x}) ) \right](\bar{h}(\bm{x}) - y) \right]      \\
+                      & = 2\mathbbm{E}_{\bm{x}, y}\left[  ( \mathbbm{E}_{\mathcal{D}}[h_{\mathcal{D}}(\bm{x})] - \bar{h}(\bm{x}) ) (\bar{h}(\bm{x}) - y) \right] \\
+                      & = 2\mathbbm{E}_{\bm{x}, y}\left[  ( \bar{h}(\bm{x}) - \bar{h}(\bm{x}) ) (\bar{h}(\bm{x}) - y) \right] \\
+                      & = 0.
+                \end{aligned}
+            \end{equation}
+        The third term is expanded as follows:
+            \begin{equation}
+                \begin{aligned}
+                \mathbbm{E}_{\bm{x}, y, \mathcal{D}}\left[ (\bar{h}(\bm{x}) - y)^2 \right] & = \mathbbm{E}_{\bm{x}, y }\left[ (\bar{h}(\bm{x}) - \bar{y}(\bm{x}) + \bar{y}(\bm{x}) - y)^2 \right] \\
+                & = \mathbbm{E}_{\bm{x}, y }\left[ \left( \bar{h}(\bm{x}) - \bar{y}(\bm{x}) \right)^2 \right] + 2\mathbbm{E}_{\bm{x}, y }\left[ \left( \bar{h}(\bm{x}) - \bar{y}(\bm{x}) \right)\left( \bar{y}(\bm{x}) - y \right) \right] + \mathbbm{E}_{\bm{x}}\left[ \left( \bar{y}(\bm{x}) - y \right)^2 \right],
+                \end{aligned}
+            \end{equation}
+        where the middle term is zero because:
+            \begin{equation}
+                \begin{aligned}
+                        2\mathbbm{E}_{\bm{x}, y }\left[ \left( \bar{h}(\bm{x}) - \bar{y}(\bm{x}) \right)\left( \bar{y}(\bm{x}) - y \right) \right]    & = 2\mathbbm{E}_{\bm{x}}\left[ \left( \bar{h}(\bm{x}) - \bar{y}(\bm{x}) \right)    \mathbbm{E}_{y|\bm{x}}\left[\left( \bar{y}(\bm{x}) - y \right) \right] \right] \\
+                        & = 2\mathbbm{E}_{\bm{x}}\left[ \left( \bar{h}(\bm{x}) - \bar{y}(\bm{x}) \right) \left( \bar{y}(\bm{x}) - \mathbbm{E}_{y|\bm{x}}[y] \right) \right] \\
+                        & = 2\mathbbm{E}_{\bm{x}}\left[ \left( \bar{h}(\bm{x}) - \bar{y}(\bm{x}) \right) \left( \bar{y}(\bm{x}) - \bar{y}(\bm{x}) \right) \right] \\
+                        & = 0.
+                \end{aligned}
+            \end{equation}
+        Finally, the generalization error that we care about is:
+            \begin{equation}
+                \mathbbm{E}_{\bm{x}, y, \mathcal{D}}\left[ (h_{\mathcal{D}}(\bm{x}) - y )^2 \right] = \underbrace{\mathbbm{E}_{\bm{x}, \mathcal{D}}\left[ (h_{\mathcal{D}}(\bm{x}) - \bar{h}(\bm{x}))^2 \right]}_{\text{variance}} + \underbrace{\mathbbm{E}_{\bm{x} }\left[ \left( \bar{h}(\bm{x}) - \bar{y}(\bm{x}) \right)^2 \right]}_{\text{bias}^2} + \underbrace{\mathbbm{E}_{\bm{x}}\left[ \left( \bar{y}(\bm{x}) - y \right)^2 \right]}_{\text{noise}}.
+            \end{equation}
+        From the above derivation we have the following conclusions:
+            \begin{itemize}
+                \item Variance: capturing how much the hypothesis changes w.r.t. different training data, which quantifies overfitting, i.e., the hypothesis is too specialized to a particular training data.
+                \item Bias: capturing the inherent difference between the hypothesis and the expected label even with infinite data.
+            \end{itemize}
         Check out this lecture: \url{https://www.cs.cornell.edu/courses/cs4780/2018fa/lectures/lecturenote12.html}.
 
 
@@ -107,9 +176,10 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
     The following are commonly used methods to combat overfitting:
         \begin{itemize}
             \item Get more data.
-            \item Regularization $ \rightarrow $ reducing model complexity $ \rightarrow $ reducing variance $ \rightarrow $ reducing overfitting.
+            \item Data augmentation.
+            \item Regularization $ \rightarrow $ reduce model complexity $ \rightarrow $ reduce variance $ \rightarrow $ reduce overfitting.
             \item Ensemble methods: random forests, bagging, etc.
-            \item Feature selection $ \rightarrow $ reducing model complexity.
+            \item Feature selection $ \rightarrow $ reduce model complexity.
         \end{itemize}
 
 
@@ -117,7 +187,7 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
 \subsection{Singular Value Decomposition (SVD)}
     \begin{itemize}
         \item Given a data matrix $\bm{X} \in \R^{\ndata \times \nfeat}$, where \ndata is the number of data points and \nfeat the number of features.
-        The SVD is: $\bm{X} = \bm{U} \bm{D} \bm{V}^\top$; $\bm{U} \in \R^{\ndata \times \nfeat}$ and the columns of $\bm{U}$ span the column space of $\bm{X}$; $\bm{V} \in \R^{\nfeat \times \nfeat}$ and the columns of $\bm{V}$ span the row space of.
+        The SVD is: $\bm{X} = \bm{U} \bm{D} \bm{V}^\top$; $\bm{U} \in \R^{\ndata \times \nfeat}$ and the columns of $\bm{U}$ span the column space of $\bm{X}$; $\bm{V} \in \R^{\nfeat \times \nfeat}$ and the columns of $\bm{V}$ span the row space of $\bm{X}$.
         Both $\bm{U}$ and $\bm{V}$ are orthonormal matrices. 
         $\bm{D}$ is a diagonal matrix with some diagonal entries possibly zeros.
     \end{itemize}
@@ -125,11 +195,15 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
     
 \subsection{Principal Component Analysis (PCA)}
     \begin{itemize}
-        \item Given a data matrix $\bm{X} \in \R^{\ndata \times \nfeat}$, PCA is to do en  eigen-decomposition of the matrix $\bm{X}^\top \bm{X}$ (i.e., an unnormalized version of the sample covariance matrix $\bm{S}$) as follows:
+        \item Given a mean-centered data matrix $\bm{X} \in \R^{\ndata \times \nfeat}$, i.e., the sum of the rows of $\bm{X}$ is $\bm{0}$; in other words, each feature has zero mean.
+        The correlation between features is captured by the unnormalized sample covariance matrix $\bm{X}^\top \bm{X}$, i.e., $X_{ij}$ quantifies the correlation between features $i$ and $j$.
+        PCA is to do en  eigen-decomposition of $\bm{X}^\top \bm{X}$ as follows\footnote{A real symmetric matrix is always diagonalizable; see \url{http://maecourses.ucsd.edu/~mdeolive/mae280a/lecture11.pdf}.}:
             \begin{equation}
                 \bm{X}^\top \bm{X} = \left( \bm{U}\bm{D}\bm{V}^\top \right)^\top \left( \bm{U}\bm{D}\bm{V}^\top \right) = \bm{V} \bm{D}^2 \bm{V}^\top,
             \end{equation}
-        where $\bm{V}^{-1} = \bm{V}^\top$. The diagonal entries of $\bm{D}^2$ are ranked in descending order.
+        where $\bm{V}^{-1} = \bm{V}^\top$. 
+        The diagonal entries of $\bm{D}^2$ are ranked in descending order.
+        As $\bm{X}^\top \bm{X}$ is a real symmetric matrix, it can be diagonalized by an orthogonal matrix.
         \item The first principal component is $\bm{z}_1 = \bm{X} \bm{v}_1$, i.e., the projection of the data matrix to the first column vector of $\bm{V}$; $\bm{z}_1$ is also the direction with the maximum sample variance.
         
         \item Notice that $\bm{X} \bm{v}_1 = d_1 \bm{u}_1$ (since $\bm{X} \bm{v}_1 = \bm{U} \bm{D} \bm{V}^\top \bm{v}_1$...), where $d_1$ is the first diagonal entry of $\bm{D}$ and $\bm{u}_1$ the first column vector of $\bm{U}$; thus, the first principal component is parallel to $\bm{u}_1$.
@@ -161,13 +235,13 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
         
     \subsubsection{Lasso Regression}
         \begin{itemize}
-            \item The optimization problem: $\hat{\bm{\beta}} \in \argmin_{\bm{\beta}} \norm{\bm{X} \bm{\beta} - \bm{y}}_2^2 + \lambda \sum_{j=1}^{\nfeat}{\Abs{\beta_j}}$.
+            \item The optimization problem: $\hat{\bm{\beta}} \in \argmin_{\bm{\beta}} \frac{1}{2}\norm{\bm{X} \bm{\beta} - \bm{y}}_2^2 + \lambda \sum_{j=1}^{\nfeat}{\Abs{\beta_j}}$.
             \item The general idea to solve Lasso is to utilize proximal gradient descent.
             See this note for deatails: \url{https://www.stat.cmu.edu/~ryantibs/convexopt-S15/scribes/08-prox-grad-scribed.pdf}.
-            \item A commonly used algorithm to solve Lasso is Iterative Soft-Thresholding Algorithm (ISTA). 
+            \item A commonly used algorithm to solve Lasso is \emph{Iterative Soft-Thresholding Algorithm} (ISTA). 
             \item ISTA algorithm is as follows:
                 \begin{enumerate}
-                    \item Let $g(\bm{x}) = \norm{\bm{X} \bm{\beta} - \bm{y}}_2^2$. Then $\frac{d g}{d \bm{\beta}^\top} = -2\bm{X}^\top(\bm{y} - \bm{X}\bm{\beta})$.
+                    \item Let $g(\bm{x}) = \frac{1}{2}\norm{\bm{X} \bm{\beta} - \bm{y}}_2^2$. Then $\frac{d g}{d \bm{\beta}^\top} = -\bm{X}^\top(\bm{y} - \bm{X}\bm{\beta})$.
                     \item The iterate at step $t$ is:
                         \begin{equation}
                             \bm{\beta}^t = S_{\eta \lambda}\left( 
@@ -188,6 +262,17 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
         \end{itemize}
     
 \subsection{Classification}
+        \subsection{Multi-Classification}
+            Consider a $K$ classification problem.
+            The following techniques can be applied to handle multi-classification problems:
+            \begin{itemize}
+                \item Softmax: this extends the sigmoid function used in binary classification problems.
+                \item One versus one: train  $\binom{K}{2}$ classifiers, each for discriminating a pair of classes.
+                Given a test instance, run it through the $\binom{K}{2}$ classifiers; the class with the most votes is the predicted class.
+                \item One versus all: train $K$ classifiers, each for discriminating whether the given instance belongs to the associated class.
+                Given a test instance, the class with the largest confidence (e.g., the distance to the separating hyperplane) is the predicted class.
+            \end{itemize}
+            
         \subsubsection{Bayes Optimal Classifier}
             In binary classification setting, the Bayes Optimal Classifier is defined as:
                 \begin{equation}
@@ -220,16 +305,17 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
                 $\frac{\partial \log L}{\partial \bm{\beta}^\top} = \sum_{i=1}^{\ndata}{\left( y_i - p(y=1|\bm{x}_i) \right) \bm{x}_i }$.
                 \item We usually maximize the log-likelihood by second-order method, e.g., Newton's method, as follows:
                     \begin{equation}
-                        \bm{\beta}^t = \bm{\beta}^{t-1} - \left[ \frac{\partial^2 \log L}{\partial \bm{\beta}^\top \partial \bm{\beta}} \right]^{-1} \frac{\partial \log L}{\partial \bm{\beta}^\top}.
+                        \bm{\beta}^t = \bm{\beta}^{t-1} - \eta \left[ \frac{\partial^2 \log L}{\partial \bm{\beta}^\top \partial \bm{\beta}} \right]^{-1} \frac{\partial \log L}{\partial \bm{\beta}^\top}.
                     \end{equation}
                 \item The second-order derivative is computed as follows:
                     \begin{equation}
                         \begin{aligned}
                             \frac{\partial^2 \log L}{\partial \bm{\beta}^\top \partial \bm{\beta}} & = -\sum_{i=1}^{\ndata}{\bm{x}_i \frac{\partial p(y=1 | \bm{x}_i)}{\partial \bm{\beta}}   }  \\
-                            & = -\sum_{i=1}^{\ndata}{\left( \bm{x}_i \bm{x}_i^\top p(y=1 | \bm{x}_i) \left( 1 - p(y=1 | \bm{x}_i)\right) \right)},
+                            & = - \sum_{i=1}^{\ndata}{\bm{x}_i \left( \frac{\partial [1 - \frac{1}{1+\EXP{\bm{\beta}^\top\bm{x}_i}}] }{\partial \bm{\beta}} \right)} \\
+                            & = - \sum_{i=1}^{\ndata}{\bm{x}_i \left( \frac{}{} \bm{x}^{\top}_i \frac{\EXP{\bm{\beta}^\top \bm{x}_i}}{\left( 1 + \EXP{\bm{\beta}^\top \bm{x}_i}\right)^2} \right)} \\
+                            & = -\sum_{i=1}^{\ndata}{\left( \bm{x}_i \bm{x}_i^\top p(y=1 | \bm{x}_i) \left( 1 - p(y=1 | \bm{x}_i)\right) \right)}.
                         \end{aligned}
                     \end{equation}
-                where $\frac{\partial p(y=1 | \bm{x}_i)}{\partial \bm{\beta}} = \frac{\partial \left( 1 - 1 / (1 + \EXP{\bm{\beta}^\top \bm{x}_i})\right)}{\partial \bm{\beta}} = p(y=1 | \bm{x}_i) \bm{x}_i^\top$.
                 \item Define $\bm{W}$ as a diagonal matrix with the $i$-th diagonal entry being $p(y=1| \bm{x}_i)(1 - p(y=1 | \bm{x}_i))$ and $\bm{p}$ a vector with the $i$-th entry being $p(y=1|\bm{x}_i)$.
                 The first- and second-order derivatives are as follows:
                     \begin{equation}
@@ -249,9 +335,17 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
                     \end{equation}
                 The last step is called \emph{Iteratively Reweighted Least Square}.
                 Compare it with the update rule of linear regression, i.e., $\left( \bm{X}^\top \bm{X}\right)^{-1} \bm{X}^\top \bm{y}$.
+                \item The Fisher information matrix is defined as $-\mathbbm{E}_{\bm{\beta}}[ \frac{\partial^2 \log f(\bm{x}; \bm{\beta})}{\partial \bm{\beta}^\top \partial \bm{\beta}} ]$, where the randomness comes from the sampling distribution of $\bm{\beta}$.
+                From the above analysis we have that the Fisher information is $\bm{X}^\top \bm{W} \bm{X}$.
+                The sampling distribution of $\bm{\beta}$ is \emph{approximately} Normal, i.e., $\bm{\beta} \sim \mathcal{N}(\bm{\beta}^\ast, \left(\bm{X}^\top \bm{W} \bm{X}\right)^{-1})$.
+                \item In the case of binary classification, the log-odds satisfies:
+                    \begin{equation}
+                        \log \frac{P(y=1 | \bm{x})}{P(y=0 | \bm{x})}  = \beta_0 + \beta_1 x_1 +, \ldots, + \beta_\nfeat x_\nfeat.
+                    \end{equation}
+                Thus, the $i$-th coefficient $\beta_i$ represents the amount of increase of decrease of the log-odds when $x_i$ increases one unit.
             \end{itemize}
             
-    \subsection{Naive Bayes (NB)}
+    \subsubsection{Naive Bayes (NB)}
         NB is based on Bayes Theorem: 
             \begin{equation}
                 \begin{aligned}
@@ -263,14 +357,14 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
         When the features are discrete, we estimate $p(y=k)$ and $p(X_i = x_i | y=k)$ for all $i$ and $k$ from training data.
         When the features are continuous, the conditional probability $p(X_i = x_i | y=k)$ is usually modeled by a one-dimensional Gaussian distribution, i.e., $\mathcal{N}(x_i; \mu_{ki}, \sigma_{ki})$, where $\mu_{ki}$ and $\sigma_{ki}$ are estimated from data.
         
-    \subsection{SVM}
+    \subsubsection{SVM}
         For convenience we discuss linear SVM in the case of separable data $\mathcal{S}$.
         Let $\mathcal{H}$ be the hypothesis set of linear classifiers, i.e., $\mathcal{H}=\Set{\Sign{\bm{w}^\top \bm{x} + b}}{\bm{w}, b}$.
         In $\R^\nfeat$, a hyperplane is represented as follows:
             \begin{equation}
                 \bm{w}^\top \bm{x} + b = 0.
             \end{equation}
-        Since the data is separable, there must be a hyperplane that does not pass any data.
+        Since the data is separable, there must be a hyperplane that does not pass any data; this means we do not have any constraints on $\bm{w}$ and $\bm{b}$.
         As a result, to avoid scaling issues (i.e., two hypotheses $(\bm{w}_1, b_1)$ and $(\bm{w}_2, b_2)$ correspond to the same hyperplane, but they have different magnitudes), we focus on a specific hyperplane $(\bm{w}, b)$ that satisfies the following:
             \begin{equation}
                 \min_{(\bm{x}, y) \in \mathcal{S}} \Abs{\bm{w}^\top \bm{x} + b} = 1.
@@ -278,7 +372,7 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
         
         The margin $\rho$ of an SVM is defined as the smallest distance of any data point to the separating hyperplane, i.e., 
             \begin{equation}
-                \rho = \min_{(\bm{x}, y) \in \mathcal{S}} \frac{\Abs{\bm{w}^\top \bm{x} + b}}{\norm{\bm{w}}} = \frac{1}{\norm{\bm{w}}}.
+                \rho = \min_{(\bm{x}, y) \in \mathcal{S}} \underbrace{\frac{\Abs{\bm{w}^\top \bm{x} + b}}{\norm{\bm{w}}}}_{\text{distance of a point to the hyperplane}} = \frac{1}{\norm{\bm{w}}}.
             \end{equation}
         One motivation of SVM is to find the separating hyperplane with the largest margin; intuitively, such a hyperplane provides the largest cushion/protection.
         Thus, the optimization problem of the SVM is formulated below:
@@ -305,7 +399,7 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
             \begin{itemize}
                 \item From the first condition: the weight vector $\bm{w}$ is a linear combination of $\bm{x}_i$; however, only those $\bm{x}_i$ with $\alpha_i \ne 0$ contribute to the combination.
                 \item From the third condition: for those data such that $\alpha_i \ne 0$, we know $\Abs{\bm{w}^\top \bm{x} + b} = 1$, i.e., they are on the marginal hyperplanes.
-                These data are called the \emph{support vectors}, which completely decide the solution $(\bm{w}, b)$.
+                For separable data, there is only one type of support vectors, i.e., those on the marginal hyperplanes; however, if the data is non-separable, two types of support vectors exist: 1) those on the marginal hyperplanes and 2) outliers. 
             \end{itemize}
         The dual of the original optimization problem is as follows:
             \begin{equation}
@@ -314,14 +408,20 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
                     & s.t. & & \alpha_i \ge 0, \sum_{i=1}^{\ndata}{\alpha_i y_i} = 0.
                 \end{aligned}
             \end{equation}
-        We know that the support vectors are on the marginal hyperplanes, which are parallel to the separating hyperplane $(\bm{w}, b)$.
-        Thus, for any support vector $\bm{x}_i$ we have $\bm{w}^\top \bm{x}_i + b = y_i$.
-        It follows that $b = y_i - \sum_{j=1}^{\ndata}{\alpha_i y_i (\bm{x}_j^\top \bm{x}_i) }$.
+        Several useful things from the dual:
+        \begin{itemize}
+            \item Only the support vectors affect the solutions of the SVM.
+            \item The support vectors are on the marginal hyperplanes, which are \emph{parallel} to the separating hyperplane $(\bm{w}, b)$.
+            Thus, for any support vector $\bm{x}_i$ we have $\bm{w}^\top \bm{x}_i + b = y_i$.
+            It follows that $b = y_i - \sum_{j=1}^{\ndata}{\alpha_i y_i (\bm{x}_j^\top \bm{x}_i) }$.
+            \item Kernel: we can map $\bm{x}_i$ to some high dimensional space (i.e., $\phi(\bm{x}_i)$), as long as we can efficiently compute the inner product $\phi(\bm{x}_i)^\top \phi(\bm{x}_j)$.
+        \end{itemize}
     
     
 \subsection{Boosting}
-The intuition behind boosting is to generate a strong classifier (the one with small generalization error) by combining a bunch of weak classifiers. 
-A typical algorithm of boosting is called AdabBoost; it typically consists of $T$ iterations of boosting, where a weak classifier is picked in each iteration; finally, the $T$ weak classifiers are combined in a way that a strong classifier (with small error) is generated. 
+\subsubsection{AdaBoost}
+The intuition behind AdaBoost is to generate a strong classifier (the one with small generalization error) by combining a bunch of weak classifiers. 
+A typical algorithm of boosting is called AdaBoost; it typically consists of $T$ iterations of boosting, where a weak classifier is picked in each iteration; finally, the $T$ weak classifiers are combined in a way that a strong classifier (with small error) is generated. 
 The pseudocode of AdaBoost is displayed in Algorithm~\ref{adaboost:algo}~\cite{mohri2018foundations}.
 
 \begin{algorithm}[ht]
@@ -352,9 +452,9 @@ There are several key questions:
         \item How to set the weight $\alpha_t$ associated with each weak classifier? The values of $\alpha_1, \ldots, \alpha_T$ are selected such that an upper-bound on the empirical error of $g$ is minimized. See the proof of Theorem 6.1 at~\cite{mohri2018foundations}.
     \end{enumerate}
 
-    \subsubsection{Boosting Trees (BT)}\label{sec:boosting-trees}
-        BT is a boosting framework where the weak learners are either classification or regression trees.
-        BT is based on the \emph{Forward Stagewise Additive Modeling} described in~\cite{hastie2009elements} (p.342), which is a great framework to unify both classification trees (e.g., AdaBoost) and regression trees (e.g., boosting trees with real-valued output).
+    \subsubsection{Boosting under the FSAM Framework}\label{sec:boosting-trees}
+        Boosting is a framework where the weak learners are either classification or regression trees.
+        Boosting is based on the \emph{Forward Stagewise Additive Modeling}~(FSAM) described in~\cite{hastie2009elements} (p.342), which is a great framework to generate a strong predictor (either classifiers or regressors) from a set of weak predictors.
         The framework is to find a linear combination of a set of $K$ learners such that some loss is minimized, i.e., 
             \begin{equation}
                 \min_{\SET{\theta_i}_{i=1}^{K}, \SET{\beta_i}_{i=1}^{K} } \sum_{i=1}^{\ndata}{L\left( y_i, \sum_{j=1}^{K}{\beta_j f(\bm{x}_i; \theta_j)} \right)},
@@ -368,7 +468,8 @@ There are several key questions:
             \end{equation}
         where $F_{m-1}(\bm{x}_i) = \sum_{j=1}^{m-1}{\beta_m f(\bm{x}_i; \theta_j)}$ combines the learners that have been learned so far. 
         
-        \paragraph{Adaboost.} An instantiation of \eqref{eq:forward-stagewise-add-model} with the loss function $L(\cdot)$ replaced by the exponential loss leads to the AdaBoost algorithm.
+    \subsubsection{AdaBoost}
+         An instantiation of \eqref{eq:forward-stagewise-add-model} with the loss function $L(\cdot)$ replaced by the exponential loss leads to the AdaBoost algorithm.
         In the $m$-th iteration:
             \begin{equation}
                 \begin{aligned}
@@ -394,29 +495,51 @@ There are several key questions:
             Thus, minimizing $\epsilon_m$ consists of two steps: 1) pick a particular feature and 2) pick a threshold for the feature, such that the resulting weighted empirical error $\epsilon_m$ is minimized.
         \end{itemize}
         
-        \paragraph{Gradient Boosting (GB).} 
-        \textbf{The discussion in this paragraph is specific for XGBoost.}  
-        GB is another instantiation of the Forward Stagewise Additive Modeling framework.
-        Unlike the exponential loss used in AdaBoost, GB uses Mean 
-        Squared Error (MSE) as the loss function; this is because MSE is friendly to Taylor expansion. 
-        The optimization problem that GB solves at iteration $m$ is as follows:
-            \begin{equation}\label{GB-model}
+        
+        
+        
+\subsubsection{Gradient Boosting (GB)}
+        GB is still under the FSAM framework.
+        In the $m$-th iteration, GB is to solve the following optimization:
+            \begin{equation}\label{XGBoost-model}
+                \min_{f^{(m)}} \sum_{i=1}^{\ndata}{
+                    \underbrace{\left( y_i - (\hat{y}^{(m-1)}_i + f^{(m)}(\bm{x}_i)) \right)^2}_{:=L(y_i, \hat{y}_i^{(m)}) }.
+                }
+            \end{equation}
+        We do a first-order Taylor expansion of $L(y_i, \hat{y}_i^{(m)})$ at $\hat{y}_i^{(m-1)}$:
+            \begin{equation}
+                L(y_i, \hat{y}_i^{(m)}) \approx L(y_i, \hat{y}_i^{(m-1)}) + \underbrace{\left[ \frac{\partial L(y_i, z)}{\partial z}\vline_{z = \hat{y}_i^{(m-1)}} \right]}_{g_{i}^{(m)}}  f^{(m)}(\bm{x}_i).
+            \end{equation}
+        A natural idea is to let $f^{(m)}(\bm{x}_i)$ be as close as possible to $-g^{(m)}_i$, such that the reduction of $L(y_i, \hat{y}_i^{(m)})$ is along the direction of the steepest descent.
+        Thus, the learning problem  in the $m$-th iteration is as follows:
+            \begin{itemize}
+                \item  Collect a new dataset $\mathcal{G}=\SET{(\bm{x}_1, -g^{(m)}_1), \ldots, (\bm{x}_\ndata, -g^{(m)}_\ndata)}$, where the supervised information are the gradients.
+                \item  Train a regression/classification tree on $\mathcal{G}$, which gives us $f^{(m)}(\cdot)$. 
+                \item  Find the weight associated with $f^{(m)}(\cdot)$ by solving $\min_{\gamma} \sum_{i=1}^{\ndata}{L\left(y_i, \hat{y}_i^{(m-1)} + \gamma f^{(m)}(\bm{x}_i)\right)}$.
+            \end{itemize}
+
+
+    \subsubsection{XGBoost}
+        This is another instantiation of the FSAM framework.
+        The optimization problem that XGBoost solves at iteration $m$ is as follows:
+            \begin{equation}\label{XGBoost-model}
                 \min_{f^{(m)}} \sum_{i=1}^{\ndata}{
                     \underbrace{\left( y_i - (\hat{y}^{(m-1)}_i + f^{(m)}(\bm{x}_i)) \right)^2}_{:=L(y_i, \hat{y}_i^{(m)}) } + R(f^{(m)}),
                 }
             \end{equation}
-        where $f^{(m)}$ is the learner that we are looking for; $R(f^{(m)})$ is a regularization term on the learner's complexity.
+        where $f^{(m)}$ is the learner that we are learning.
+        Notice that XGBoost has an additional regularization term $R(f^{(m)})$ to control the learner's complexity.
         We approximate the loss $L(y_i, \hat{y}_i^{(m)})$ with its second-order Taylor expansion at $\hat{y}^{(m-1)}_i$:
             \begin{equation}
                 L(y_i, \hat{y}_i^{(m)}) \approx L(y_i, \hat{y}^{(m-1)}_i) + g_i \cdot f^{(m)}(\bm{x}_i) + \frac{1}{2} h_i \cdot (f^{(m)}(\bm{x}_i))^2,
             \end{equation}
-        where $f^{(m)}(\bm{x}_i) = (\hat{y}_i^{(m)} - \hat{y}_i^{(m-1)})$, $g_i = \frac{\partial L(y_i, \hat{y}_i^{(m-1)})}{\partial \hat{y}_i^{(m-1)} }$, and $h_i = \frac{\partial^2 L(y_i, \hat{y}_i^{(m-1)})}{\partial^2 \hat{y}_i^{(m-1)} }$; this is the reason for the name ``Gradient''.
-        We regularize the complexity of $f^{(m)}$ by the follow:
+        where $f^{(m)}(\bm{x}_i) = (\hat{y}_i^{(m)} - \hat{y}_i^{(m-1)})$, $g_i = \frac{\partial L(y_i, \hat{y}_i^{(m-1)})}{\partial \hat{y}_i^{(m-1)} }$, and $h_i = \frac{\partial^2 L(y_i, \hat{y}_i^{(m-1)})}{\partial^2 \hat{y}_i^{(m-1)} }$.
+        We regularize the complexity of $f^{(m)}$ by the following:
             \begin{equation}
                 R(f^{(m)}) = \gamma T + \frac{\lambda}{2}\sum_{i=1}^{T}{s_i},
             \end{equation}
-        where $T$ is the number of leaves and $s_i$ is the final score at each leave; for regression problems $s_i$ is the mean of the target values of the points that belong to the region associated with the leave; for classification problems $s_i$ is the probability of the most likely class.
-        Then, the optimization problem of GB (i.e., \eqref{GB-model}) can be approximated by solving the following:
+        where $T$ is the number of leaves and $s_i$ the final score at each leave; for regression problems $s_i$ is the mean of the target values of the points that belong to the region associated with the leave; for classification problems $s_i$ is the probability of the most likely class.
+        Then, the optimization problem of XGBoost (i.e., \eqref{XGBoost-model}) can be approximated by solving the following:
             \begin{equation}
                 \begin{aligned}
                     \tilde{L} & = \sum_{i=1}^{\ndata}{
@@ -424,7 +547,7 @@ There are several key questions:
                             g_i \cdot f^{(m)}(\bm{x}_i) + \frac{1}{2} h_i \cdot (f^{(m)}(\bm{x}_i))^2 
                         \right] + \gamma T + \frac{\lambda}{2}\sum_{i=1}^{T}{s_i}
                     } \\
-                    & \quad \quad \text{$s_j = f^{(m)}(\bm{x}_i)$ if $i \in \mathcal{I}_j$} \\
+                    & \quad \quad \text{$s_j = f^{(m)}(\bm{x}_i)$ if $i \in \mathcal{I}_j$, i.e., instance $i$ belongs to leave $j$.} \\
                     & = \sum_{j=1}^{T}{
                         \left[ \underbrace{\left(\sum_{i \in \mathcal{I}_j}^{}{g_i} \right)}_{:=G_j} s_j + \frac{1}{2}\left( \underbrace{\sum_{i \in \mathcal{I}_j}^{}{h_i}}_{:=H_j} + \lambda \right)s_j^2
                         \right] + \gamma T 
@@ -437,27 +560,23 @@ There are several key questions:
                 \text{structure score of $f^{(m)}$}= -\frac{1}{2}\sum_{j=1}^{T}{\frac{G_j^2}{H_j + \lambda}} + \gamma T.
             \end{equation}
         Ideally, in each iteration we would like to enumerate all possible tree structures and pick the one that has the smallest structure score; however, this is too expensive.
-        Instead, GB grows a \emph{single} tree by iteratively splitting a node into the left and right nodes (just as how we splitted in decision trees).
+        Instead, XGBoost grows a \emph{single} tree by iteratively splitting a node into the left and right nodes (just as how we splitted in decision trees).
         We choose the feature $i$ that maximizes the following gain as the splitting feature:
             \begin{equation}
                 \frac{1}{2}\left[ \frac{G_L^2}{H_L + \lambda} + \frac{G_R^2}{H_R + \lambda} - \frac{(G_L + G_R)^2}{H_L +  H_R + \lambda}  \right] - \gamma
             \end{equation}
         Check out this excellent article about GB: \url{https://xgboost.readthedocs.io/en/stable/tutorials/model.html}.
         The Wikipedia has a good introduction for generic GB: \url{https://en.wikipedia.org/wiki/Gradient_boosting}.
+    
         
         \paragraph{Generic GB v.s. XGBoost.}
-        In each iteration of a generic GB, the first-order gradient of the loss w.r.t. the output of the learner so far is used as supervised information to train a weak learner, i.e., $f^{(m)}(\bm{x})$ should be close to $\frac{\partial L}{\partial f^{(m-1)}(\bm{x})}$.
-        However, XGBoost uses both the first- and the second-order gradient information.
-        
-        
-        
-        
-    
+        In each iteration of a generic GB, the first-order gradient of the loss w.r.t. the predictor of the last iteration is used as supervised information to train a weak learner, i.e., $f^{(m)}(\bm{x})$ should be close to $-\frac{\partial L}{\partial f^{(m-1)}(\bm{x})}$.
+        However, XGBoost uses both the first- and second-order gradient information as a criterion to split features.
         
     
     
     
-\subsubsection{Bagging}
+\subsection{Bagging}
 
 Another technique with the idea of combining weak learners to generate a strong learner is \emph{bagging}.
 Intuitively, given a dataset $\mathcal{S}$ with \ndata samples, bagging consists of three steps:
@@ -491,6 +610,7 @@ Check out this website for more details: \url{https://www.ibm.com/cloud/learn/ba
             \end{enumerate}
             \item Notice that K-Means clustering can also be used as a classification algorithm. 
             \item The above two steps can be thought of as an instantiation of the famous EM algorithm; as a result, the resulting solutions (i.e., the clustering centers) are only sub-optimal w.r.t. the loss function.
+            \item How to choose $K$? We can find $K$ by solving $\min_{K} \frac{B(K)}{W(K)}$, where $B(K)$ is the normalized total between-cluster distance and $W(K)$ the normalized total within-cluster distance. 
         \end{itemize}
     
     \subsubsection{Spectral Clustering}
@@ -504,7 +624,7 @@ Check out this website for more details: \url{https://www.ibm.com/cloud/learn/ba
             \end{equation}
         Let $\bm{H} \in \R^{\ndata \times K}$ be the matrix encoding which cluster a point belongs to, i.e., $H_{i,j}=\frac{1}{\sqrt{\SetCard{\mathcal{C}_j}}}$ if $\bm{x}_i$ belongs to cluster $\mathcal{C}_j$; otherwise $H_{i,j}=0$.
         Note that the columns of $\bm{H}$ are orthogonal with each other. 
-        Let $\bm{h}_i$ be the i-th column of $\bm{H}$.
+        Let $\bm{h}_i$ be the $i$-th column of $\bm{H}$.
         The loss function $L$ can also be formulated with the Laplacian of the underlying graph:
             \begin{equation}
                 \begin{aligned}
@@ -515,10 +635,11 @@ Check out this website for more details: \url{https://www.ibm.com/cloud/learn/ba
                       & = \sum_{i=1}^{K}{\frac{1}{\SetCard{\mathcal{C}_i}} \sum_{u \in \mathcal{C}_i, v\notin \mathcal{C}_i}^{}{A_{u,v}}}.
                 \end{aligned}
             \end{equation}
-        Minimizing $L$ directly is usually intractable since it is an integer programming.
+        Minimizing $L$ directly is usually intractable since it is an integer programming.t
         Instead, we use the following procedure to obtain an approximate solution~\cite{shalev2014understanding}:
             \begin{enumerate}
-                \item Get the SVD of $\bm{L}$ and set $\bm{U} \in \R^{\ndata \times K}$ as the matrix whose columns are the $K$ eigenvectors corresponding to the $K$ \emph{smallest} eigenvalues of $\bm{L}$.
+                \item Get the SVD of $\bm{L}$ and set $\bm{U} \in \R^{\ndata \times K}$ as the matrix whose columns are the $K$ eigenvectors (ignoring the trivial constant eigenvector) corresponding to the $K$ \emph{smallest} eigenvalues of $\bm{L}$.
+                \footnote{It is worth noting that the Laplacian matrix of a connected, undirected graph is a positive semidefinite matrix; this is because it is a real symmetric diagonally dominant matrix.}
                 \item The $K$ clusters $\mathcal{C}_1,\ldots, \mathcal{C}_K$ are obtained by running a K-Means clustering on the rows of $\bm{U}$.
             \end{enumerate}
         
@@ -567,7 +688,7 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
             Let $\mathcal{X}_l$ and $\mathcal{X}_r$ be the splitted subsets. 
             The target value associated with a sample $i$ is represented by $y_i$.
             The gain of this split is called \emph{variance reduction}:
-            $\text{Var}(y_i | i \in \mathcal{X}) - (\text{Var}(y_i | i \in \mathcal{X}_l) + \text{Var}(y_i | i \in \mathcal{X}_r))$; for example, $\text{Var}(y_i | i \in \mathcal{X}) = \frac{1}{\SetCard{\mathcal{X}}}\sum_{i \in \mathcal{X}}^{}{(y_i - \bar{y}_i)^2}$. Intuitively, we want to choose the feature $j$ as the splitting feature such that the resulting variance reduction is maximized.
+            $\text{Var}(y_i | i \in \mathcal{X}) - \left( \text{Var}(y_i | i \in \mathcal{X}_l) + \text{Var}(y_i | i \in \mathcal{X}_r) \right)$; for example, $\text{Var}(y_i | i \in \mathcal{X}) = \frac{1}{\SetCard{\mathcal{X}}}\sum_{i \in \mathcal{X}}^{}{(y_i - \bar{y}_i)^2}$. Intuitively, we want to choose the feature $j$ as the splitting feature such that the resulting variance reduction is maximized.
             \item The way we predict the target value of a testing sample: given a testing sample, the prediction is done by traversing the sample from the root down to a leaf.
             The leaf corresponds to a subset of samples; thus, the prediction is the average of the samples' target values.
             Check out the detailed implementations of decision trees: \url{https://github.com/ddbourgin/numpy-ml/blob/master/numpy_ml/trees/dt.py}.
@@ -576,8 +697,8 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
     \paragraph{Random Forests (RF).} It is worth noting that RF is similar to Boosting Trees (BT) from a modeling perspective, i.e., they are both an ensemble of decision trees.
     The difference is in the training method:
         \begin{itemize}
-            \item Training BT is more complicated than training RF, which uses a framework called \emph{Forward Stagewise Additive Modeling}; see \ref{sec:boosting-trees} for details.
-            In addition, BT usually trains a single tree.
+            \item Training BT is more complicated than training RF, the former uses a framework called \emph{Forward Stagewise Additive Modeling}; see \ref{sec:boosting-trees} for details.
+            % In addition, BT usually trains a single tree.
             \item RF is trained by bootstrapping subsets from the original data and training a decision tree on every subset. 
             The final output is the average of the decision trees.
         \end{itemize}
@@ -585,11 +706,50 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
 
 
 \subsection{Expectation-Maximization Algorithm (EM)}
-
-
+    The EM algorithm is most suitable for maximum likelihood estimation problems of models with latent variables.
+    Consider a dataset (not necessarily labeled) $\mathcal{D} = \SET{\bm{x}_1, \ldots, \bm{x}_\ndata}$.
+    Suppose we want to fit a two-component Gaussian mixture model on $\mathcal{D}$.
+    The log-likelihood function is:
+        \begin{equation}
+            \log L(\mathcal{D}) = \sum_{i=1}^{\ndata}{\log P(\bm{x}_i)} = \sum_{i=1}^{\ndata}{\log\left[ (1-\pi)f_1(\bm{x}_i; \theta_1) + \pi f_2(\bm{x}_i; \theta_2) \right]},
+        \end{equation}
+    where $\pi$ is the probability that an instance was sampled from the second component; $f_i(\bm{x}_j; \theta_i)$ is just a Gaussian probability density function with $\theta_i$ including the mean and covariance.
+    The model is latent in the sense that each instance is associated with a latent variable indicating which component it was sampled from, i.e., $m_i$ indicates the component membership of $\bm{x}_i$.
+    If we knew $\mathcal{M} = \SET{m_1, \ldots, m_\ndata}$, the resulting log-likelihood function is:
+        \begin{equation}
+            \begin{aligned}
+            \log L(\mathcal{D}, \mathcal{M}) & = \sum_{i=1}^{\ndata}{
+                \left[
+                    (1 - m_i) \log f_1(\bm{x}_i; \theta_1) + m_i  \log f_2(\bm{x}_i; \theta_2) + 
+                    (1 - m_i) \log(1 - \pi) + m_i \log\pi
+                \right]
+            }.
+            \end{aligned}
+        \end{equation}
+    The EM algorithm is to maximize $\log L(\mathcal{D}, \mathcal{M})$ by alternating the following two steps:
+        \begin{itemize}
+            \item Expectation (E-step): Suppose $\theta_1$ and $\theta_2$ are known. 
+            Let the estimates of the memberships from the previous iteration be $m'_1, \ldots, m'_\ndata$.
+            As $\mathcal{M}$ is actually not available, we use $P(m_i=1 | \theta_1, \theta_2, m'_i)$ in place of $m_i$, which is computed as follows:
+                \begin{equation}
+                    \begin{aligned}
+                    P(m_i=1 | \theta_1, \theta_2, m'_i) & = \frac{P(i \in \mathcal{C}_2) P(\bm{x}_i | i \in \mathcal{C}_2)}{P(\bm{x}_i)} \\
+                    & = \frac{\left( \sum_{j=1}^{\ndata}{m'_j} / \ndata \right) f_2(\bm{x}_i; \theta_2)}{ \left( \sum_{j=1}^{\ndata}{m'_j} / \ndata \right) f_2(\bm{x}_i; \theta_2) + \left( \sum_{j=1}^{\ndata}{(1-m'_j)} / \ndata \right) f_1(\bm{x}_i; \theta_1) }.
+                \end{aligned}
+                \end{equation}
+            \item Maximization (M-step): In this step we estimate $\theta_1$ and $\theta_2$ based on $P(m_i=1)$ computed in the E-step.
+            We use the estimation of $\theta_2$ as an example:
+                \begin{equation}
+                    \begin{aligned}
+                        \hat{\bm{\mu}}_2 & = \frac{\sum_{i=1}^{\ndata}{P(m_i=1) \bm{x}_i}}{\sum_{i=1}^{\ndata}{P(m_i=1)}}  \\
+                        \hat{\bm{\Sigma}}_2 & = \frac{\sum_{i=1}^{\ndata}{P(m_i=1)\left( \bm{x}_i -  \hat{\bm{\mu}}_2  \right)\left( \bm{x}_i -  \hat{\bm{\mu}}_2  \right)^\top}}{\sum_{i=1}^{\ndata}{P(m_i=1)}}.
+                    \end{aligned}
+                \end{equation}
+        \end{itemize}
+    
 
 \subsection{Imbalanced Data}
-    Suppose we have a dataset with positive-to-negative ratio $1:200$, i.e., the number of negative samples is $200$ times than the number of positive samples.
+    Suppose we have a dataset with positive-to-negative ratio $1:200$, i.e., the number of negative samples is $200$ times the number of positive samples.
     A standard technique to combat the imbalance is \emph{Downsampling} and \emph{Upweighting}.
         \begin{itemize}
             \item Downsampling: we sample the negative instances every $10$ times, which results in the new positive-to-negative ratio $1:20$.
@@ -617,7 +777,7 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
 
 \subsection{Ranking}
     Consider a set of data $\mathcal{S}=\SET{(\bm{x}_1, \bm{x}'_1, y_1), \ldots, (\bm{x}_{\ndata}, \bm{x}'_{\ndata}, y_{\ndata})}$, where $y_i=+1$ (resp. $-1$) if $\bm{x}'_i$ should be ranked higher (resp. lower) than $\bm{x}_i$.
-    Given a hypothesis set $\mathcal{H}$, the ranking problem is to choose a hypothesis $h \in \mathcal{H}$ such that the mis-ranking error below is minimized:
+    Given a hypothesis set $\mathcal{H}$, the ranking problem is to choose a hypothesis $h \in \mathcal{H}$ such that the mis-ranking error is minimized, i.e.,
         \begin{equation}
             R(h) = P_{(\bm{x}_i, \bm{x}'_i) \sim \mathcal{D}}\left[ y_i \cdot \left( h(\bm{x}'_i) - h(\bm{x}_i) \right) \le 0 \right].
         \end{equation}
@@ -633,4 +793,83 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
                 \end{aligned}
             \end{equation}
         The constraints encourage that $\bm{x}'_i$ is ranked higher than $\bm{x}_i$ (i.e., $\bm{w}^\top \left( \Phi(\bm{x}'_i) - \Phi(\bm{x}_i) \right) > 0$) if $y_i=+1$.
-        Some cushion $\xi_i$ is allowed, however, its magnitude is penalized in the objective function.
+        Some cushion $\xi_i$ is allowed, however, its magnitude is penalized by the objective function.
+
+
+\subsection{Matrix Factorization}
+    \begin{itemize}
+        \item Low-Rank Model: the optimization problem is to solve the following:
+            \begin{equation}
+                \begin{aligned}
+                            & \min_{\bm{X}}  & & \norm{\bm{Y} - \bm{X}}_F \\
+                            & s.t. & & \text{rank}(\bm{X}) = 1.
+                \end{aligned}
+            \end{equation}
+        In the context of movie recommendation, $Y_{i,j}$ is the ranking of user $i$ to movie $j$.
+        We would like to approximate $Y_{i,j} \approx a_i b_j$, where $a_i$ quantifies how generous user $i$ is and $b_j$ measures the  popularity of movie $j$.
+        The rank one matrix $\bm{X}$ is such that $\bm{X}=\bm{a}\bm{b}^\top$.
+        We use SVD to solve the above optimization, e.g., pick the vectors of $\bm{U}$ and $\bm{V}$ that are associated with the largest singular value.
+        \item Matrix Completion: suppose we have a matrix $\bm{Y}$ with some missing entries that we would like to recover. 
+        We make the assumption that $\bm{Y}$ is of low rank.
+        The problem is formulated as the following:
+            \begin{equation}
+                \begin{aligned}
+                            & \min_{\bm{X} \in \R^{m \times n}} & & \frac{1}{2}\norm{\bm{Y}_\Omega - \bm{X}}_2^2 + \underbrace{\lambda \norm{\bm{X}}_\ast}_{\text{convex relaxation of the low-rank assumption}},
+                \end{aligned}
+            \end{equation}
+        where $\bm{Y}_\Omega$ represents the observed entries; $\norm{\bm{X}}_\ast = \text{trace}(\sqrt{\bm{X}^\top \bm{X}}) = \sum_{i=1}^{\min \SET{m, n}}{\sigma_i(\bm{X})}$ is the nuclear norm, which is a convex relaxation of the number of non-zero singular values (and hence eigenvalues) of $\bm{X}$.
+        Notice that the above formulation results from the low-rank assumption.
+        We may make other assumptions and the corresponding formulations will be different. 
+        
+        \item Scalable Formulation: the above formulations involving SVD decomposition that are not scalable.
+        Instead, we usually solve the following formulation in practice:
+            \begin{equation}\label{eq:matrix-factor}
+                \begin{aligned}
+                            & \min_{\bm{U} \in \R^{m \times d}, \bm{V} \in \R^{n \times d}} & & \sum_{i, j\in \Omega}^{}{ w_{i,j} \big(Y_{i,j} - \langle \bm{u}_i, \bm{v}_j \rangle \big)^2 +  w_0 \sum_{i,j \notin \Omega }^{}{ \left( \langle \bm{u}_i, \bm{v}_j \rangle \right)^2} },
+                \end{aligned}
+            \end{equation}
+        where $\Omega$ is the set of observed entries of $\bm{Y}$.
+        The formulation is to do $\bm{Y} \approx \bm{U} \bm{V}^\top$.
+        \item Algorithm: we usually use \emph{weighted alternating least square} (WALS) to solve \eqref{eq:matrix-factor}.
+        Intuitively, we alternate between optimizing over either $\bm{U}$ or $\bm{V}$ with the other fixed.
+        Check out this tutorial: \url{https://cran.r-project.org/web/packages/rrecsys/vignettes/b5_wALS.html}.
+    \end{itemize}
+    
+    
+    
+\subsection{Kernel Smoothing Methods}
+    \subsubsection{Kernel Density Estimation (KDE)}
+        Given a dataset $\mathcal{D}=\SET{\bm{x}_1, \ldots, \bm{x}_\ndata}$, suppose we want to estimate the probability density function  evaluated at a query point $\bm{x}_0$, i.e., $f_\mathcal{D}(\bm{x}_0)$.
+        The framework of KDE is as follows:
+            \begin{equation}
+                f_\mathcal{D}(\bm{x}_0) = \frac{1}{\ndata}\sum_{i=1}^{\ndata}{  \frac{K_\lambda(\bm{x}_i, \bm{x}_0)}{\lambda}   },
+            \end{equation}
+        where $K_\lambda(\bm{x}_i, \bm{x}_0)$ is some kernel function (e.g., Gaussian kernel) and $\lambda$ is a scale parameter.
+        We can think of $\lambda$ as a parameter to control the bias-variance trade-off of the model.
+        
+    \subsubsection{Kernel Density Classification (KDC)}
+        Different from KDE, we need labeled data in KDC.
+        Consider a multi-class classification problem with $K$ classes.
+        The KDC consists of the following steps:
+            \begin{itemize}
+                \item We use the KDE framework to estimate a probability density function for each class, i.e., $\hat{f}_k(\bm{x})$ for $k=1,\ldots, K$.
+                \item We estimate the proportion of each class based on the labels, i.e., $\hat{\pi}_k$ for $k=1,\ldots, K$.
+                \item The probability $\hat{f}_k(\bm{x})$ is $P(\bm{x} | y=k)$ and $\hat{\pi}_k = P(y=k)$, which implies the following by using Bayes Theorem:
+                    \begin{equation}
+                        P(y=k | \bm{x}) = \frac{P(y=k) P(\bm{x} | y=k)}{P(\bm{x})} = \frac{\hat{\pi}_k \hat{f}_k(\bm{x}) }{\sum_{j=1}^{K}{ \hat{\pi}_j \hat{f}_j(\bm{x})   }}.
+                    \end{equation}
+            \end{itemize}
+            
+            
+    \subsection{When $\nfeat \gg \ndata$}
+        We can use the following techniques to handle the cases where the number of features is a lot larger than the number of data:
+            \begin{itemize}
+                \item Adding Regularization.
+                \item Feature Selection, e.g., Lasso.
+                \item Identify non-significant features: for MLE estimators, we can leverage asymptotic normality to do statistical tests.
+                Specifically, for a scalar estimator $\hat{\theta}$, we have $\frac{\hat{\theta} - \theta_0 }{\hat{\text{se}}} \sim \mathcal{N}(0, 1)$, where $\theta_0$ is the null hypothesis (usually $0$) and $\hat{\text{se}}$ is the estimated standard error.
+                Suppose the null hypothesis is that the parameter is zero, i.e., $\theta_0=0$. 
+                We reject the null hypothesis if $\Abs{\frac{\hat{\theta} }{\hat{\text{se}}}} > z_{\alpha/2}$.
+                \item Identify non-significant features: likelihood ratio test to check if a subset of parameters should be zeros.
+            \end{itemize}
+    

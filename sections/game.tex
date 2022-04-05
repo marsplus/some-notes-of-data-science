@@ -1,0 +1,24 @@
+
+
+\subsection{Stackelberg Game in ML}
+    The Stackelberg Game used in ML context is modeled as follows:
+        \begin{equation}\label{eq:stackelberg-ml}
+            \begin{aligned}
+                    & \min_{\bm{\theta}} & & L_d(\bm{x}^\ast, \bm{\theta}) \\
+                    & s.t.               & & \bm{x}^\ast \in \argmin_{\bm{x}} L_a(\bm{x}, \bm{\theta}),
+            \end{aligned}
+        \end{equation}
+    where $L_d$ is the defender's (e.g., ML practitioner) loss and $L_a$ the attacker's (e.g., spammer) loss.
+    The defender's action is to pick a model parameter $\bm{\theta}$, while the attacker's action is to modify an instance (e.g., an email).
+    The defender first decides which model parameter $\bm{\theta}$ to use; then, the attacker observes the decided $\bm{\theta}$ and correspondingly chooses the best instance, i.e., $\bm{x}^\ast$.
+    
+    Solving \eqref{eq:stackelberg-ml} is usually difficult.
+    However, there are some tractable cases:
+        \begin{itemize}
+            \item $\bm{x}^\ast$ has closed-form solution: We can directly substitute the closed-form solution back to $L_d$ and then solve a single-level optimization problem.
+            \item $L_d$ and $L_a$ are both convex: Under some mild conditions, the lower-level problem can be converted to the KKT conditions.
+            As $L_d$ is also convex, the resulting optimization problem is a convex programming.
+            \item $L_a$ is convex: If $L_d$ is not necessarily convex, we can still convert the lower-level problem to the KKT conditions. 
+            The resulting problem is a nonconvex programming with the constraints encoded by the KKT conditions, which can be solved with DC (difference of convex functions); intuitively, DC models $L_d$ as the difference of two convex functions.
+        \end{itemize}
+    

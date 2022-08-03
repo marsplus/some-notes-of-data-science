@@ -1,0 +1,67 @@
+
+
+
+    
+\subsection{Policy Gradient}
+Let $\tau$ be a trajectory, i.e., $\tau = (s_1, a_1, \ldots, s_T, a_T)$.
+The probability of generating $\tau$ is:
+    \begin{equation}
+        p_{\theta}(\tau) = p(s_1) \prod_{t=1}^{T}{\pi_{\theta}(a_t | s_t) p(s_{t+1} | s_t, a_t)},
+    \end{equation}
+where $\pi_{\theta}$ is the policy parameterized by $\theta$.
+The goal of \emph{policy gradient} is to find an optimal $\theta^\ast$ such that:
+    \begin{equation}
+        \theta^\ast = \argmax_{\theta} \E_{\tau \sim p_\theta(\tau)}\left[ \sum_{t}^{}{r(s_t, a_t)} \right].
+    \end{equation}
+    
+Suppose we have collected a set of trajectories $\SET{\tau_i}_{i=1}^{\ndata}$ by running the policy $\pi_{\theta}$ multiple times.
+% We approximate the expected reward as follows:
+%     \begin{equation}
+%         \E_{\tau \sim p_\theta(\tau)}\left[ \sum_{t}^{}{r(s_t, a_t)} \right] \approx \frac{1}{\ndata}\sum_{i=1}^{\ndata}{  \sum_{t=1}^{T}{ r(s_{i,t}, a_{i,t})}      }.
+%     \end{equation}
+A convenient identify is below:
+    \begin{equation}
+        p_{\theta}(\tau)\nabla_{\theta}\log p_{\theta}(\tau) = \nabla_\theta p_\theta(\tau).
+    \end{equation}
+Let $J(\theta) = \E_{\tau \sim p_\theta(\tau)}\left[ \sum_{t}^{}{r(s_t, a_t)} \right]$.
+The gradient of $J(\theta)$ w.r.t. $\theta$ is below:
+    \begin{equation}
+        \begin{aligned}
+        \nabla_\theta J(\theta) = \nabla_\theta \left[ \int p_\theta(\tau) r(\tau) d\tau \right] = \int \nabla_\theta p_\theta(\tau) r(\tau) d\tau  & = \int p_{\theta}(\tau)\nabla_{\theta}\log p_{\theta}(\tau)  r(\tau) d\tau \\
+        & = \E_{\tau \sim p_\theta(\tau)} \left[ \nabla_\theta \log p_\theta(\tau) r(\tau) \right].
+        \end{aligned}
+    \end{equation}
+The loglikelihood of $\tau$ is as follows (omitting the terms that are irrelevant with $\theta$):
+    \begin{equation}
+        \log p_\theta(\tau) \approx \sum_{t=1}^{T}{\log \pi_{\theta}(a_t | s_t)}.
+    \end{equation}
+Thus, we have:
+    \begin{equation}
+        \nabla_\theta J(\theta) = \E_{\tau \sim p_\theta(\tau)}\left[ \left( \sum_{t=1}^{T}{\nabla_\theta \log\pi_{\theta}(a_t | s_t)}\right) \left( \sum_{t=1}^{T}{r(s_t, a_t)} \right)\right].
+    \end{equation}
+    
+\subsubsection{On-Policy Policy Gradient}
+The classic algorithm to implement the online policy gradient is called \emph{REINFORCE}:
+    \begin{itemize}
+        \item[1.] Sample $\SET{\tau_i}_{i=1}^{\ndata}$ by running $\pi_{\theta}$ for \ndata times.
+        \item[2.] Compute $\nabla_\theta J(\theta) \approx \frac{1}{\ndata}\sum_{i=1}^{\ndata}{
+        \left(\sum_{t=1}^{T}{\nabla_\theta\log \pi_\theta(a_t^i | s_t^i)}\right)
+        \left(\sum_{t=1}^{T}{r(s_t^i, a_t^i)} \right)
+        }$.
+        \item[3.] Update $\theta \leftarrow \theta + \alpha \nabla_\theta J(\theta)$.
+    \end{itemize}
+    
+    
+    
+\subsubsection{Off-Policy Policy Gradient}
+Recall that \emph{Importance Sampling} is a useful technique to sample from a intractable distribution $p(x)$ by using an auxiliary distribution $q(x)$, i.e., 
+    \begin{equation}
+        \E_{x \sim p(x)}[f(x)] = \E_{x \sim q(x)}\left[ \frac{p(x)}{q(x)}f(x) \right].
+    \end{equation}
+
+
+
+\subsubsection{Trust Region Policy Optimization (TRPO)}
+
+
+

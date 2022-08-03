@@ -10,7 +10,7 @@
 \subsection{Optimization in Deep Learning}
     \subsubsection{Local Minimum/Maximum and Saddle Points}
     Let the loss function at a point $\bm{x}$ be $L(\bm{x})$.
-    Suppose $\bm{x}$ is the a point where the gradients become zeros, i.e., $\nabla_{\bm{x}}L(\bm{x}) = \bm{0}$.
+    Suppose $\bm{x}$ is a point where the gradients become zeros, i.e., $\nabla_{\bm{x}}L(\bm{x}) = \bm{0}$.
     We can determine whether $\bm{x}$ is a local minimum/maximum from the Hessian matrix $\bm{H}$:
         \begin{itemize}
             \item If all eigenvalues of $\bm{H}$ are positive, then $\bm{x}$ is a local minimum.
@@ -32,7 +32,7 @@
         \end{equation}
     This justifies the choice of setting $\epsilon$ to the negative of the first-order derivative.
     Notice that the value of the learning rate $\eta$ is important.
-    If $\eta$ is too large and the second-order term $O(\epsilon^2)$ becomes significant, moving toward the direction $-\eta f'(x)$ may not decrease the function value.
+    If $\eta$ is too large then the second-order term $O(\epsilon^2)$ becomes significant, moving toward the direction $-\eta f'(x)$ may not decrease the function value.
     
     \subsubsection{Newton's Method}\label{newton-method}
         Consider a function $f(\bm{x}): \R^\nfeat \rightarrow \R$.
@@ -58,21 +58,47 @@
         \begin{itemize}
             \item GD: compute the gradients over the entire dataset, i.e., $\nabla L = \sum_{i=1}^{\ndata}{\nabla f(\bm{x}_i)}$, which costs $O(\ndata)$ and might be too expensive when \ndata is large.
             \item SGD: randomly pick an index $i \in \SET{1, \ldots, \ndata}$ and compute $\nabla f(\bm{x}_i)$. This costs $O(1)$ but may oscillate a lot.
-            \item Mini-batch SGD: instead of picking a single index, mini-batch SGD picks a subset $\mathcal{M} \subseteq \SET{1, \ldots, \ndata}$ uniformly at random and then computes $\sum_{i \in \mathcal{M}}^{}{\nabla f(\bm{i})}$.
-            There are two benefits of mini-batch SGD: 1) it is more computationally efficient than both GD and SGD; 2) it reduces variance by averaging the gradients over a mini-batch.
+            \item Mini-batch SGD: instead of picking a single index, mini-batch SGD picks a subset $\mathcal{M} \subseteq \SET{1, \ldots, \ndata}$ uniformly at random and then computes $\sum_{i \in \mathcal{M}}^{}{\nabla f(\bm{x}_i)}$.
+            There are two benefits of mini-batch SGD:
+                \begin{itemize}
+                    \item[1)] Mini-batch SGD converges much faster than GD.
+                    This is because mini-batch SGD updates the model parameters more frequently than GD does in the same amount of time.
+                    \item[2)] Compared with SGD, mini-batch SGD reduces variance by averaging the gradients over a mini-batch.
+                \end{itemize}
+            Note that when doing mini-batch SGD we need to shuffle the training data after every epoch.
+            This is helpful for escaping local optima, which makes convergence faster.
         \end{itemize}
         
+        \paragraph{Shuffling in SGD.}
+        The standard way of shuffling in SGD:
+            \begin{itemize}
+                \item[1.] Before each epoch, re-shuffle the entire dataset.
+                \item[2.] Sample mini-batchs without replacement.
+            \end{itemize}
+        Notice that the following strategies do \emph{not} work:
+            \begin{itemize}
+                \item[1.] Before each epoch, shuffle the order of mini-batches, while the data in each mini-batch stays the same.
+                This is related to the Coupon Collector Problem: \url{shorturl.at/fnHXY}.
+                Intuitively, given $K$ mini-batches, we only need $\Theta(K \log{K})$ epochs to traverse all the $K$ mini-batches, which could stuck the optimization into local optima.
+                \item[2.] Only shuffle the data within each mini-batch. The gradient computed on each mini-batch is invariant to the order of the data, so this is actually equivalent to using a static order of the entire dataset.
+            \end{itemize}
+            
+    
+        
     \subsubsection{Common Optimizers in DL}
-        \begin{itemize}
-            \item Momentum: the key idea is to leverage historical gradients. Let $\bm{g}_t$ be the gradient at step $t$:
+
+            \paragraph{Momentum.} 
+            The key idea is to leverage historical gradients. Let $\bm{g}_t$ be the gradient at step $t$:
                 \begin{equation}
                     \begin{aligned}
                         \bm{v}_t & = \beta  \bm{v}_{t-1} + \bm{g}_t \text{ (recursively taking past gradients into account)}\\
                         \bm{\theta}_t & = \bm{\theta}_{t-1} - \eta_t \bm{v}_t,
                     \end{aligned}
                 \end{equation}
-            where $\beta \in (0, 1)$. By tuning the value of $\beta$, we can take either long- or short-range gradients into account.
-            \item Adagrad: recall from Section~\ref{newton-method} that the inverse of the Hessian matrix is used to precondition the gradients. 
+            where $\beta \in (0, 1)$. By tuning the value of $\beta$, we can take either long- or short-term gradient information into account.
+
+            \paragraph{Adagrad.} 
+            Recall from Section~\ref{newton-method} that the inverse of the Hessian matrix is used to precondition the gradients. 
             However, computing the Hessian and its inverse is prohibitively expensive. 
             Adagrad uses the following updating rule:
                 \begin{equation}
@@ -83,7 +109,9 @@
                 \end{equation}
             where $\bm{g}_t^2$ is element-wise squares and $\bm{\epsilon} > \bm{0}$ ensures that we do not divide by zeros.
             The intuition is that we can use the variance of the gradients as a cheap proxy for the scale of the Hessian. 
-            \item RMSProp: the $\bm{s}_t$ in Adagrad may grow very large. A simple fix of RMSProp is as follows with $\gamma \in (0, 1)$:
+
+            \paragraph{RMSProp.} 
+            The $\bm{s}_t$ in Adagrad may grow very large. A simple fix of RMSProp is as follows with $\gamma \in (0, 1)$:
                 \begin{equation}
                     \begin{aligned}
                         \bm{s}_t & = \gamma \bm{s}_{t-1} + (1 - \gamma) \bm{g}_t^2  \\
@@ -91,7 +119,10 @@
                     \end{aligned}
                 \end{equation}
             Another benefit of RMSProp is that the learning rate $\eta$ is decoupled from the scaling of $\bm{g}_t$.
-            \item Adam: the key idea is to keep track of both the momentum and the second-order moments of the gradients.
+
+
+            \paragraph{Adam.} 
+            The key idea is to keep track of both the momentum and the second-order moments of the gradients.
             The updating rule of Adam is as follows:
                 \begin{equation}
                     \begin{aligned}
@@ -101,7 +132,7 @@
                         \bm{\theta}_t & = \bm{\theta}_{t-1}  - \eta \frac{\hat{\bm{v}}_t}{\sqrt{\hat{\bm{s}}_t} +\bm{\epsilon}}.
                     \end{aligned}
                 \end{equation}
-        \end{itemize}
+
         
     
 
@@ -121,7 +152,7 @@ However, the integral is hard to evaluate as enumerating all $\bm{z}$ is difficu
 Instead, the VAE paper does the following:
     \begin{itemize}
         \item The encoder: learn a distribution $q_{\bm{\phi}}(\bm{z} | \bm{x})$, which enables us to sample a hidden vector $\bm{z}$ given an input $\bm{x}$.
-        This is an application of \emph{variational inference}, i.e., using a parameterized $q_{\bm{\phi}}(\bm{z} | \bm{x})$ to approximate the true posterior $p(\bm{z} | \bm{x})$.
+        This is an application of \emph{variational inference}, i.e., using a parameterized function (i.e., $q_{\bm{\phi}}(\bm{z} | \bm{x})$) to approximate the true posterior $p(\bm{z} | \bm{x})$.
         \item The decoder: learn another distribution $p_{\bm{\theta}}(\bm{x} | \bm{z})$, which can be used to generate an output given the sampled hidden vector $\bm{z}$.
     \end{itemize}
 The learning becomes maximizing the following:
@@ -146,7 +177,7 @@ Check out this fantastic blog for more details: \url{https://lilianweng.github.i
 Another example implementation based on PyTorch is: \url{https://github.com/ethanluoyc/pytorch-vae/blob/master/vae.py}.
 
 \subsection{RNN, GRU and LSTM}
-This section is based on the excellent book: \url{https://d2l.ai/chapter_recurrent-neural-networks/bptt.html}.
+This section is based on the excellent book: \url{shorturl.at/nwDEL}.
 % Let us first consider a one-dimensional RNN encoded as follows:
 %     \begin{equation}
 %         \begin{aligned}
@@ -215,12 +246,14 @@ When $t < T$, the loss $L$ depends on $\bm{h}_t$ and $\bm{h}_{t+1}$ (and recursi
         \end{aligned}
     \end{equation}
 The so-called ``gradient explosion'' and ``gradient vanishing'' manifest themselves from the last step of \eqref{rnn-grad}.
-When computing the gradients of the loss w.r.t. a hidden state, we need to repeatedly multiply the weight matrix between hidden states:  
+\emph{When computing the gradients of the loss w.r.t. a hidden state, we need to repeatedly multiply the weight matrix between hidden states.}  
     \begin{itemize}
         \item Gradient explosion: $\left(\bm{W}_{hh}^\top \right)^{T-i}$ will become 
         very large when some eigenvalues of $\bm{W}_{hh}$ have absolute values greater than one, which makes $\frac{\partial L}{\partial \bm{h}_t}$ very large.
         \item Gradient vanishing: $\left(\bm{W}_{hh}^\top \right)^{T-i}$ will become very small when some eigenvalues of $\bm{W}_{hh}$ have absolute values less than one, which makes $\frac{\partial L}{\partial \bm{h}_t}$ very small.
-        \item How to mitigate gradient explosion/vanishing: 1) gradient clipping, i.e., in each iteration projecting the gradients back to a $L_2$ norm ball; 2) detach the gradients after a fixed number of time steps.
+        \item How to mitigate gradient explosion/vanishing: 1) gradient clipping, i.e., projecting the gradients back to a $L_2$ norm ball. 
+        The radius of the ball can be decided from historical epochs.
+        2) detach the gradients after a fixed number of time steps.
     \end{itemize}
     
 \subsubsection{GRU}
@@ -245,7 +278,7 @@ When computing the gradients of the loss w.r.t. a hidden state, we need to repea
     We represent the neighborhood (not necessarily 1-hop neighbors) of a node $i$ by $\mathcal{N}_{s}(i)$, where $s$ is some strategy that we use to generate the neighborhood (e.g., random walk).
     Deepwalk and Node2vec solve the following maximum likelihood estimation:
         \begin{equation}
-            \max_{f} \sum_{i=1}^{\ndata}{ \log p\left(\mathcal{N}_s(i) | f(i) \right)} \approx \sum_{i=1}^{\ndata}{ \sum_{j \in \mathcal{N}_s(i)}^{}{\log p(j | f(i))} },
+            \max_{f} \left[ \sum_{i=1}^{\ndata}{ \log p\left(\mathcal{N}_s(i) | f(i) \right)} \approx \sum_{i=1}^{\ndata}{ \sum_{j \in \mathcal{N}_s(i)}^{}{\log p(j | f(i))} } \right],
         \end{equation}
     where the approximation utilizes the conditional independence assumption.
     The probability $p(j | f(i))$ is usually parameterized as follows:
@@ -312,7 +345,7 @@ When computing the gradients of the loss w.r.t. a hidden state, we need to repea
         \begin{equation}
             \text{BN}(\bm{x}) = \bm{\gamma} \odot \frac{\bm{x} - \hat{\bm{\mu}} }{\hat{\bm{\sigma}}} + \bm{\beta},
         \end{equation}
-    where $\hat{\bm{\mu}}$ and $\hat{\bm{\sigma}}$ are sample mean and standard deviation estimated from the mini-batch.
+    where $\hat{\bm{\mu}}$ and $\hat{\bm{\sigma}}$ are sample mean and standard deviation estimated from the mini-batch; $\bm{\gamma}$ and $\bm{\beta}$ are learnable weight parameters.
     Notice that during training the mean and standard deviation of BN are computed from mini-batches, however, those statistics are computed from the entire dataset when testing.
         
     

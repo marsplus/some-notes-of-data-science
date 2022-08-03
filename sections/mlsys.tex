@@ -1,12 +1,13 @@
 
 
 \subsection{A Case Study: Fraud Detection System}
+    This section is based on this tutorial: \url{shorturl.at/bxHX0}.
     \begin{enumerate}
-        \item Feature extractor: collecting features that are relevant to the problem.
+        \item Feature extraction: collecting features that are relevant to the problem.
             \begin{itemize}
                 \item Credit-card fraud detection: some relevant features include: 1) the features that characterize a user's spending behavior, historical records, geographical attributes, etc. 2) merchants' historical payment records, e.g., typical spending amount, etc. 3) some time windows are needed to aggregate time-sensitive information for both users and merchants. 
             \end{itemize}
-        \item Feature transformation: transforming the features to real values which ML models can be applied.
+        \item Feature transformation: transforming the features to real values.
             \begin{itemize}
                 \item Categorical features: binary values or one-hot encoding. 
                 \item Date and time: split a time frame (e.g., a day) into several time periods (e.g., morning, afternoon, etc.) and then use one-hot encoding. 
@@ -19,3 +20,49 @@
                 \item Threshold-free metric: ROC curve, AUC.
             \end{itemize}
     \end{enumerate}
+    
+    
+\subsection{A Case Study: YouTube Recommendation System}
+    This section is based on the paper by~\citet{covington2016deep}.
+    As Figure~2 in the paper shows, the system includes two components: 1) candidate generation network and 2) ranking network.
+    \paragraph{Candidate Generation Network}
+        \begin{itemize}
+            \item Goal: generate hundreds of videos out of the massive database of YouTube.
+            \item Method: suppose the YouTube dataset $\mathcal{D}$ has one million videos. 
+            The paper formulated the candidate generation problem as a binary classification problem, i.e., a video $v_i \in \mathcal{D}$ is in the candidate set iff its predicted label  $y_i = 1$.
+            Formally,
+                \begin{equation}
+                    P(y_i = 1) = \frac{e^{\bm{u}^\top \bm{v}_i}}{ \sum_{j \in \mathcal{D}}^{}{e^{\bm{u}^\top \bm{v}_j}}},
+                \end{equation}
+            where $\bm{u}$ is the user's embedding and $\bm{v}_i$ the video's embedding.
+            \item Feature: users' watched videos/search tokens, demographic information, etc.
+            \item Label: 1) explicit feedback, including clicks/likes/shares, etc; 2) implicit feedback, including whether the user watches the entire video, etc.
+            \item Training: the objective of training is to learn users' embedding.
+            All features are embedded into real-valued space.
+            \item Imbalanced data: the training labels are likely to be imbalanced, e.g., only a tiny amount of videos is clicked by the user (i.e., positive examples are rare). 
+            So it is necessary to downsample and reweight the negative examples.
+            \item Inference: given a user's embedding, the paper used approximate KNN to find the $K$ relevant videos as candidates. 
+        \end{itemize}
+    \paragraph{Ranking Network}
+        \begin{itemize}
+            \item Goal: given a user, suppose the candidate generation outputs a set $\mathcal{C}$ of potentially relevant videos.
+            The ranking network is to rank the videos in $\mathcal{C}$ and output the top-$k$ videos for the user.
+            \item Method: the paper formulated this as a classic ranking problem.
+            \item Feature: the embedding of watched videos/impression videos/languages/demographic information, etc.
+            \item Label: whether the user clicked the video.
+            \item Training: a training data can be a triplet $(v_{i1}, v_{i2}, y_i)$, where $y_i=1$ means video $v_{i1}$ should be ranked higher than video $v_{i2}$, and vice versa.
+            \item Inference: given a set of new videos, the ranking network scores each one of them and returns the top-$k$ scored videos.
+        \end{itemize}
+    \paragraph{Evaluation}
+        \begin{itemize}
+            \item Offline: typical metrics include precision/recall/ranking loss, etc.
+            \item Online: A/B testing.
+            \item Offline v.s. Online: the metrics of offline evaluation may not always correlate with online performance.
+            In other words, offline metrics are only surrogates of actual performance.
+            \item Evaluating the ranking results: NDCG.
+        \end{itemize}
+        
+        
+\subsection{A Case Study: Airbnb Personalized Ranking System}
+    This section is based on Airbnb's engineering blog: \url{shorturl.at/qAQZ8}.
+    

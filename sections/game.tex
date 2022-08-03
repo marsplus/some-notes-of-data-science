@@ -1,4 +1,13 @@
 
+\subsection{Correlated Equilibrium}
+    A correlated equilibrium (CE) is a distribution $\mathcal{P}$ over action profiles such that for every player $i$ and every action $a_i^\prime$:
+        \begin{equation}
+            \E_{\vec{a} \sim \mathcal{P}}\left[ u_i(\vec{a})\right] \ge \E_{\vec{a} \sim \mathcal{P}}\left[ u_i(a_i^\prime, \vec{a}_{-i})\, | \, a_i\right].
+        \end{equation}
+    Intuitively, we can think that there is a trusted principal who controls the distribution $\mathcal{P}$.
+    The principal samples a profile $\vec{a}$ from $\mathcal{P}$ and recommends the action $a_i$ for each player $i$ such that no player complains about the recommended action.
+    Check out this lecture note: \url{http://tinyurl.com/4v8dn6se}.
+
 
 \subsection{Stackelberg Game in ML}
     The Stackelberg Game used in ML context is modeled as follows:

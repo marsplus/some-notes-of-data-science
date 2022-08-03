@@ -50,10 +50,13 @@
 \providecommand{\nfeat}{\ensuremath{p}\xspace}  % the number of features
 \providecommand{\EXP}[1]{\ensuremath{ \text{exp}\left( #1 \right) }\xspace}  % the exponential function
 \providecommand{\E}{\ensuremath{\mathbbm{E}}\xspace}  % the expectation symbol
+\providecommand{\Var}{\ensuremath{\mathbbm{V}}\xspace}  % the variance symbol
+\providecommand{\Cov}{\ensuremath{\text{Cov}}\xspace}  % the covariance symbol
 \providecommand{\Tr}{\ensuremath{\mathbbm{\text{trace}}}\xspace}  % the trace operator
 \providecommand{\Sign}[1]{\ensuremath{\text{sign}\left(#1 \right)}\xspace}  % the sign function
+\providecommand{\RecallAtK}{\ensuremath{ \text{Recall}@K }\xspace}
 
-
+\setcounter{tocdepth}{3}
             
 \setlength{\parskip}{1em}
 \begin{document}
@@ -66,6 +69,10 @@
 
 \section{Basic Statistics}
 \input{sections/stat}
+
+
+\section{Basic Probability}
+\input{sections/prob} 
 
 \section{Deep Learning}
 \input{sections/dl}
@@ -83,6 +90,10 @@
 
 \section{Game Theory}
 \input{sections/game}
+
+
+\section{Reinforcement Learning}
+\input{sections/rl.tex}
 
 
 \section{Feature Engineering}

@@ -1,7 +1,7 @@
 
 
 In this section, a data matrix is represented by $\bm{X} \in \R^{\ndata \times \nfeat}$, with \ndata the number of data points and \nfeat the number of features. 
-When the context is clear we also use $\mathcal{S}$ to refer an unlabeled data. 
+When the context is clear we sometimes use $\mathcal{S}$ to refer an unlabeled data. 
 
 \subsection{Common Loss Functions}
 In this section, we focus on two discrete distributions $p$ and $q$ , defined on the same set $\mathcal{X}$.
@@ -15,10 +15,11 @@ In this section, we focus on two discrete distributions $p$ and $q$ , defined on
             Minimizing cross entropy is equivalent to maximizing the likelihood of observed data.
             Thus, when we update the model's parameters to minimize cross entropy, we are actually updating the model so as to maximize the data likelihood.
         \item Information gain from $q$ to $p$ (or the reduction of uncertainty): $H(q) - H(p)$.
-        \item Mutual information (in discrete space): 
+        \item Mutual information (in discrete spaces): 
             \begin{equation*}
                 I(X; Y) = D_\text{KL}\left( P_{X, Y} \, || \, P_X \cdot P_Y \right).
             \end{equation*}
+        MI is the KL divergence between the joint distribution (of $X$ and $Y$) and the product of their marginal distributions.
         It measures the extent to which knowledge of one quantity reduces uncertainty about the other.
         \item Mean squared error: $\frac{1}{\ndata}\sum_{i=1}^{\ndata}{(y_i - \hat{y}_i)^2}$.
         \item Upper-bounds on 0-1 loss:
@@ -135,6 +136,22 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
                 \item Bias: capturing the inherent difference between the hypothesis and the expected label even with infinite data.
             \end{itemize}
         Check out this lecture: \url{https://www.cs.cornell.edu/courses/cs4780/2018fa/lectures/lecturenote12.html}.
+        
+        \subsubsection{An Example of Bias-Variance for Linear Regression Models }
+        This is based on Chapter 7.3 at~\cite{hastie2009elements}.
+        Consider a linear regression model with standard gaussian noise $\epsilon$:
+            \begin{equation}
+                Y = f(X) + \epsilon.
+            \end{equation}
+        The expected prediction error of a regression fit $\hat{f}$ at $x_0$ is:
+            \begin{equation}
+                \begin{aligned}
+                    \ell(x_0) & = \mathbbm{E}[(f(x_0) - \hat{f}(x_0))^2] \\
+                    & = \text{noise} + \underbrace{\mathbbm{E}\left[\left(\hat{f}(x_0) - \mathbbm{E}\hat{f}(x_0) \right)^2 \right]}_{\text{variance of $\hat{f}$}} + \underbrace{\left( \mathbbm{E}\hat{f}(x_0) - f(x_0) \right)^2}_{\text{bias}^2}
+                \end{aligned}
+            \end{equation}
+        
+        
 
 
 \subsection{Cross-Validation}
@@ -145,7 +162,7 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
 
 
 \subsection{Precision, Recall, and some Other Measures}
-    The quizzes here are instructive: \url{https://developers.google.com/machine-learning/crash-course/classification/check-your-understanding-accuracy-precision-recall}.
+    The quizzes here are instructive: \url{shorturl.at/cwALX}.
     \begin{itemize}
         \item Precision: $\frac{TP}{TP + FP}$; what proportion of identified positives was actually positives?
         \item Top-k Precision: this is usually used in fraud/anomaly detection. Specifically, the predictive model gives a list of $k$ suspicious entries.
@@ -165,9 +182,38 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
 \subsection{MLE and MAP}
     \begin{itemize}
         \item The optimization problem of MLE: $\bm{\theta}^\ast \in  \argmin_{\bm{\theta}} p(\mathcal{S} | \bm{\theta})$, where $p(\mathcal{S}| \bm{\theta})$ is the likelihood of data $\mathcal{S}$.
+            \begin{enumerate}
+                \item Bernoulli distribution (coin flip): suppose we flip a coin $\ndata$ times, i.e., $X_1, \ldots, X_\ndata$ where $X_i=1$ (resp. $X_i=0$) indicating head (resp. tail).
+                The probability of getting a head is $p$.
+                The log-likelihood function is:
+                    \begin{equation}
+                        \begin{aligned}
+                            \log L & = \log \prod_{i=1}^{\ndata}{
+                            p^{X_i} (1-p)^{1-X_i} } \\
+                            & = \sum_{i=1}^{\ndata}{X_i \log p + (1-X_i) \log(1-p)} \\
+                            & \quad \quad \text{let $s = \sum_{i=1}^{\ndata}{X_i}$} \\
+                            & = \log p \cdot s + \log (1-p) (n-s).
+                        \end{aligned}
+                    \end{equation}
+                Let $\frac{\partial \log L}{\partial p} =0$ we have $p = s / \ndata$.
+                \item Uniform distribution: suppose $X_1, \ldots, X_\ndata$ are sampled from a uniform distribution $[0, \theta]$.
+                We would like to estimate $\theta$.
+                Recall that the PDF of a uniform distribution is:
+                    \begin{equation}
+                        f(x; \theta) = \begin{cases}
+                            \frac{1}{\theta}, & 0 \le x \le \theta \\
+                            0, & o.w.
+                        \end{cases}
+                    \end{equation}   
+                Let $X^\ast = \max \SET{X_1, \ldots, X_\ndata}$.
+                If $X^\ast > \theta$, we know that the likelihood function $L = 0$; otherwise, the likelihood function is $L = \left( \frac{1}{\theta}\right)^\ndata$.
+                The MLE estimate of $\theta$ is $X^\ast$.
+                Notice that $\theta > X^\ast$ cannot be true, as $L$ is decreasing in $\theta$; also, we cannot have $\theta < X^\ast$, which makes $L=0$. 
+            \end{enumerate}
         \item The optimization problem of MAP: $\bm{\theta}^\ast \in  \argmin_{\bm{\theta}} p(\bm{\theta} | \mathcal{S})$, where $p(\bm{\theta} | \mathcal{S}) \propto p(\bm{\theta})p(\mathcal{S} | \bm{\theta})$.
         \item If we have some prior knowledge about the parameter $\bm{\theta}$, then MAP is a good choice; otherwise, go ahead and use MLE. 
     \end{itemize}
+        
     
 
 \subsection{Overfitting}
@@ -211,6 +257,9 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
 
 
 \subsection{Regressions}
+    One thing worth mentioning is that many regression problems require computing matrix inverse.
+    An efficient and numerically stable way to compute the inverse $\bm{X}^{-1}$ is to solve the linear system $\bm{X} \bm{y} = \bm{I}$ for $\bm{y}$, e.g., by using \texttt{Numpy}.\footnote{Check out: \url{https://numpy.org/doc/stable/reference/generated/numpy.linalg.solve.html}}
+    
     \subsubsection{Linear Regression}\label{ML:linear-regression}
         \begin{itemize}
             \item The optimization problem: $\hat{\bm{\beta}} \in \argmin_{\bm{\beta}} \norm{\bm{X} \bm{\beta} - \bm{y}}_2^2$.
@@ -236,7 +285,7 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
     \subsubsection{Lasso Regression}
         \begin{itemize}
             \item The optimization problem: $\hat{\bm{\beta}} \in \argmin_{\bm{\beta}} \frac{1}{2}\norm{\bm{X} \bm{\beta} - \bm{y}}_2^2 + \lambda \sum_{j=1}^{\nfeat}{\Abs{\beta_j}}$.
-            \item The general idea to solve Lasso is to utilize proximal gradient descent.
+            \item The general idea to solve Lasso is utilizing the proximal gradient descent.
             See this note for deatails: \url{https://www.stat.cmu.edu/~ryantibs/convexopt-S15/scribes/08-prox-grad-scribed.pdf}.
             \item A commonly used algorithm to solve Lasso is \emph{Iterative Soft-Thresholding Algorithm} (ISTA). 
             \item ISTA algorithm is as follows:
@@ -303,7 +352,7 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
                     \end{equation}
                 \item Computing the derivative of $\log L$ w.r.t. $\bm{\beta}$ leads to: 
                 $\frac{\partial \log L}{\partial \bm{\beta}^\top} = \sum_{i=1}^{\ndata}{\left( y_i - p(y=1|\bm{x}_i) \right) \bm{x}_i }$.
-                \item We usually maximize the log-likelihood by second-order method, e.g., Newton's method, as follows:
+                \item We usually maximize the log-likelihood by second-order methods, e.g., the Newton's method, as follows:
                     \begin{equation}
                         \bm{\beta}^t = \bm{\beta}^{t-1} - \eta \left[ \frac{\partial^2 \log L}{\partial \bm{\beta}^\top \partial \bm{\beta}} \right]^{-1} \frac{\partial \log L}{\partial \bm{\beta}^\top}.
                     \end{equation}
@@ -342,7 +391,7 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
                     \begin{equation}
                         \log \frac{P(y=1 | \bm{x})}{P(y=0 | \bm{x})}  = \beta_0 + \beta_1 x_1 +, \ldots, + \beta_\nfeat x_\nfeat.
                     \end{equation}
-                Thus, the $i$-th coefficient $\beta_i$ represents the amount of increase of decrease of the log-odds when $x_i$ increases one unit.
+                Thus, the $i$-th coefficient $\beta_i$ represents the amount of increase or decrease of the log-odds when $x_i$ increases one unit.
             \end{itemize}
             
     \subsubsection{Naive Bayes (NB)}
@@ -355,7 +404,7 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
                 \end{aligned}
             \end{equation}
         When the features are discrete, we estimate $p(y=k)$ and $p(X_i = x_i | y=k)$ for all $i$ and $k$ from training data.
-        When the features are continuous, the conditional probability $p(X_i = x_i | y=k)$ is usually modeled by a one-dimensional Gaussian distribution, i.e., $\mathcal{N}(x_i; \mu_{ki}, \sigma_{ki})$, where $\mu_{ki}$ and $\sigma_{ki}$ are estimated from data.
+        When the features are continuous ($X_i$ here means the $i$-th feature), the conditional probability $p(X_i = x_i | y=k)$  is usually modeled by a one-dimensional Gaussian distribution, i.e., $\mathcal{N}(x_i; \mu_{ki}, \sigma_{ki})$, where $\mu_{ki}$ and $\sigma_{ki}$ are estimated from data.
         
     \subsubsection{SVM}
         For convenience we discuss linear SVM in the case of separable data $\mathcal{S}$.
@@ -420,8 +469,8 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
     
 \subsection{Boosting}
 \subsubsection{AdaBoost}
-The intuition behind AdaBoost is to generate a strong classifier (the one with small generalization error) by combining a bunch of weak classifiers. 
-A typical algorithm of boosting is called AdaBoost; it typically consists of $T$ iterations of boosting, where a weak classifier is picked in each iteration; finally, the $T$ weak classifiers are combined in a way that a strong classifier (with small error) is generated. 
+The intuition behind AdaBoost is to generate a strong classifier (one with small generalization error) by combining a bunch of weak classifiers. 
+A typical algorithm of boosting is called AdaBoost; it typically consists of $T$ iterations of boosting, where a weak classifier is picked in each iteration; finally, the $T$ weak classifiers are combined in a way that a strong classifier is generated. 
 The pseudocode of AdaBoost is displayed in Algorithm~\ref{adaboost:algo}~\cite{mohri2018foundations}.
 
 \begin{algorithm}[ht]
@@ -467,6 +516,7 @@ There are several key questions:
                 },
             \end{equation}
         where $F_{m-1}(\bm{x}_i) = \sum_{j=1}^{m-1}{\beta_m f(\bm{x}_i; \theta_j)}$ combines the learners that have been learned so far. 
+        As boosting sequentially reduces the training loss, the bias increases as we combine more learners; intuitively, the combined model becomes more complicated.
         
     \subsubsection{AdaBoost}
          An instantiation of \eqref{eq:forward-stagewise-add-model} with the loss function $L(\cdot)$ replaced by the exponential loss leads to the AdaBoost algorithm.
@@ -527,7 +577,7 @@ There are several key questions:
                     \underbrace{\left( y_i - (\hat{y}^{(m-1)}_i + f^{(m)}(\bm{x}_i)) \right)^2}_{:=L(y_i, \hat{y}_i^{(m)}) } + R(f^{(m)}),
                 }
             \end{equation}
-        where $f^{(m)}$ is the learner that we are learning.
+        where $f^{(m)}$ is the learner that needs to be learned at the current iteration.
         Notice that XGBoost has an additional regularization term $R(f^{(m)})$ to control the learner's complexity.
         We approximate the loss $L(y_i, \hat{y}_i^{(m)})$ with its second-order Taylor expansion at $\hat{y}^{(m-1)}_i$:
             \begin{equation}
@@ -547,7 +597,7 @@ There are several key questions:
                             g_i \cdot f^{(m)}(\bm{x}_i) + \frac{1}{2} h_i \cdot (f^{(m)}(\bm{x}_i))^2 
                         \right] + \gamma T + \frac{\lambda}{2}\sum_{i=1}^{T}{s_i}
                     } \\
-                    & \quad \quad \text{$s_j = f^{(m)}(\bm{x}_i)$ if $i \in \mathcal{I}_j$, i.e., instance $i$ belongs to leave $j$.} \\
+                    & \quad \quad \text{$s_j = f^{(m)}(\bm{x}_i)$ for any $i \in \mathcal{I}_j$, i.e., all instances belonging to leave $j$ get the same score.} \\
                     & = \sum_{j=1}^{T}{
                         \left[ \underbrace{\left(\sum_{i \in \mathcal{I}_j}^{}{g_i} \right)}_{:=G_j} s_j + \frac{1}{2}\left( \underbrace{\sum_{i \in \mathcal{I}_j}^{}{h_i}}_{:=H_j} + \lambda \right)s_j^2
                         \right] + \gamma T 
@@ -573,6 +623,14 @@ There are several key questions:
         In each iteration of a generic GB, the first-order gradient of the loss w.r.t. the predictor of the last iteration is used as supervised information to train a weak learner, i.e., $f^{(m)}(\bm{x})$ should be close to $-\frac{\partial L}{\partial f^{(m-1)}(\bm{x})}$.
         However, XGBoost uses both the first- and second-order gradient information as a criterion to split features.
         
+    \subsubsection{Missing Values}
+        A major advantage of gradient boosting trees (GBT) is the capability of dealing with missing values.
+        Consider the following two settings:
+            \begin{itemize}
+                \item Both the training and testing data have missing values at some features: GBT determines the optimal split of these features based on training data, which is used when handling missing values during testing.
+                \item Only the testing data has missing values: the testing data with missing values is split into the majority class (computed from the training data).
+            \end{itemize}
+        
     
     
     
@@ -585,8 +643,12 @@ Intuitively, given a dataset $\mathcal{S}$ with \ndata samples, bagging consists
         \item Parallel training: training $k$ weak learners on the subsets in paralle. 
         \item Aggregation: given a test sample, aggregate the $k$ weak learners by computing (in the case of regression tasks) their average or (in the case of classification tats) the majority voting.
     \end{enumerate}
-A key advantage of bagging is to reduce variance.
-Check out this website for more details: \url{https://www.ibm.com/cloud/learn/bagging}.
+A key advantage of bagging is to reduce variance\footnote{https://www.ibm.com/cloud/learn/bagging}.
+Intuitively, let $L_i$ be the generalization error of the model trained on the $i$-th bootstrapped sample.
+Assume that $L_1, \ldots, L_k$ are not correlated; this is not true in theory, however, it helps the subsequent analysis.
+The variance after bagging is $\text{Var}\left(\frac{\sum_{i=1}^{k}{L_i}}{k}\right) = \frac{\text{Var}(L_i)}{k}$.
+\footnote{For uncorrelated random variables $L_1, \ldots, L_k$: $\text{Var}\left(\frac{\sum_{i=1}^{k}{L_i}}{k}\right) = \frac{1}{k^2} \sum_{i=1}^{k}{\text{Var}(L_i)} = \frac{k \text{Var}(L_i)}{k^2} =  \frac{ \text{Var}(L_i)}{k}$.}
+Thus, the variance of the bagged model is reduced by a factor of $k$.
 
 
 
@@ -602,7 +664,7 @@ Check out this website for more details: \url{https://www.ibm.com/cloud/learn/ba
             \end{equation}
             where $\bm{c}_1, \ldots, \bm{c}_R$ are the cluster centers that are  randomly initialized.
             
-            \item The K-Means alternates the two steps until convergence: 1) assign each sample to a cluster and 2) update the centers of the $R$ clusters
+            \item The K-Means alternates the two steps until convergence: 1) assign each sample to a cluster and 2) update the centers.
             Formally, the steps are as follows:
             \begin{enumerate}
                 \item Assign $\bm{x}_i$ to cluster $k \in \argmin_{j=1,\ldots, R}\norm{\bm{x}_i - \bm{c}_j}_2^2$.
@@ -611,6 +673,7 @@ Check out this website for more details: \url{https://www.ibm.com/cloud/learn/ba
             \item Notice that K-Means clustering can also be used as a classification algorithm. 
             \item The above two steps can be thought of as an instantiation of the famous EM algorithm; as a result, the resulting solutions (i.e., the clustering centers) are only sub-optimal w.r.t. the loss function.
             \item How to choose $K$? We can find $K$ by solving $\min_{K} \frac{B(K)}{W(K)}$, where $B(K)$ is the normalized total between-cluster distance and $W(K)$ the normalized total within-cluster distance. 
+            A commonly used method to choose $K$ is the elbow method.
         \end{itemize}
     
     \subsubsection{Spectral Clustering}
@@ -638,7 +701,7 @@ Check out this website for more details: \url{https://www.ibm.com/cloud/learn/ba
         Minimizing $L$ directly is usually intractable since it is an integer programming.t
         Instead, we use the following procedure to obtain an approximate solution~\cite{shalev2014understanding}:
             \begin{enumerate}
-                \item Get the SVD of $\bm{L}$ and set $\bm{U} \in \R^{\ndata \times K}$ as the matrix whose columns are the $K$ eigenvectors (ignoring the trivial constant eigenvector) corresponding to the $K$ \emph{smallest} eigenvalues of $\bm{L}$.
+                \item Get the SVD of the Laplacian $\bm{L}$ and set $\bm{U} \in \R^{\ndata \times K}$ as the matrix whose columns are the $K$ eigenvectors (ignoring the trivial constant eigenvector) corresponding to the $K$ \emph{smallest} eigenvalues of $\bm{L}$.
                 \footnote{It is worth noting that the Laplacian matrix of a connected, undirected graph is a positive semidefinite matrix; this is because it is a real symmetric diagonally dominant matrix.}
                 \item The $K$ clusters $\mathcal{C}_1,\ldots, \mathcal{C}_K$ are obtained by running a K-Means clustering on the rows of $\bm{U}$.
             \end{enumerate}
@@ -650,6 +713,8 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
         \item When $K$ is small, e.g., $K=1$, the model complexity is high. So the bias is small; however, the variance will be large, that is, the prediction of a testing instance varies a lot when the training data changes. 
         \item When $K$ is large, the bias is large and the variance is small.
         \item The implementation of KNN utilizes a data structure called K-d tree. 
+        \item In practice, approximate KNN is usually good enough, which can be done by either the locality sensitive hashing (LSH) technique, or the  Hierarchical Navigable Small World graphs (HNSW) approach.
+        \footnote{A discussion of KNN from the perspective of industry is here: \url{https://www.elastic.co/blog/introducing-approximate-nearest-neighbor-search-in-elasticsearch-8-0}.}
     \end{itemize}
 
 
@@ -693,6 +758,16 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
             The leaf corresponds to a subset of samples; thus, the prediction is the average of the samples' target values.
             Check out the detailed implementations of decision trees: \url{https://github.com/ddbourgin/numpy-ml/blob/master/numpy_ml/trees/dt.py}.
         \end{itemize}
+        
+    \paragraph{Common Impurity Measures.}
+    For a particular node $k$, let $f^k_i$ be the frequency of label $i$ and $C$ the total number of unique labels at the node.
+    \begin{itemize}
+        \item Gini impurity (classification): $\sum_{i=1}^{C}{f^k_i (1 - f^k_i)}$.
+        \item Entropy (classification): $-\sum_{i=1}^{C}{f^k_i \log f^k_i}$.
+        \item Variance (regression): $\frac{1}{N}\sum_{i=1}^{N}{(y^k_i - \mu)^2}$, where $N$ is the total number of instances at node $k$, $y^k_i$ is the label for a particular instance, and $\mu$ is the mean of the labels at the node, i.e., $\frac{1}{N}\sum_{i=1}^{N}{y^k_i}$.
+    \end{itemize}
+    
+    
     
     \paragraph{Random Forests (RF).} It is worth noting that RF is similar to Boosting Trees (BT) from a modeling perspective, i.e., they are both an ensemble of decision trees.
     The difference is in the training method:
@@ -715,7 +790,7 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
         \end{equation}
     where $\pi$ is the probability that an instance was sampled from the second component; $f_i(\bm{x}_j; \theta_i)$ is just a Gaussian probability density function with $\theta_i$ including the mean and covariance.
     The model is latent in the sense that each instance is associated with a latent variable indicating which component it was sampled from, i.e., $m_i$ indicates the component membership of $\bm{x}_i$.
-    If we knew $\mathcal{M} = \SET{m_1, \ldots, m_\ndata}$, the resulting log-likelihood function is:
+    If we knew $\mathcal{M} = \SET{m_1, \ldots, m_\ndata}$, the resulting log-likelihood function should be:
         \begin{equation}
             \begin{aligned}
             \log L(\mathcal{D}, \mathcal{M}) & = \sum_{i=1}^{\ndata}{
@@ -746,9 +821,70 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
                     \end{aligned}
                 \end{equation}
         \end{itemize}
+        
+        \subsubsection{A Concrete Example of EM Algorithm}
+        This example is based on the network structure estimation paper from~\citet{newman2018estimating}.
+        Suppose we would like to estimate the adjacency matrix $\bm{A}$ of a network.
+        We assume a probabilistic model $P(\bm{A} | \gamma)$ of the structure, with parameters $\gamma$.
+        In addition, suppose we have a dataset $\mathcal{D}$ at hand, which can be any kind of measurement from the network.
+        Similarly, we assume a probabilistic model underlying the data, i.e., $P(\mathcal{D} | \theta)$ parameterized by $\theta$.
+        The goal is to estimate both $\gamma$ and $\theta$.
+        From Bayes rule, the posterior distribution of both the parameters and the adjacency matrix is:
+            \begin{equation}
+                P(\bm{A}, \gamma, \theta | \mathcal{D}) =  \frac{P(\bm{A}|\gamma) P(\mathcal{D} | \theta) P(\theta) P(\gamma)}{P(\mathcal{D})},
+            \end{equation}
+        where $P(\theta)$ and $P(\gamma)$ are the prior distributions of the parameters.
+        The posterior distribution of $\gamma$ and $\theta$ is obtained by marginalizing $\bm{A}$, i.e., 
+            \begin{equation}
+                P(\gamma, \theta | \mathcal{D}) = \sum_{\bm{A}}^{}{P(\bm{A}, \gamma, \theta | \mathcal{D})}.
+            \end{equation}
+            
+        Notice that $P(\gamma, \theta | \mathcal{D})$ is the distribution that we care about, e.g., we can obtain  estimation of the parameters by maximizing the posterior (MAP).
+        However, the marginalization is intractable, which makes directly maximizing $P(\gamma, \theta | \mathcal{D})$ over $\gamma$ and $\theta$ too hard.
+        A more tractable way is to maximize a lower bound on the logarithm of $P(\gamma, \theta | \mathcal{D})$, i.e., 
+            \begin{equation}
+                \log P(\gamma, \theta | \mathcal{D}) = \log \sum_{\bm{A}}^{}{P(\bm{A}, \gamma, \theta | \mathcal{D})} \ge 
+                \underbrace{\sum_{\bm{A}}^{}{q(\bm{A}) \frac{P(\bm{A}, \gamma, \theta | \mathcal{D})}{ q(\bm{A}) }}}_{(\ast)},
+            \end{equation}
+        where $q(\bm{A}) \ge 0$ and $\sum_{\bm{A}}^{}{q(\bm{A})} = 1$.
+        The second inequality utilizes the Jensen's inequality.
+        \footnote{For any set of positive quantities $x_i$: $\log \sum_{i}^{}{x_i} \ge \sum_{i}^{}{q_i \log \frac{x_i}{q_i}}$.}
+        We can use an iterative algorithm to maximize $(\ast)$.
+        The algorithm is to repeat the following steps until convergence:
+            \begin{enumerate}
+                \item Holding $\gamma$ and $\theta$ fixed, maximize $(\ast)$ w.r.t. $q(\bm{A})$ by setting
+                    \begin{equation}
+                        q(\bm{A}) = \frac{P(\bm{A}, \gamma, \theta | \mathcal{D})}{\sum_{\bm{A}}^{}{P(\bm{A}, \gamma, \theta | \mathcal{D})}}.
+                    \end{equation}
+                \item Holding $q(\bm{A})$ fixed, maximize $(\ast)$ w.r.t. $\gamma$ and $\theta$, i.e.,
+                    \begin{equation}
+                        \max_{\gamma, \theta}\left[ \sum_{\bm{A}}^{}{
+                            q(\bm{A}) \log P(\bm{A}, \gamma, \theta | \mathcal{D})
+                        } \right].
+                    \end{equation}
+                The maximization can be done by applying gradient-based methods to separately optimize over $\gamma$ and $\theta$.
+                Specifically, we first expand the term inside the bracket as follows:
+                    \begin{equation}
+                        \sum_{\bm{A}}^{}{
+                            q(\bm{A}) \log P(\bm{A}, \gamma, \theta | \mathcal{D})
+                        } \propto \sum_{\bm{A}}^{}{
+                            q(\bm{A}) \Big[  \log P(\mathcal{D} | \bm{A}, \theta) + \log P(\bm{A} | \gamma) + \log P(\gamma) + \log P(\theta) \Big]
+                        }.
+                    \end{equation}
+                Thus, the gradients w.r.t. $\gamma$ and $\theta$ are:
+                    \begin{equation}
+                        \begin{aligned}
+                        & \nabla_\gamma \log P(\gamma) + \sum_{\bm{A}}^{}{q(\bm{A}) \nabla_{\gamma} \log P(\bm{A} | \gamma)}
+                         \\
+                        & \nabla_\theta \log P(\theta) + \sum_{\bm{A}}^{}{q(\bm{A}) \nabla_\theta \log P(\mathcal{D} | \bm{A}, \theta) }.
+                        \end{aligned}
+                    \end{equation}
+            \end{enumerate}
     
+        
 
 \subsection{Imbalanced Data}
+    \paragraph{Downsampling and Upweighting.}
     Suppose we have a dataset with positive-to-negative ratio $1:200$, i.e., the number of negative samples is $200$ times the number of positive samples.
     A standard technique to combat the imbalance is \emph{Downsampling} and \emph{Upweighting}.
         \begin{itemize}
@@ -756,23 +892,23 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
             \item Upweighting: after downsampling, the weight of each negative instance needs to be increased by a factor of the downsampling ratio, i.e., $10$.
         \end{itemize}
         
-    \subsubsection{Cost-Sensitive Learning}
-        Another strategy to combat imbalanced data is through \emph{cost-sensitive} learning.
-        Consider binary classification settings.
-        Let $\mathcal{Y}_0$ and $\mathcal{Y}_1$ represent the majority and minority classes, respectively. 
-        Define the imbalance ratio as follows:
-            \begin{equation}
-                R = \frac{\SetCard{\mathcal{Y}_1}}{\SetCard{\mathcal{Y}_0}},
-            \end{equation}
-        which is usually smaller than $1$. 
-        Then, the costs of making different types of mistakes become:
-            \begin{equation}
-                \begin{aligned}
-                        \text{Cost(classify a minority sample to majority)} & = 1 \\
-                        \text{Cost(classify a majority sample to minority)} & = R.
-                \end{aligned}
-            \end{equation}
-        Intuitively, wrongly classifying a majority sample is less severe than wrongly classifying a minority sample.
+    \paragraph{Cost-Sensitive Learning.}
+    Another strategy to combat imbalanced data is through \emph{cost-sensitive} learning.
+    Consider binary classification settings.
+    Let $\mathcal{Y}_0$ and $\mathcal{Y}_1$ represent the majority and minority classes, respectively. 
+    Define the imbalance ratio as follows:
+        \begin{equation}
+            R = \frac{\SetCard{\mathcal{Y}_1}}{\SetCard{\mathcal{Y}_0}},
+        \end{equation}
+    which is usually smaller than $1$. 
+    Then, the costs of making different types of mistakes become:
+        \begin{equation}
+            \begin{aligned}
+                    \text{Cost(classify a minority sample to majority)} & = 1 \\
+                    \text{Cost(classify a majority sample to minority)} & = R.
+            \end{aligned}
+        \end{equation}
+    Intuitively, wrongly classifying a majority sample is less severe than wrongly classifying a minority sample.
         
 
 \subsection{Ranking}
@@ -797,8 +933,8 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
 
 
 \subsection{Matrix Factorization}
-    \begin{itemize}
-        \item Low-Rank Model: the optimization problem is to solve the following:
+        \paragraph{Low-Rank Model.} 
+        The optimization problem is to solve the following:
             \begin{equation}
                 \begin{aligned}
                             & \min_{\bm{X}}  & & \norm{\bm{Y} - \bm{X}}_F \\
@@ -809,7 +945,9 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
         We would like to approximate $Y_{i,j} \approx a_i b_j$, where $a_i$ quantifies how generous user $i$ is and $b_j$ measures the  popularity of movie $j$.
         The rank one matrix $\bm{X}$ is such that $\bm{X}=\bm{a}\bm{b}^\top$.
         We use SVD to solve the above optimization, e.g., pick the vectors of $\bm{U}$ and $\bm{V}$ that are associated with the largest singular value.
-        \item Matrix Completion: suppose we have a matrix $\bm{Y}$ with some missing entries that we would like to recover. 
+
+        \paragraph{Matrix Completion.} 
+        Suppose we have a matrix $\bm{Y}$ with some missing entries that we would like to recover. 
         We make the assumption that $\bm{Y}$ is of low rank.
         The problem is formulated as the following:
             \begin{equation}
@@ -820,8 +958,9 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
         where $\bm{Y}_\Omega$ represents the observed entries; $\norm{\bm{X}}_\ast = \text{trace}(\sqrt{\bm{X}^\top \bm{X}}) = \sum_{i=1}^{\min \SET{m, n}}{\sigma_i(\bm{X})}$ is the nuclear norm, which is a convex relaxation of the number of non-zero singular values (and hence eigenvalues) of $\bm{X}$.
         Notice that the above formulation results from the low-rank assumption.
         We may make other assumptions and the corresponding formulations will be different. 
-        
-        \item Scalable Formulation: the above formulations involving SVD decomposition that are not scalable.
+    
+        \paragraph{Scalable Formulation.} 
+        The above formulations involving SVD decomposition that are not scalable.
         Instead, we usually solve the following formulation in practice:
             \begin{equation}\label{eq:matrix-factor}
                 \begin{aligned}
@@ -830,10 +969,11 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
             \end{equation}
         where $\Omega$ is the set of observed entries of $\bm{Y}$.
         The formulation is to do $\bm{Y} \approx \bm{U} \bm{V}^\top$.
-        \item Algorithm: we usually use \emph{weighted alternating least square} (WALS) to solve \eqref{eq:matrix-factor}.
+        
+        \paragraph{Algorithm.} 
+        We usually use \emph{weighted alternating least square} (WALS) to solve \eqref{eq:matrix-factor}.
         Intuitively, we alternate between optimizing over either $\bm{U}$ or $\bm{V}$ with the other fixed.
         Check out this tutorial: \url{https://cran.r-project.org/web/packages/rrecsys/vignettes/b5_wALS.html}.
-    \end{itemize}
     
     
     
@@ -872,4 +1012,44 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
                 We reject the null hypothesis if $\Abs{\frac{\hat{\theta} }{\hat{\text{se}}}} > z_{\alpha/2}$.
                 \item Identify non-significant features: likelihood ratio test to check if a subset of parameters should be zeros.
             \end{itemize}
+            
+    
+    \subsection{Recommendation System}
+        
+        We consider the bipartite analog of a recommender system, where two sets $\mathcal{U}$ and $\mathcal{V}$ represent the users and items, respectively.
+        A set of observed user-item interactions is available, i.e., $\Omega$.
+        For each user-item pair $(\bm{u}, \bm{v})$, we assume $\bm{u}$ and $\bm{v}$ are embeddings of the user and item, respectively.
+        We would like to have a score function $f(\bm{u}, \bm{v})$ to quantify how likely $\bm{u}$ will like $\bm{v}$.
+        With such a score function, we can score all unobserved user-item pairs for an user $\bm{w}$ and recommend her the top-$K$ items in terms of the scores.
+        
+        For a particular user $\bm{w}$, suppose $\mathcal{P}_w$ is the set of items she will like.
+        Let $\mathcal{P}_r$ be the $K$ items recommended by the system (thus $\SetCard{\mathcal{P}_r} = K$).
+        The performance of the system is measured by \RecallAtK, i.e., 
+            \begin{equation}
+                \RecallAtK = \frac{\mathcal{P}_w \cap \mathcal{P}_r}{\SetCard{\mathcal{P}_w}}.
+            \end{equation}
+            
+            
+        \RecallAtK is not differentiable, so we usually use the following two surrogate functions:
+            \begin{itemize}
+                \item Binary loss: we pick a set of user-item interactions from $\Omega$ as \emph{positive} instances; similarly, we pick a set of user-item interactions \emph{not} in $\Omega$ as \emph{negative} instances. 
+                We then use a sigmoid function to convert the scores to $[0, 1]$ and formulate the learning of the score function as a binary classification problem.
+                One issue is that the learned score function is not personalized.
+                \item Bayesian personalized ranking (BPR): to achieve personalization,  for each user $u$ BPR defines two sets: 1) the set of positive user-item pairs for $u$, i.e., $\Omega_+(u)=\Set{(u, v)}{(u, v) \in \Omega}$ and 2) the set of negative user-item pairs for $u$, i.e., $\Omega_-(u)=\Set{(u, v)}{(u, v) \notin \Omega}$.
+                The BPR loss for $u$ is defined as follows:
+                    \begin{equation}
+                        L(u) = \frac{1}{\SetCard{\Omega_+(u)} \SetCard{\Omega_-(u)}} \sum_{(u, v_+) \in \Omega_+(u) }^{}{
+                            \sum_{(u, v_-) \in \Omega_-(u)}^{}{
+                                -\log \Big[ \sigma\big(f_\theta(u, v_+) - f_\theta(u, v_-) \big) \Big]
+                            }
+                        }.
+                    \end{equation}
+                One caveat: it is better to have $\SetCard{\Omega_-(u)} > \SetCard{\Omega_+(u)}$, since in practice the number of truly relevant user-item interactions is a lot smaller than that of irrelevant interactions.
+            \end{itemize}
+            
+    
+        
+        
+        
+        
     

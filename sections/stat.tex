@@ -1,13 +1,69 @@
+\subsection{Expectation}
+    The expectation of a random variable may not exist, e.g., a Cauchy distribution does not have an expectation. 
+    Some properties:
+        \begin{enumerate}
+            \item If $X_1, \ldots, X_\ndata$ are random variables and $a_1, \ldots, a_\ndata$ are constants, then
+                \begin{equation}
+                    \E\left( \sum_{i=1}^{\ndata}{a_i X_i}\right) = \sum_{i=1}^{\ndata}{a_i \E[X_i]}.
+                \end{equation}
+            It is worth nothing that the summation does not require $X_i$ to be IID.
+        \end{enumerate}
+    \paragraph{One concrete example.} Take a stick of unit length and break it at random.
+    Let $Y$ be the length of the longer piece. 
+    What is the mean of $Y$?
+    Let $X$ be the break point.
+    It follows that $X \sim U[0, 1]$ and $Y = \max\SET{X, 1- X}$.
+    If $0 \le X \le 1/2$, then $Y = 1 - X$; if $1/2 < X \le 1$, then $Y = X$.
+    Thus, we have
+        \begin{equation}
+            \E{[Y]} = \int_{0}^{1/2}{(1-x) dx} + \int_{1/2}^{1}{x dx} = 1/2 - 1/8 + 3/8 = 3/4.
+        \end{equation}
+        
+\subsection{Variance}
+    One thing worth mentioning about variance is the summation rule.
+    Specifically, if $X_1, \ldots, X_\ndata$ are \emph{independent} (not necessarily identically distributed) and $a_1, \ldots, a_\ndata$ are constants, then
+        \begin{equation}
+            \Var\left( \sum_{i=1}^{\ndata}{a_i X_i} \right) = \sum_{i=1}^{\ndata}{a_i^2 \Var(X_i)}.
+        \end{equation}
+    If we remove the independence assumption, the summation becomes:
+        \begin{equation}
+            \Var\left( \sum_{i=1}^{\ndata}{a_i X_i}\right) = \sum_{i=1}^{\ndata}{a_i^2 \Var(X_i)} + 2 \sum_{i < j}^{}{a_i a_j \Cov(X_i, X_j)}.
+        \end{equation}
+    
+\subsection{Conditional Expectation}
+    $\E[X]$ is a \emph{number}, while $\E[X | Y]$ is a function of $Y$.
+    We can think of $\E[X|Y]$ as a random variable, which can be realized by fixing the value of $Y$, i.e., $\E[X | Y=y]$.
+    \paragraph{The rule of iterated expectations:} $\E[\E[Y | X]] = \E[Y]$.
+    The proof is interesting
+        \begin{equation}
+            \begin{aligned}
+                    \E[\E[Y|X]] = \int \E[Y|X=x] f_x(x) dx = \int \left(y f_{y|x}(y|x) dy\right) f_x(x) dx & = \int \left( y f_{y|x}(y|x) f_x(x)\right)dx dy \\
+                    & = \int y f(x, y)  dx dy \\
+                    & = \int y f(y) dy \\
+                    & = \E[Y].
+            \end{aligned}
+        \end{equation}
+    
 
+    \subsection{Some Estimators}
+        \begin{itemize}
+            \item Sample variance: $\hat{\sigma}^2 = \frac{1}{\ndata-1} \sum_{i=1}^{\ndata}{(x_i - \bar{x})^2}$.
+            \item Sample standard deviation: $\hat{\sigma} = \sqrt{\frac{1}{\ndata-1} \sum_{i=1}^{\ndata}{(x_i - \bar{x})^2}}$.
+            \item Sample standard error (standard deviation of the sample mean): $\hat{\text{se}} = \frac{\hat{\sigma}}{\sqrt{\ndata}}$.
+        \end{itemize}
+        
 
 \subsection{Hypothesis Testing (HT)}
+
+        
+        
     \subsubsection{P-Value}
     A key step of HT is to choose a test statistic.
     Given a set of data $\mathcal{X} = \SET{x_1, \ldots, x_\ndata}$, 
     Let $T(\mathcal{X})$ be the test statistic computed on $\mathcal{X}$.
     The null hypothesis and the alternative hypothesis are $H_0$ and $H_1$, respectively.
     \begin{itemize}
-        \item P-value: the probability of observing (under $H_0$) a value of the test statistic that is the same or more extreme than $T(\mathcal{X})$, i.e., $P_{H_0}(T \ge T(\mathcal{X}))$. 
+        \item P-value: the probability of observing (under $H_0$) a value of the test statistic that is the same or more extreme than the test statistic computed from the data (i.e., $T(\mathcal{X})$), i.e., $P_{H_0}(T \ge T(\mathcal{X}))$. 
         For the purpose of computing p-values, we need to know the distribution of the test statistic.
         \item Interpreting a p-value: the smaller the p-value is, the stronger the evidence will be to reject the null hypothesis. However, the other direction is not true, i.e., we do not have strong evidence to support the null hypothesis when the p-value is large.
     \end{itemize}
@@ -24,8 +80,16 @@
      
     
     \subsection{Central Limit Theorem}
+        Let $X_1, \ldots, X_n$ be IID with mean $\mu$ and variance $\sigma^2$. 
+        Define $\bar{X}_n = \frac{\sum_{i=1}^{n}{X_i}}{n}$.
+        The distribution of $Z_n=\frac{\bar{X}_n - \mu}{\sqrt{V(\bar{X}_n)}}$ converges to the standard normal distribution $\mathcal{N}(0, 1)$ in distribution.
     
-    \subsection{Law of Large Number}
+    \subsection{The Weak Law of Large Number}
+        If $X_1, \ldots, X_n$ are IID with mean $\mu$, then $\bar{X}_n \xrightarrow{P} \mu$, i.e., $P(\Abs{\bar{X}_n - \mu} > \epsilon) \rightarrow 0$.
+        The proof is by invoking the Chebyshev's inequality:
+            \begin{equation}
+                P(\Abs{\bar{X}_n - \mu} > \epsilon) \le \frac{V(\bar{X}_n)}{\epsilon^2} = \frac{ \sigma^2 }{n \epsilon^2}.
+            \end{equation}
      
      
 
@@ -53,7 +117,7 @@
         \begin{equation}
             I(\theta) = -\int \left( \frac{\partial^2 \log f(x; \theta)}{\partial \theta^2} f(x; \theta) \right) d x,
         \end{equation}
-    where $f(x; \theta)$ is PDF of $x$.
+    where $f(x; \theta)$ is the PDF of $x$.
     The estimated standard error is computed as follows:
         \begin{equation}
             \hat{\text{se}} = \sqrt{\frac{1}{\ndata \cdot I(\hat{\theta})}}.
@@ -71,4 +135,77 @@
                 }.
             \end{equation}
     \end{itemize}
+    
+    
+\subsection{Sampling Techniques}
+    \subsubsection{Importance Sampling}
+        Suppose we would like to compute the following expectation:
+            \begin{equation}
+                I = \int h(x) f(x) d x,
+            \end{equation}
+        where $f(x)$ is the PDF and $h(x)$ is the function that we are interested in.
+        Instead of estimating $I$ by directly sampling from $f(x)$, we can estimate $I$ by sampling from a different distribution $g(x)$ as follows:
+            \begin{equation}\label{eq:importance_sampling}
+                I = \int \frac{h(x) f(x)}{g(x)}  d g(x).
+            \end{equation}
+            
+        \paragraph{One Example.}
+        Suppose $X \sim \mathcal{N}(0, 1)$ and we want to estimate $P(X > 5)$.
+        If we were to use the Monte Carlo method to estimate $P(X>5)$, it is very likely that we never sample any $x$ in the set \SET{X > 5}, which makes us wrongly conclude that $P(X > 5) = 0$.
+        Instead, we can let $g(x)$ be $\mathcal{N}(4, 1)$ and $h(x) = \mathbbm{1}[x > 5]$, and run the following:
+            \begin{itemize}
+                \item[1.] Sample from $g(x): x_1, \ldots, x_n \sim \mathcal{N}(4, 1) $.
+                \item[2.] Estimate $I = \frac{1}{\ndata} \sum_{i=1}^{\ndata}{\frac{\mathbbm{1}[x_i > 5] \cdot \mathcal{N}(x_i; 0, 1)}{\mathcal{N}(x_i; 4, 1)}}$.
+            \end{itemize}
+            
+\subsection{Common Inequalities}
+    \subsubsection{Markov Inequality}
+     Let $X$ be a \emph{non-negative} random variable and suppose that $\E[X]$ exists. 
+     For any $t > 0$,
+        \begin{equation}
+            P(X > t) \le \frac{\E[X]}{t}.
+        \end{equation}
+    \begin{proof}
+        \begin{equation}
+            \E[X] = \int_{0}^{\infty}{ x f(x)} dx = \int_{0}^{t} x f(x) dx + \int_{t}^{\infty} x f(x) dx \underbrace{\ge}_{(\diamond)} \int_{t}^{\infty} x f(x) dx \ge t \int_{t}^{\infty} f(x) dx = t P(X > t),
+        \end{equation}
+    where $(\diamond)$ utilizes the non-negative property.
+    \end{proof}
+    
+    \subsubsection{Chebyshev's Inequality}
+    Let $\mu = \E[X]$ and $\sigma^2 = \Var[X]$.
+    Then:
+        \begin{equation}
+            P(\Abs{X - \mu} \ge t) \le \frac{\sigma^2}{t^2}.
+        \end{equation}
+    \begin{proof}
+        The proof is to use Markov's inequality.
+        \begin{equation}
+            P(\Abs{X - \mu} \ge t) = P(\Abs{X - \mu}^2 \ge t^2) \le \frac{\E[\Abs{X - \mu}^2]}{t^2} =  \frac{\E[(X - \mu)^2]}{t^2} = \frac{\sigma^2}{t^2}.
+        \end{equation}
+    \end{proof}
+    
+    \paragraph{One Example.}
+    Suppose we test a neural network on \ndata testing samples.
+    Let $X_i=1$ (resp. $X_i = 0$) represent that the $i$-th instance is wrongly (resp. correctly) classified.
+    The error rate is estimated as $\bar{X}_\ndata = \frac{1}{\ndata} \sum_{i=1}^{\ndata}{X_i}$.
+    What is the probability that the error rate deviates from the \emph{true} error rate $p$ by more than $\epsilon$?
+    Treat $\bar{X}_\ndata$ as a random variable.
+    The expectation is $\E[\bar{X}_\ndata] = p$.
+    We want to compute $P(\Abs{\bar{X}_\ndata - p} \ge \epsilon)$.
+    Formally:
+        \begin{equation}
+            P(\Abs{\bar{X}_\ndata - p} \ge \epsilon) \le \frac{\Var[\bar{X}_\ndata]}{\epsilon^2} = \frac{\Var[\frac{1}{\ndata} \sum_{i=1}^{\ndata}{X_i}]}{\sigma^2} = \frac{\frac{\ndata \Var[X_i]}{\ndata^2}}{\sigma^2} = \frac{\Var[X_i]}{\ndata \sigma^2} = \frac{p (1 - p)}{N \sigma^2} \le \frac{1}{4\ndata \sigma^2}.
+        \end{equation}
+    
+    
+    \subsection{Hoeffding's Inequality}
+        Hoeffding's inequality is usually a lot more tighter than Chebyshev's inequality.
+        Let $X_1, \ldots, X_\ndata$ be independent observations (not necessarily identically distributed) such that $\E[X_i] = 0$ and $a_i \le X_i \le b_i$.
+        Let $\epsilon > 0$.
+        Then for any $t > 0$:
+            \begin{equation}
+                P\left( \sum_{i=1}^{\ndata}{X_i} \ge \epsilon \right) \le e^{-t\epsilon} \prod_{i=1}^{\ndata}{e^{t^2(b_i-a_i)^2/8} }.
+            \end{equation}
+        
     

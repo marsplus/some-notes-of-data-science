@@ -29,6 +29,20 @@
             \partial f(\bm{x}_0) = \Set{\bm{g} \in \R^\nfeat}{f(\bm{x}) \ge f(\bm{x}_0) + \bm{g}^\top (\bm{x} - \bm{x}_0), \forall \bm{x}}.
         \end{equation}
     Intuitively, this is the set of directions that never over-estimate the value of $f(\bm{x})$.
+    Some examples of subgradients are as follows:
+        \begin{itemize}
+            \item $f(\bm{x}) = \norm{\bm{x}}_2$:
+                \begin{equation}
+                    \partial f(\bm{x}) = \begin{cases}
+                        \frac{\bm{x}}{\norm{\bm{x}}_2} & , \bm{x} \ne \bm{0},\\
+                        \Set{\bm{z}}{\norm{\bm{z}}_2 \le 1} &, \bm{x} = \bm{0}.
+                    \end{cases}
+                \end{equation}
+            This is because: for $\bm{x} \ne \bm{0}$, it follows that $\norm{\bm{y}}_2 \ge \norm{\bm{x}}_2 + \left(\frac{\bm{x}}{\norm{\bm{x}}_2}\right)^\top (\bm{y} - \bm{x}) \iff \norm{\bm{y}}_2 \norm{\bm{x}}_2 \ge \bm{x}^\top \bm{y}$, which is true by Cauchy-Schwarz inequality.
+            For $\bm{x} = \bm{0}$, we have $\partial f(\bm{x}) = \Set{\bm{z}}{\norm{\bm{y}}_2 \ge \bm{z}^\top \bm{y}}$
+            \item $f(\bm{x}) = \norm{\bm{x}}_1$:
+            \item $f(\bm{x}) = \mathbbm{I}_\mathcal{C}[\bm{x}]$ (indicator function of the set $\mathcal{C}$):
+        \end{itemize}
     
     \subsubsection{Proximal (or Projected) Gradient Descent (PGD)}
     \begin{itemize}
@@ -66,6 +80,6 @@
     \end{itemize}
     
 \subsection{Matrix Norms}
-    \begin{itemize}
-        \item 
-    \end{itemize}
+    % \begin{itemize}
+    %     \item 
+    % \end{itemize}

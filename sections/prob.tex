@@ -1,0 +1,15 @@
+
+
+\subsection{Two Types of Sampling with Replacement}
+The materials are based on Chapter 1 of~\cite{degroot2012probability}.
+There are two types of ``sampling with replacement":
+\begin{itemize}
+    \item Ordered sampling with replacement: suppose we have a box containing \ndata balls numbered from $1$ to $\ndata$.
+    If we would like to select $k$ balls with replacement from the box, the number of possible ways is $\ndata^k$.
+    This is because the balls are numbered so the order matters. The first selection has $\ndata$ possibilities; the second has $\ndata$ possibilities, and so on.
+    
+    \item Unordered sampling with replacement: suppose we go to a bakery store and would like to choose a box of $k$ cakes to go.
+    The store has \ndata types of cakes.
+    The number of ways to fill the box is $\binom{\ndata+k-1}{k}$.
+    Notice that the answer is not $\ndata^k$, as the order of the same cake does not matter.
+\end{itemize}

@@ -1,0 +1,62 @@
+
+
+\subsection{Some Definitions and Important Results}
+    \paragraph{Vector Field.}
+        A vector field on a domain in $n$-dimensional Euclidean space (i.e., $\mathcal{D} \subseteq \R^n$) can be represented as a vector-valued function $f$ that associates an $n$-dimensional real vector to each point in the domain, e.g., $f: \mathcal{D} \rightarrow \R^n$.
+    \paragraph{Gradient Field.}
+        A vector field $\vec{v}$ defined on an open set $\mathcal{S}$ is called a gradient field if there exists a real-valued function $f$ on $\mathcal{S}$ such that
+            \begin{equation}
+                \vec{v} = \nabla f = \left(\frac{\partial f}{\partial x_1}, \ldots, \frac{\partial f}{\partial x_n} \right).
+            \end{equation}
+    \paragraph{Divergence.}
+        The divergence of a vector field $\vec{v}$ (defined over $\mathcal{S}$) is defined as
+            \begin{equation}
+                \nabla \cdot \vec{v} = \frac{\partial v_1}{\partial X_1} + , \ldots , + \frac{\partial v_n}{\partial X_n},
+            \end{equation}
+        where $\frac{\partial v_1}{\partial X_1}$ refers to the partial derivative w.r.t. the first coordinate. 
+        We can think of each $v_i$ as the $i$-th dimension of the vector-valued function corresponding to $\vec{v}$; thus, each $v_i$ maps a point in $\R^n$ to a real value.
+        Notice that $\nabla \cdot \vec{v}$ maps a point from $\mathcal{S}$ to a real number, quantifying ``the change of density" at that point, i.e., $\nabla \cdot \vec{v}: \mathcal{S} \rightarrow \R$. 
+        Given a point $(x_1, \ldots, x_n)$, the following three conditions exist:
+            \begin{enumerate}
+                \item $\nabla \cdot \vec{v}(x_1, \ldots, x_n) < 0$: the point is a sink.
+                \item $\nabla \cdot \vec{v}(x_1, \ldots, x_n) > 0$: the point is a source.
+                \item $\nabla \cdot \vec{v}(x_1, \ldots, x_n) = 0$: the point is a transit.
+            \end{enumerate}
+    \paragraph{Normal Vector.}
+        The normal vector of a surface $z=f(X_1, \ldots, X_n)$ at $(x_1, \ldots, x_n)$ is:
+            \begin{equation}
+                \vec{n} = \left( \frac{\partial f}{\partial X_1} ,\ldots, \frac{\partial f}{\partial X_n} , -1  \right).
+            \end{equation}
+        The normal vector of a plane specified by $f(X_1, \ldots, X_n) = c_1 X_1 + , \ldots, + c_n X_n = 0$ is 
+            \begin{equation}
+                \vec{n} = \left( c_1, \ldots, c_n \right).
+            \end{equation}
+    \paragraph{Lyapunouv Stable.}
+        An equilibrium point $\bm{x}^\ast$ is Lyapunouv stable if and only if for any $\epsilon > 0$, there exists a positive number $\delta(\epsilon)$, such that 
+            \begin{equation}
+                \norm{\bm{x}(0) - \bm{x}^\ast} \le \delta \implies \norm{\bm{x}(t; \bm{x}_0, \bm{u}(t)=\bm{0}) - \bm{x}^\ast} \le \epsilon.
+            \end{equation}
+        Intuitively, for any starting point close enough to $\bm{x}^\ast$, the states of the system $\bm{x}(t; \bm{x}_0, \bm{u}(t)=\bm{0})$ will not be far away from $\bm{x}^\ast$.
+    \paragraph{Asymptotically Stable.}
+        If an equilibrium point $\bm{x}^\ast$ is Lyapunouv stable and every motion starting sufficiently close to $\bm{x}^\ast$ converges to $\bm{x}^\ast$ as $t \rightarrow \infty$, then the point is called asymptotically stable.
+    \paragraph{Attractor.}
+        An attractor $\mathcal{A}$ is a closed set. 
+        It is invariant, i.e., any trajectory $\bm{x}(t)$ that starts in $\mathcal{A}$ remains in $\mathcal{A}$.
+        We say that $\mathcal{A}$ attracts an open set of initial conditions if there is an open set $\mathcal{U}$ that contains $\mathcal{A}$ such that if $\bm{x}(0) \in \mathcal{U}$ then $\bm{x}(t) \in \mathcal{A}$ as $t \rightarrow \infty$.
+        The largest $\mathcal{U}$ is called the basin of attraction of $\mathcal{A}$.
+    \paragraph{Lyapunouv Function.}
+        Consider a dynamical system $\dot{\bm{x}} = f(\bm{x}), f: \R^n \rightarrow \R^n$.
+        Let $\bm{x}^\ast$ be an equilibrium point.
+        A continuously differentiable function $V: \R^n \rightarrow \R$ is called a Lyapunouv function for $\bm{x}^\ast$ if for some neighborhood $\mathcal{D}$ the following holds:
+            \begin{itemize}
+                \item $V(\bm{x}^\ast)=0$ and $V(\bm{x}) > 0$ for all $\bm{x} \ne \bm{x}^\ast \in \mathcal{D}$.
+                \item $\dot{V}(\bm{x}) \le 0$ for all $\bm{x} \in \mathcal{D}$, where $\dot{V} = \frac{d V}{dX_1}\frac{d X_1}{d t} + , \ldots , + \frac{d V}{dX_n}\frac{d X_n}{d t}$.
+                If the inequality is strict, then $V$ is called a \emph{strict} Lyapunouv function.
+            \end{itemize}
+            
+    \paragraph{Lyapunouv Stability Theorem.}
+        Let $\bm{x}^\ast$ be an equilibrium point of $\dot{\bm{x}} = f(\bm{x})$.
+        If there exists a Lyapunouv function for $\bm{x}^\ast$, then $\bm{x}^\ast$ is stable. 
+        If there exists a strictly Lyapunouv function, then $\bm{x}^\ast$ is asymptotically stable.
+        
+        

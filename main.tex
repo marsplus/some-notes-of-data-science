@@ -18,7 +18,7 @@
 \usepackage{color-edits}
 \usepackage[hidelinks]{hyperref}
 
-\title{Miscellaneous Basics of Data Science }
+\title{Some Notes of Data Science \\ (WARNING: no guarantee on technical soundness)}
 \author{Sixie Yu}
 \date{ }
 \setlength{\parindent}{0em}
@@ -55,6 +55,9 @@
 \providecommand{\Tr}{\ensuremath{\mathbbm{\text{trace}}}\xspace}  % the trace operator
 \providecommand{\Sign}[1]{\ensuremath{\text{sign}\left(#1 \right)}\xspace}  % the sign function
 \providecommand{\RecallAtK}{\ensuremath{ \text{Recall}@K }\xspace}
+\providecommand{\ColSpace}{\ensuremath{ C }\xspace} % column space
+\providecommand{\NullSpace}{\ensuremath{ N }\xspace} % null space
+\providecommand{\Rank}{\ensuremath{ \text{rank} }\xspace} % rank
 
 \setcounter{tocdepth}{3}
             
@@ -98,6 +101,20 @@
 
 \section{Feature Engineering}
 \input{sections/feature}
+
+
+\section{Matrix Analysis}
+\input{sections/matrix.tex}
+
+\section{Dynamical System}
+\input{sections/dynamical.tex}
+
+\section{Ordinary Differential Equation}
+\input{sections/ode.tex}
+
+
+\section{Time Series Analysis}
+\input{sections/time-series.tex}
 
 
 \bibliographystyle{plainnat}

@@ -516,7 +516,7 @@ There are several key questions:
                 },
             \end{equation}
         where $F_{m-1}(\bm{x}_i) = \sum_{j=1}^{m-1}{\beta_m f(\bm{x}_i; \theta_j)}$ combines the learners that have been learned so far. 
-        As boosting sequentially reduces the training loss, the bias increases as we combine more learners; intuitively, the combined model becomes more complicated.
+        As boosting sequentially reduces the training loss, the bias increases---the combined classifier becomes gradually complicated.
         
     \subsubsection{AdaBoost}
          An instantiation of \eqref{eq:forward-stagewise-add-model} with the loss function $L(\cdot)$ replaced by the exponential loss leads to the AdaBoost algorithm.
@@ -790,7 +790,7 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
         \end{equation}
     where $\pi$ is the probability that an instance was sampled from the second component; $f_i(\bm{x}_j; \theta_i)$ is just a Gaussian probability density function with $\theta_i$ including the mean and covariance.
     The model is latent in the sense that each instance is associated with a latent variable indicating which component it was sampled from, i.e., $m_i$ indicates the component membership of $\bm{x}_i$.
-    If we knew $\mathcal{M} = \SET{m_1, \ldots, m_\ndata}$, the resulting log-likelihood function should be:
+    If we knew $\mathcal{M} = \SET{m_1, \ldots, m_\ndata}$, the resulting log-likelihood function would be:
         \begin{equation}
             \begin{aligned}
             \log L(\mathcal{D}, \mathcal{M}) & = \sum_{i=1}^{\ndata}{
@@ -844,10 +844,10 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
         A more tractable way is to maximize a lower bound on the logarithm of $P(\gamma, \theta | \mathcal{D})$, i.e., 
             \begin{equation}
                 \log P(\gamma, \theta | \mathcal{D}) = \log \sum_{\bm{A}}^{}{P(\bm{A}, \gamma, \theta | \mathcal{D})} \ge 
-                \underbrace{\sum_{\bm{A}}^{}{q(\bm{A}) \frac{P(\bm{A}, \gamma, \theta | \mathcal{D})}{ q(\bm{A}) }}}_{(\ast)},
+                \underbrace{\sum_{\bm{A}}^{}{q(\bm{A}) \log \left( \frac{P(\bm{A}, \gamma, \theta | \mathcal{D})}{ q(\bm{A}) } \right) }}_{(\ast)},
             \end{equation}
         where $q(\bm{A}) \ge 0$ and $\sum_{\bm{A}}^{}{q(\bm{A})} = 1$.
-        The second inequality utilizes the Jensen's inequality.
+        The second inequality utilizes Jensen's inequality.
         \footnote{For any set of positive quantities $x_i$: $\log \sum_{i}^{}{x_i} \ge \sum_{i}^{}{q_i \log \frac{x_i}{q_i}}$.}
         We can use an iterative algorithm to maximize $(\ast)$.
         The algorithm is to repeat the following steps until convergence:

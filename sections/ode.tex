@@ -1,0 +1,23 @@
+
+
+\subsection{Homogeneous Linear System}
+This section is based on the materials in Section 10.4 of \cite{trench2013elementary}.
+Consider the following ODE with constant coefficient matrix $\bm{A} \in \R^{n \times n}$:
+    \begin{equation}\label{eq:ode}
+        \dot{\bm{x}} = \bm{A} \bm{x}.
+    \end{equation}
+The following theorem characterizes the solutions of the above system; see Theorem 10.4.1 of \cite{trench2013elementary}.
+\begin{theorem}
+    Suppose $\bm{A}$ has $n$ real eigenvalues $\lambda_1, \ldots, \lambda_n$ (which need not be distinct) with associated linearly independent eigenvectors $\bm{x}_1, \ldots, \bm{x}_n$.
+    Then the functions
+        \begin{equation}
+            \bm{y}_1 = \bm{x}_1 e^{\lambda_1 t}, \ldots, \bm{y}_n = \bm{x}_n e^{\lambda_n t},
+        \end{equation}
+    form a fundamental set of solutions of \eqref{eq:ode}.
+    As a result, any solution $\bm{y}$ of the ODE can be represented by a linear combination of the fundamental solutions, i.e., 
+        \begin{equation}
+            \bm{y} = c_1 \bm{x}_1 e^{\lambda_1 t} + , \ldots, + c_n \bm{x}_n e^{\lambda_n t}.
+        \end{equation}
+    The values of the coefficients are determined by initial value conditions.
+    
+\end{theorem}

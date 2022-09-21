@@ -1,0 +1,22 @@
+
+
+
+\subsection{Checking Non-Stationarity}
+A stationary sequence should exhibit the following four properties: 1) constant means; 2) constant variance; 3) constant auto-correlation structures\footnote{E.g., today's measurements are highly correlated with some past values.}; 4) no periodic component. 
+
+There are a couple of ways to check if there is non-stationarity in the data.
+    \begin{itemize}
+        \item Just plot the sequence. We should check if there is any specific pattern. 
+        This is usually the first step of any subsequent analysis.
+        \item Divide a sequence into several chunks and compute some statistics (e.g., mean, variance, etc.) on each chunk. 
+        If the statistics vary a lot, it's likely there is some non-stationarity. 
+        \item Visualize a sequence as a histogram plot. The histogram should look like a normal distribution if the sequence is stationary.
+        \item Use the Augmented Dickey-Fully (ADF) test. This is usually good with large datasets.
+    \end{itemize}
+
+Some transformations can be applied to convert non-stationary sequences to stationary ones:
+    \begin{itemize}
+        \item Periodicity or non-constant mean: remove the periodicity and make the mean constant.
+        \item Heterogeneous variances: a log transformation can be applied.
+        \item Auto-correlation structures: 1) determine the lag $l$; 2) minus the current value by the value at $l$ steps before, i.e., $v_t \leftarrow v_t - v_{t-l}$.
+    \end{itemize}

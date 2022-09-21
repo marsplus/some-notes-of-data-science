@@ -1,0 +1,16 @@
+
+
+
+\subsection{Real Symmetric Matrix}
+    \subsubsection{Spectral Radius}
+    The spectral radius of a real symmetric matrix is the maximum of the absolute values of  its eigenvalues, i.e., 
+        \begin{equation}
+            \rho(\bm{X}) = \max_{i} \Abs{\lambda_i(\bm{X})}.
+        \end{equation}
+
+    In the context of real symmetric matrices, the following inequality holds (for any natural matrix norm):
+        \begin{equation}
+            \norm{\bm{X}\bm{v}} = \norm{\bm{U}^\top \bm{D} \bm{U} \bm{v}} = \norm{\bm{D} \bm{U} \bm{v} } \le \rho(\bm{X}) \norm{\bm{U} \bm{v}} = \rho(\bm{X}) \norm{\bm{v}}.
+        \end{equation}
+    This is because a real symmetric matrix is diagonalizable with a unitary matrix, i.e., $\bm{X} = \bm{U}^\top \bm{D} \bm{U}$ and unitary matrices preserve vector length.  
+        

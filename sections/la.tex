@@ -1,4 +1,26 @@
 
+\subsection{Some Fundamentals}
+    Given a matrix $\bm{A} \in \R^{m \times n}$, the null space contains all solutions $\bm{x}$ to $\bm{A}\bm{x} = \bm{0}$.
+    The reduced row echelon form of $\bm{A}$ is $\bm{R}$.
+    Some important facts:
+    \begin{itemize}
+        \item \text{The number of pivots of $\bm{A}$} = \text{the number of nonzero rows in $\bm{R}$} = \text{$\Rank(\bm{A})$}.
+        \item If column $j$ of $\bm{R}$ is free (i.e., no pivot), there is a special solution of $\bm{A}\bm{x}=\bm{0}$ with $x_j=1$.
+        The number of free columns (i.e., the columns without pivots) of $\bm{R}$ is $n - \Rank(\bm{A})$.
+        \item Every matrix with $m < n$ (i.e., a short and wide matrix) has nonzero solutions to $\bm{A}\bm{x} = \bm{0}$.
+        \item The rank $\Rank(\bm{A})$ is the dimensions of both the row space and the column space. The dimension of the null space is $n - \Rank(\bm{A})$.
+        \item The solutions to $\bm{A}\bm{x} = \bm{b}$ (if any) consists of two parts: one particular solution $\bm{x}_p$ where $\bm{A}\bm{x}_p = \bm{b}$ and several solutions $\bm{x}_n$ of $\bm{A} \bm{x} = \bm{0}$ (one for each free variable).
+        \item In summary, there are four possibilities for the linear system $\bm{A} \bm{x} = \bm{b}$:
+            \begin{enumerate}
+                \item $\Rank(\bm{A}) = m = n$: the matrix $\bm{A}$ is invertible and the system has one solution.
+                \item $\Rank(\bm{A}) = m$ and $\Rank(\bm{A}) < n$: the matrix $\bm{A}$ is short and wide; the system has infinite solutions.
+                \item $\Rank(\bm{A}) < m$ and $\Rank(\bm{A}) = n$: the matrix $\bm{A}$ is tall and thin; the system has zero or one solution.
+                \item $\Rank(\bm{A}) < m$ and $\Rank(\bm{A}) < n$: the matrix $\bm{A}$ is not full rank; the system has zero or infinite solutions.
+            \end{enumerate}
+        \end{itemize}
+
+
+
 
 \subsection{Commonly Used Matrix Differentiation}
     We use the \emph{numerator layout} convention when discussing matrix differentiation.

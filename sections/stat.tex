@@ -200,12 +200,27 @@
     
     
     \subsection{Hoeffding's Inequality}
-        Hoeffding's inequality is usually a lot more tighter than Chebyshev's inequality.
+        Hoeffding's inequality is usually a lot tighter than Chebyshev's inequality.
         Let $X_1, \ldots, X_\ndata$ be independent observations (not necessarily identically distributed) such that $\E[X_i] = 0$ and $a_i \le X_i \le b_i$.
         Let $\epsilon > 0$.
         Then for any $t > 0$:
             \begin{equation}
                 P\left( \sum_{i=1}^{\ndata}{X_i} \ge \epsilon \right) \le e^{-t\epsilon} \prod_{i=1}^{\ndata}{e^{t^2(b_i-a_i)^2/8} }.
             \end{equation}
+
+
+    \subsection{Exponential Family}
+        Let $f(\bm{x})$ be the PDF (or probability mass function in the case of discrete random variables) of the random variable $\bm{X}$.
+        We say that $f(\bm{x})$ is in the exponential family if it can be written as
+            \begin{equation}
+                f(\bm{x}; \bm{\theta}) = h(\bm{x})  \EXP{\eta(\bm{\theta})^\top T(\bm{x}) - A(\bm{\theta})}.
+            \end{equation}
+        Some important facts:
+            \begin{itemize}
+                \item $T(\bm{x})$ is called the sufficient statistics; it provides all information with regard to the unknown parameter $\bm{\theta}$. 
+                For example, given a set of i.i.d. data $\mathcal{X}=\SET{x_1, \ldots, x_\ndata}$, the sufficient statistics $T(\mathcal{X})$ is all we need to compute the posterior of $\bm{\theta}$ given $\mathcal{X}$.
+                \item $\eta(\bm{\theta})$ is called the natural parameter.
+                \item $A(\bm{\theta})$ is called the log-partition function; it plays the role of a normalization constant to ensure that $f(\bm{x}; \bm{\theta})$ is a valid PDF.
+            \end{itemize}
         
     

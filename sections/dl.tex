@@ -271,28 +271,31 @@ The so-called ``gradient explosion'' and ``gradient vanishing'' manifest themsel
     
     
 \subsection{Deepwalk and Node2vec}
+    \subsubsection{Negative Sampling}
     Deepwalk and Node2vec are unsupervised methods to learn node embedding.
     Suppose we have a graph $G=(V, E)$ with $\ndata$ nodes.
     We would like to learn an embedding $\bm{z}_i \in \R^\nfeat$ for each node $i$, such that $\bm{z}^{\top}_i \bm{z}_j$ is large when $i$ and $j$ are connected.
     Let $f(i): V \rightarrow \R^\nfeat$ be the function mapping a node to its embedding.
     We represent the neighborhood (not necessarily 1-hop neighbors) of a node $i$ by $\mathcal{N}_{s}(i)$, where $s$ is some strategy that we use to generate the neighborhood (e.g., random walk).
-    Deepwalk and Node2vec solve the following maximum likelihood estimation:
+    Deepwalk and Node2vec solve the following maximum likelihood estimation problem:
         \begin{equation}
             \max_{f} \left[ \sum_{i=1}^{\ndata}{ \log p\left(\mathcal{N}_s(i) | f(i) \right)} \approx \sum_{i=1}^{\ndata}{ \sum_{j \in \mathcal{N}_s(i)}^{}{\log p(j | f(i))} } \right],
         \end{equation}
-    where the approximation utilizes the conditional independence assumption.
-    The probability $p(j | f(i))$ is usually parameterized as follows:
+    where the approximation utilizes the assumption of conditional independence.
+    The probability density function $p(j | f(i))$ is usually parameterized by a softmax:
         \begin{equation}
             p(j | f(i)) = \frac{\EXP{\bm{z}_j^\top \bm{z}_i}}{\sum_{k\in V}^{}{\EXP{\bm{z}_k^\top \bm{z}_i}}}.
         \end{equation}
-    Intuitively, if node $j$ frequently occurs in random walks started from $i$, the two nodes should be similar in some sense; the softmax is used to capture the similarity.
-    Computing the softmax above is very expensive due to the summation in the denominator.
+    Intuitively, if node $j$ frequently occurs in random walks started from $i$, the two nodes $i$ and $j$ should be similar in some sense.
+    Evaluating the softmax is very expensive due to the summation in the denominator.
     One solution is to utilize the idea of \emph{negative sampling} to do approximation:
         \begin{equation}
             \log \frac{\EXP{\bm{z}_j^\top \bm{z}_i}}{\sum_{k\in V}^{}{\EXP{\bm{z}_k^\top \bm{z}_i}}} \approx \log\left( \sigma(\bm{z}_j^\top \bm{z}_i) \right)  - \sum_{k\in \mathcal{M}}^{}{\log\left( \sigma(\bm{z}_k^\top \bm{z}_i) \right)},
         \end{equation}
     where $\sigma(\cdot)$ is the sigmoid function.
-    The set $\mathcal{M}$ is a small subset of nodes sampled with probability proportional to the nodes' degrees. 
+    The set $\mathcal{M}$ is a subset of nodes with small cardinality, i.e., $\SetCard{\mathcal{M}} \ll \SetCard{V}$.
+    Typically, the set $\mathcal{M}$ should contain ``negative samples"; in the case of Deepwalk and Node2vec, the negative samples are those nodes that do not belong to any random walk starting from $i$; In practice, the nodes in $\mathcal{M}$ are sampled with probability proportional to the nodes' degrees.\footnote{The definition of negative samples depends on specific application scenarios.}
+    
     
     
     \subsection{GNN}

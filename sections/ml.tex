@@ -7,20 +7,33 @@ When the context is clear we sometimes use $\mathcal{S}$ to refer an unlabeled d
 In this section, we focus on two discrete distributions $p$ and $q$ , defined on the same set $\mathcal{X}$.
     \begin{itemize}
         \item KL divergence: $D_\text{KL}(p || q) = \sum_{i \in \mathcal{X}}^{}{p(i) \log \frac{p(i)}{q(i)}}$.
-        \item Entropy:  $H(p) = -\sum_{i \in \mathcal{X}}^{}{p(i) \log p(i)}$, which captures the uncertainty of the underlying event set.
-        \item Cross entropy: 
+        \item Entropy:  $H(p) = -\sum_{i \in \mathcal{X}}^{}{p(i) \log p(i)}$, which captures the uncertainty of the random variable. 
+            A higher entropy corresponds to a more uniform or spread out distribution, which implies less certainty about the outcome of a random variable.
+        \item Cross entropy:
             \begin{equation*}
                H(p, q) = H(p) + D_\text{KL}(p || q) =  -\sum_{i \in \mathcal{X}}^{}{p(i) \log p(i)} + \sum_{i \in \mathcal{X}}^{}{p(i) \log \frac{p(i)}{q(i)}} =  -\sum_{i \in \mathcal{X}}^{}{p(i) \log q(i)}.
             \end{equation*}
-            Minimizing cross entropy is equivalent to maximizing the likelihood of observed data.
-            Thus, when we update the model's parameters to minimize cross entropy, we are actually updating the model so as to maximize the data likelihood.
-        \item Information gain from $q$ to $p$ (or the reduction of uncertainty): $H(q) - H(p)$.
+        Suppose $p$ is the real distribution generating the data and $q$ is from some parametric model (e,g., a logistic regression or a neural network) that we are learning.
+        Minimizing the cross entropy $H(p, q)$ is equivalent to maximizing the log-likelihood of the observed data (i.e., $\sum_{x \sim p}^{}{\log q(x)}$). That is, updating the model's parameters by minimizing the cross entropy can be equivalently achieved by maximizing the log-likelihood.
+        \footnote{Given a dataset with $k \ge 2$ classes, the random classification rule (i.e., flipping a fair coin with $k$ sides) has cross entropy loss $-\log{\frac{1}{k}} = \log{k}$.}
+        \item Information gain from $q$ to $p$ (a.k.a. the reduction of uncertainty): $H(q) - H(p)$.
         \item Mutual information (in discrete spaces): 
             \begin{equation*}
-                I(X; Y) = D_\text{KL}\left( P_{X, Y} \, || \, P_X \cdot P_Y \right).
+                I(X; Y) = D_\text{KL}\left( P_{X, Y} \, || \, P_X \cdot P_Y \right),
             \end{equation*}
-        MI is the KL divergence between the joint distribution (of $X$ and $Y$) and the product of their marginal distributions.
-        It measures the extent to which knowledge of one quantity reduces uncertainty about the other.
+        i.e., the KL divergence between the joint distribution (of $X$ and $Y$) and the product of their marginal distributions.
+        Intuitively, it measures the information that $X$ and $Y$ share. 
+        For example, when $X$ and $Y$ are independent, the mutual information $I(X; Y)=0$, indicating that knowing the value of one of the random variables does not reduce any uncertainty about the other.
+        \item Conditional entropy (in discrete space):
+            \begin{equation*}
+                H(Y|X) = - \sum_{X \in \mathcal{X}}^{}{
+                    \sum_{Y \in \mathcal{Y}}^{}{
+                        P(X, Y) \log\left(\frac{P(X, Y)}{P(X)}\right)
+                    }
+                }.
+            \end{equation*}
+        Note that $H(Y|X) = \mathbbm{E}_{P(X, Y)}[f(X, Y)]$, where $f(X, Y)=-\log\left(\frac{P(X, Y)}{P(X)}\right)$ measures the amount of information needed to encode $Y$ given $X$.
+        Thus, the conditional entropy measures the average amount of information needed to encode $Y$ given $X$.
         \item Mean squared error: $\frac{1}{\ndata}\sum_{i=1}^{\ndata}{(y_i - \hat{y}_i)^2}$.
         \item Upper-bounds on 0-1 loss:
             \begin{itemize}
@@ -33,8 +46,8 @@ In this section, we focus on two discrete distributions $p$ and $q$ , defined on
 
 \subsection{Common Data Preprocessing}
     \begin{itemize}
-        \item Standardization: subtract the mean and divided by the standard deviation. The processed features have zero mean and unit variance.
-        \item Whitening: do a PCA and then project the data to the principal components, which removes correlation between features. 
+        \item Standardization: subtract the mean and divided by the standard deviation. The processed features have zero mean and unit variance. With Central Limit Theorem (Section~\ref{sec:CLT}), this processing makes the resulting data follow a standard normal distribution.
+        \item Whitening: do a PCA and then project the data to the principal components, eliminating correlation between features and reducing the number of feature dimensions. 
     \end{itemize}
     
 
@@ -52,14 +65,15 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
     \end{equation}
 \begin{itemize}
     \item The first term measures the bias of the hypothesis set $\mathcal{H}$: $L_\text{bias} = \argmin_{h \in \mathcal{H}} L(h)$.
-          Intuitively, if $\mathcal{H}$ is some complicated hypothesis set, e.g., deep neural networks, the bias will be very small; however, a very small bias would not always be good, as the complicated hypothesis set is the root of overfitting.
+          Intuitively, if $\mathcal{H}$ is some complicated hypothesis set (e.g., deep neural networks) the bias should be very small; however, a very small bias would not always be good, since the complexity is the root of overfitting.
           
     \item Informally, the second term decomposes into
         \begin{equation}
             L_\text{est} \approx \underbrace{L_{\mathcal{S}}(h)}_{\text{training error on $\mathcal{S}$}} + f(\text{model and sample complexity}).
         \end{equation}
-    Thus, a complicated model with have high model complexity, which makes $f(\cdot)$ large.
-    In addition, a complicated model tends to overfit to the training set; as a result, the training error $L_\mathcal{S}(h)$ will change a lot for different training data--- this refers to the ``variance'' in the famous Bias-Variance tradeoff.
+    A complicated model with high model complexity makes $f(\cdot)$ large.
+    In addition, a complicated model tends to overfit training data.
+    Thus, the training error $L_\mathcal{S}(h)$  changes a lot for different training data, leading to high variance of training errors. 
     
     \item How the Bias-Variance tradeoff arises
         \begin{equation}
@@ -162,15 +176,14 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
 
 
 \subsection{Precision, Recall, and some Other Measures}
-    The quizzes here are instructive: \url{shorturl.at/cwALX}.
     \begin{itemize}
-        \item Precision: $\frac{TP}{TP + FP}$; what proportion of identified positives was actually positives?
+        \item Precision: $\frac{TP}{TP + FP}$; what proportion of identified positives are actually positives?
         \item Top-k Precision: this is usually used in fraud/anomaly detection. Specifically, the predictive model gives a list of $k$ suspicious entries.
-        Then, $\text{top-k precision} = \frac{\text{TP out of the $k$ entries}}{k}$.
-        \item Recall: $\frac{TP}{TP + FN}$; what proportion of true positives that was correctly identified?
+        $\text{Top-k precision} = \frac{\text{TP out of the $k$ entries}}{k}$.
+        \item Recall: $\frac{TP}{TP + FN}$; what proportion of true positives that are correctly identified. $\text{Top-k recall} = \frac{\text{TP out of the $k$ entries}}{\text{total number of positives}}$.
         \item F1 score: $\left( \frac{\text{Precision}^{-1} + \text{Recall}^{-1}}{2} \right)^{-1}$; a measure to consider both precision and recall.
         \item ROC curve: evaluating a binary classification model at different thresholds and plotting the false positive rates (as x-axis) against the true positive rates (as y-axis).
-        \item AUC: the area under the ROC curve. Intuitively, AUC gives us the probability that the model ranks a random positive example higher than a random negative example.
+        \item AUC: the area under the ROC curve. Intuitively, AUC is the probability that the model ranks a randomly picked positive example higher than a randomly picked negative example.
             \begin{enumerate}
                 \item AUC is scale-invariant: it does not depend on the actual magnitudes of the output; in other words, only the ranking of the outputs matter.
                 \item AUC measures the quality of the prediction irrespective of what threshold is chosen: this may not be desirable if we have different costs for false positives and false negative (e.g., spam detection).
@@ -179,9 +192,9 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
     
 
 
-\subsection{MLE and MAP}
+\subsection{Maximum Likelihood Estimation (MLE) and Maximum a Posteriori (MAP)}
     \begin{itemize}
-        \item The optimization problem of MLE: $\bm{\theta}^\ast \in  \argmin_{\bm{\theta}} p(\mathcal{S} | \bm{\theta})$, where $p(\mathcal{S}| \bm{\theta})$ is the likelihood of data $\mathcal{S}$.
+        \item The optimization problem of MLE: $\bm{\theta}^\ast \in  \argmin_{\bm{\theta}} p(\mathcal{S} | \bm{\theta})$, where $p(\mathcal{S}| \bm{\theta})$ is the likelihood of generating the dataset $\mathcal{S}$.
             \begin{enumerate}
                 \item Bernoulli distribution (coin flip): suppose we flip a coin $\ndata$ times, i.e., $X_1, \ldots, X_\ndata$ where $X_i=1$ (resp. $X_i=0$) indicating head (resp. tail).
                 The probability of getting a head is $p$.
@@ -207,11 +220,13 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
                     \end{equation}   
                 Let $X^\ast = \max \SET{X_1, \ldots, X_\ndata}$.
                 If $X^\ast > \theta$, we know that the likelihood function $L = 0$; otherwise, the likelihood function is $L = \left( \frac{1}{\theta}\right)^\ndata$.
-                The MLE estimate of $\theta$ is $X^\ast$.
-                Notice that $\theta > X^\ast$ cannot be true, as $L$ is decreasing in $\theta$; also, we cannot have $\theta < X^\ast$, which makes $L=0$. 
+                The MLE estimate of $\theta$ (denoted by $\hat{\theta}$) is $X^\ast$.
+                This is proved from two aspects: firstly  $\hat{\theta} > X^\ast$ can't be true, as $L$ is decreasing in $\theta$ ( we could decrease $\theta$ to further increase $L$). 
+                On the other hand, we can't have $\hat{\theta} < X^\ast$, which makes $L=0$. 
             \end{enumerate}
         \item The optimization problem of MAP: $\bm{\theta}^\ast \in  \argmin_{\bm{\theta}} p(\bm{\theta} | \mathcal{S})$, where $p(\bm{\theta} | \mathcal{S}) \propto p(\bm{\theta})p(\mathcal{S} | \bm{\theta})$.
         \item If we have some prior knowledge about the parameter $\bm{\theta}$, then MAP is a good choice; otherwise, go ahead and use MLE. 
+        \item Prof. Roman Garnett has some great lecture notes about MAP: \url{https://www.cse.wustl.edu/~garnett/cse515t/fall_2019/}.
     \end{itemize}
         
     
@@ -233,26 +248,30 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
 \subsection{Singular Value Decomposition (SVD)}
     \begin{itemize}
         \item Given a data matrix $\bm{X} \in \R^{\ndata \times \nfeat}$, where \ndata is the number of data points and \nfeat the number of features.
-        The SVD is: $\bm{X} = \bm{U} \bm{D} \bm{V}^\top$; $\bm{U} \in \R^{\ndata \times \nfeat}$ and the columns of $\bm{U}$ span the column space of $\bm{X}$; $\bm{V} \in \R^{\nfeat \times \nfeat}$ and the columns of $\bm{V}$ span the row space of $\bm{X}$.
-        Both $\bm{U}$ and $\bm{V}$ are orthonormal matrices. 
-        $\bm{D}$ is a diagonal matrix with some diagonal entries possibly zeros.
+        SVD is the factorization: $\bm{X} = \bm{U} \bm{D} \bm{V}^\top$.
+        The columns of $\bm{U} \in \R^{\ndata \times \ndata}$ span the column space of $\bm{X}$.  
+        The columns of $\bm{V} \in \R^{\nfeat \times \nfeat}$ span the row space of $\bm{X}$.
+        Both $\bm{U}$ and $\bm{V}$ are orthonormal matrices.
+        $\bm{D} \in \R^{\ndata \times \nfeat}$ is a rectangular diagonal matrix (i.e., some diagonal entries may be zeros).
+        The non-zero entries are called the singular values of $\bm{D}$. 
     \end{itemize}
     
     
 \subsection{Principal Component Analysis (PCA)}
     \begin{itemize}
-        \item Given a mean-centered data matrix $\bm{X} \in \R^{\ndata \times \nfeat}$, i.e., the sum of the rows of $\bm{X}$ is $\bm{0}$; in other words, each feature has zero mean.
+        \item Given a mean-centered data matrix $\bm{X} \in \R^{\ndata \times \nfeat}$, i.e., the features have zero means.
         The correlation between features is captured by the unnormalized sample covariance matrix $\bm{X}^\top \bm{X}$, i.e., $X_{ij}$ quantifies the correlation between features $i$ and $j$.
         PCA is to do en  eigen-decomposition of $\bm{X}^\top \bm{X}$ as follows\footnote{A real symmetric matrix is always diagonalizable; see \url{http://maecourses.ucsd.edu/~mdeolive/mae280a/lecture11.pdf}.}:
             \begin{equation}
-                \bm{X}^\top \bm{X} = \left( \bm{U}\bm{D}\bm{V}^\top \right)^\top \left( \bm{U}\bm{D}\bm{V}^\top \right) = \bm{V} \bm{D}^2 \bm{V}^\top,
+                \bm{X}^\top \bm{X} = \left( \bm{U}\bm{D}\bm{V}^\top \right)^\top \left( \bm{U}\bm{D}\bm{V}^\top \right) = \bm{V} \bm{D}^2 \bm{V}^\top = d_1^2 \cdot \bm{v}_1 \bm{v}_1^\top +, \ldots, +  d_p^2 \cdot \bm{v}_p \bm{v}_p^\top,
             \end{equation}
-        where $\bm{V}^{-1} = \bm{V}^\top$. 
+        where $\bm{V}^{-1} = \bm{V}^\top$ (since $\bm{V}$ is an orthonomal matrix, we have $\bm{V} \bm{V}^\top = \bm{I}$). 
         The diagonal entries of $\bm{D}^2$ are ranked in descending order.
-        As $\bm{X}^\top \bm{X}$ is a real symmetric matrix, it can be diagonalized by an orthogonal matrix.
+        % As $\bm{X}^\top \bm{X}$ is a real symmetric matrix, it can be diagonalized by an orthogonal matrix (i.e., $\bm{V}$).
         \item The first principal component is $\bm{z}_1 = \bm{X} \bm{v}_1$, i.e., the projection of the data matrix to the first column vector of $\bm{V}$; $\bm{z}_1$ is also the direction with the maximum sample variance.
         
         \item Notice that $\bm{X} \bm{v}_1 = d_1 \bm{u}_1$ (since $\bm{X} \bm{v}_1 = \bm{U} \bm{D} \bm{V}^\top \bm{v}_1$...), where $d_1$ is the first diagonal entry of $\bm{D}$ and $\bm{u}_1$ the first column vector of $\bm{U}$; thus, the first principal component is parallel to $\bm{u}_1$.
+        If we project the entire data matrix $\bm{X}$ to the new coordinate system determined by $\bm{V}$, the columns of the projected data $\hat{\bm{X}} = \bm{X} \bm{V}$ are linearly independent.
     \end{itemize}
 
 
@@ -260,7 +279,7 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
     One thing worth mentioning is that many regression problems require computing matrix inverse.
     An efficient and numerically stable way to compute the inverse $\bm{X}^{-1}$ is to solve the linear system $\bm{X} \bm{y} = \bm{I}$ for $\bm{y}$, e.g., by using \texttt{Numpy}.\footnote{Check out: \url{https://numpy.org/doc/stable/reference/generated/numpy.linalg.solve.html}}
     
-    \subsubsection{Linear Regression}\label{ML:linear-regression}
+    \subsubsection{Linear Regression (LR)}\label{ML:linear-regression}
         \begin{itemize}
             \item The optimization problem: $\hat{\bm{\beta}} \in \argmin_{\bm{\beta}} \norm{\bm{X} \bm{\beta} - \bm{y}}_2^2$.
             \item The objective function: $L = \bm{\beta}^\top \bm{X}^\top \bm{X} \bm{\beta} - 2 \bm{\beta}^\top \bm{X}^\top \bm{y} - \bm{y}^\top \bm{y}$.
@@ -268,10 +287,32 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
                 \begin{equation}
                     \frac{\partial L}{\partial \bm{\beta}^\top} =  2 \bm{X}^\top \bm{X} \bm{\beta} - 2\bm{X}^\top \bm{y} = \bm{0}.
                 \end{equation}
-            Setting the derivative to zero we have: $\hat{\bm{\beta}} = (\bm{X}^\top \bm{X})^{-1} \bm{X}^\top \bm{y}$.
+            Assume $\bm{X}$ has full column rank (i.e., the columns are linearly independent),  setting the derivative to zero we have: $\hat{\bm{\beta}} = (\bm{X}^\top \bm{X})^{-1} \bm{X}^\top \bm{y}$. Without the assumption of linear independence, the matrix $\bm{X}^\top \bm{X}$ is only guaranteed to be positive semidefinite, i.e., there may be zero eigenvalues. 
+            In this case we need to use pseudo-inverse instead. 
             \item Further discussion: Chapter 3.2 of~\cite{hastie2009elements}.
         \end{itemize}
+
+    \subsubsection{Probabilistic View}
+        Assume the true data model is as follows
+            \begin{equation}
+                \bm{y} = \bm{X} \beta^\ast + \bm{\epsilon},
+            \end{equation}
+        where $\bm{\epsilon} \sim \mathcal{N}(\bm{0}, \sigma^2 \bm{I})$ and $\bm{X}$ has full column rank.
+        That is, the data $(\bm{X}, \bm{y})$ is generated from a linear model with white Gaussian noise.
+        This implies that the observed label $\bm{y}$ is sampled from a Gaussian distribution $\mathcal{N}(\bm{y}^\ast, \sigma^2 \bm{I})$, where $\bm{y}^\ast = \bm{X} \bm{\beta}^\ast$.
+        By the linear transformation rule of Gaussian distributions, the estimated parameter $\bm{\beta} = (\bm{X}^\top \bm{X})^{-1} \bm{X}^\top \bm{y}$ also follows a Gaussian distribution, where the mean is $ (\bm{X}^\top \bm{X})^{-1} \bm{X}^\top \bm{y}^\ast = \bm{\beta}^\ast$ and the covariance matrix is        \footnote{Suppose $\bm{A}$ is a square matrix. Transposing both sides of $\bm{A} \bm{A}^{-1}=\bm{I}$ gives us ${(\bm{A}^{-1})}^\top \bm{A}^\top = \bm{I}$. This shows that the inversion of $\bm{A}^\top$ is $(\bm{A}^{-1})^\top$, i.e., $(\bm{A}^\top)^{-1} = (\bm{A}^{-1})^\top$. }
     
+            \begin{equation}
+                \begin{aligned}
+                     (\bm{X}^\top \bm{X})^{-1} \bm{X}^\top (\sigma^2 \bm{I}) \left( (\bm{X}^\top \bm{X})^{-1} \bm{X}^\top \right)^\top & = (\sigma^2 \bm{I}) (\bm{X}^\top \bm{X})^{-1} \bm{X}^\top  \bm{X}  \left((\bm{X}^\top \bm{X})^{-1}\right)^\top \\
+                     & \quad \textcolor{red}{\text{note that $(\bm{A}^{-1})^\top = (\bm{A}^\top)^{-1}$; proof in footnote.}}\\
+                     & = (\sigma^2 \bm{I}) (\bm{X}^\top \bm{X})^{-1} \\
+                     & = \sigma^2 (\bm{X}^\top \bm{X})^{-1}.
+                \end{aligned}
+            \end{equation}
+
+         
+            
     \subsubsection{Ridge Regression}
         \begin{itemize}
             \item The optimization problem: $\hat{\bm{\beta}} \in \argmin_{\bm{\beta}} \norm{\bm{X} \bm{\beta} - \bm{y}}_2^2 + \lambda\norm{\bm{\beta}}_2^2$.
@@ -309,6 +350,41 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
             \item $L_1$ makes the optimization a bit more challenging, as the proximal gradient descent needs to be applied.
             \item From robust optimization perspective, $L_1$ and $L_2$ correspond to two ways of constructing uncertainty sets. 
         \end{itemize}
+
+
+
+    \subsubsection{The Selection of the Loss Function}  
+        Let $f$ be a regression model, which can be a highly nonlinear and complex model (e.g., a deep neural network).
+        Let $\hat{\bm{y}}$ be the predicted value of the data $\bm{X}$, i.e., $\hat{\bm{y}} = f(\bm{X})$.
+        Assume that the residuals $\bm{\epsilon} = \hat{\bm{y}} - \bm{y}$ follow a standard normal distribution, i.e., $\bm{\epsilon} \sim \mathcal{N}(\bm{0}, \sigma^2 \bm{I})$.
+        The log-likelihood function of the residuals is below
+            \begin{equation}
+                \log L = \log{ \frac{ e^{-\frac{1}{2} \bm{\epsilon}^\top \bm{\epsilon}} }{\sqrt{(2\pi)^m }}} \propto -\frac{1}{2} \bm{\epsilon}^\top \bm{\epsilon} = -\frac{1}{2}(\hat{\bm{y}} - \bm{y})^\top (\hat{\bm{y}} - \bm{y}) = -\frac{1}{2} \norm{\hat{\bm{y}} - \bm{y}}^2_2 .
+            \end{equation}
+        Thus, minimizing the Euclidean distance between $\hat{\bm{y}}$ and $\bm{y}$ is equivalent to maximizing  the likelihood of the residuals.
+        
+        If we assume that the residuals follow a Laplace distribution with parameters $\mu=0$ and $b$, i.e., $\epsilon_i \sim \frac{1}{2b} \exp{\left( -\frac{\Abs{\epsilon_i - \mu}}{b}\right)}$, then the log-likelihood is as follows
+            \begin{equation}
+                \log L \propto  -\sum_{i=1}^{m}{\Abs{\hat{y}_i - y_i}} = - \norm{\hat{\bm{y}} - \bm{y}}_1.
+            \end{equation}
+        Thus, minimizing the $L_1$ distance between $\hat{\bm{y}}$ and $\bm{y}$ is equivalent to maximizing  the likelihood of the residuals.
+        
+
+    \subsection{Robust Regression}
+        One common case in practice is that the targets $y_1, \ldots, y_{\ndata}$ follow a power-law distribution. 
+        Intuitively, this means that extreme target values are more likely to appear, which makes the regression too sensitive to them.
+        Instead, we can use a loss function called Huber loss to reduce the impact of the the extreme values.
+        Formally, the Huber loss is defined as follows:
+            \begin{equation}
+                L(a) = \begin{cases}
+                            \frac{1}{2} a^2 , &\Abs{a} \le \delta, \\
+                            \delta (\Abs{a} - \frac{1}{2}\delta) , & o.w.
+                       \end{cases}
+            \end{equation}
+        The loss behaves like the $L_2$ loss when $a$ is small, instead it behaves like the $L_1$ loss when $a$ becomes larger. 
+        
+
+        
     
 \subsection{Classification}
         \subsection{Multi-Classification}
@@ -323,7 +399,7 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
             \end{itemize}
             
         \subsubsection{Bayes Optimal Classifier}
-            In binary classification setting, the Bayes Optimal Classifier is defined as:
+            In binary classification setting, the bayes optimal classifier is defined as:
                 \begin{equation}
                     h(\bm{x}) = \begin{cases} 1, & p(y=1 | \bm{x}) \ge 0.5 \\
                                               0, & p(y=1 | \bm{x}) < 0.5.
@@ -391,7 +467,7 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
                     \begin{equation}
                         \log \frac{P(y=1 | \bm{x})}{P(y=0 | \bm{x})}  = \beta_0 + \beta_1 x_1 +, \ldots, + \beta_\nfeat x_\nfeat.
                     \end{equation}
-                Thus, the $i$-th coefficient $\beta_i$ represents the amount of increase or decrease of the log-odds when $x_i$ increases one unit.
+                Thus, the $i$-th coefficient $\beta_i$ represents the amount of increase or decrease of the log-odds when $x_i$ increases by one unit.
             \end{itemize}
             
     \subsubsection{Naive Bayes (NB)}
@@ -408,13 +484,14 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
         
     \subsubsection{SVM}
         For convenience we discuss linear SVM in the case of separable data $\mathcal{S}$.
-        Let $\mathcal{H}$ be the hypothesis set of linear classifiers, i.e., $\mathcal{H}=\Set{\Sign{\bm{w}^\top \bm{x} + b}}{\bm{w}, b}$.
+        Let $\mathcal{H}$ be the hypothesis set of linear classifiers, i.e., $\mathcal{H}=\Set{\Sign{\bm{w}^\top \bm{x} + b}}{\bm{w}, b \in \R^\nfeat}$.
         In $\R^\nfeat$, a hyperplane is represented as follows:
             \begin{equation}
                 \bm{w}^\top \bm{x} + b = 0.
             \end{equation}
-        Since the data is separable, there must be a hyperplane that does not pass any data; this means we do not have any constraints on $\bm{w}$ and $\bm{b}$.
-        As a result, to avoid scaling issues (i.e., two hypotheses $(\bm{w}_1, b_1)$ and $(\bm{w}_2, b_2)$ correspond to the same hyperplane, but they have different magnitudes), we focus on a specific hyperplane $(\bm{w}, b)$ that satisfies the following:
+        Since the data is separable, there must be a hyperplane that does not pass any data.
+        So we do not need to put any constraint on $\bm{w}$ and $\bm{b}$.
+        In consequence, to avoid scaling issues (i.e., two hypotheses $(\bm{w}_1, b_1)$ and $(\bm{w}_2, b_2)$ correspond to the same hyperplane, but they have different magnitudes), we consider the following hyperplane $(\bm{w}, b)$:
             \begin{equation}
                 \min_{(\bm{x}, y) \in \mathcal{S}} \Abs{\bm{w}^\top \bm{x} + b} = 1.
             \end{equation}
@@ -423,7 +500,7 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
             \begin{equation}
                 \rho = \min_{(\bm{x}, y) \in \mathcal{S}} \underbrace{\frac{\Abs{\bm{w}^\top \bm{x} + b}}{\norm{\bm{w}}}}_{\text{distance of a point to the hyperplane}} = \frac{1}{\norm{\bm{w}}}.
             \end{equation}
-        One motivation of SVM is to find the separating hyperplane with the largest margin; intuitively, such a hyperplane provides the largest cushion/protection.
+        The key motivation of SVM is to find the hyperplane with the largest margin, providing the largest cushion/protection.
         Thus, the optimization problem of the SVM is formulated below:
             \begin{equation}
                 \begin{aligned}
@@ -432,7 +509,7 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
                 \end{aligned}
             \end{equation}
         where the constraints ensure that every sample is correctly classified.
-        The Lagrange function of the above optimization is as follows where $\alpha_i \ge 0$:
+        The Lagrangian of the above optimization is as follows where $\alpha_i \ge 0$:
             \begin{equation}
                 L(\bm{w}, b, \bm{\alpha}) = \frac{1}{2}\norm{\bm{w}}^2 - \sum_{i=1}^{\ndata}{\alpha_i \left[ y_i \cdot (\bm{w}^\top \bm{x}_i + b) - 1\right]}.
             \end{equation}
@@ -441,14 +518,14 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
                 \begin{aligned}
                     \nabla_{\bm{w}} L & = \bm{w} - \sum_{i=1}^{\ndata}{\alpha_i y_i \bm{x}_i} = 0 \\
                     \nabla_{b} L & = -\sum_{i=1}^{\ndata}{\alpha_i y_i} = 0 \\
-                    a_i & = 0 \text{ or } y_i(\bm{w}^\top \bm{x} + b) = 1, \forall i.
+                    a_i & = 0 \ text{ or } y_i(\bm{w}^\top \bm{x} + b) = 1, \forall i.
                 \end{aligned}
             \end{equation}
         Several things from the KKT conditions:
             \begin{itemize}
                 \item From the first condition: the weight vector $\bm{w}$ is a linear combination of $\bm{x}_i$; however, only those $\bm{x}_i$ with $\alpha_i \ne 0$ contribute to the combination.
                 \item From the third condition: for those data such that $\alpha_i \ne 0$, we know $\Abs{\bm{w}^\top \bm{x} + b} = 1$, i.e., they are on the marginal hyperplanes.
-                For separable data, there is only one type of support vectors, i.e., those on the marginal hyperplanes; however, if the data is non-separable, two types of support vectors exist: 1) those on the marginal hyperplanes and 2) outliers. 
+                For separable data, there is only one type of support vectors, i.e., those on the marginal hyperplanes. However, if the data is non-separable, two types of support vectors exist: 1) those on the marginal hyperplanes and 2) outliers. 
             \end{itemize}
         The dual of the original optimization problem is as follows:
             \begin{equation}
@@ -459,15 +536,74 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
             \end{equation}
         Several useful things from the dual:
         \begin{itemize}
-            \item Only the support vectors affect the solutions of the SVM.
+            \item Only the support vectors  affect the solutions of the SVM, i.e., $\alpha_i$.
             \item The support vectors are on the marginal hyperplanes, which are \emph{parallel} to the separating hyperplane $(\bm{w}, b)$.
             Thus, for any support vector $\bm{x}_i$ we have $\bm{w}^\top \bm{x}_i + b = y_i$.
             It follows that $b = y_i - \sum_{j=1}^{\ndata}{\alpha_i y_i (\bm{x}_j^\top \bm{x}_i) }$.
             \item Kernel: we can map $\bm{x}_i$ to some high dimensional space (i.e., $\phi(\bm{x}_i)$), as long as we can efficiently compute the inner product $\phi(\bm{x}_i)^\top \phi(\bm{x}_j)$.
         \end{itemize}
-    
-    
+    \paragraph{A Quadratic Program (QP) Formulation of Linear SVM in Matrix Form.}
+    Consider the following QP formulation of a linear SVM with slack variables $\bm{\xi} = (\xi_1, \ldots, \xi_\ndata)$ to handle non-separable data: 
+            \begin{equation}
+                \begin{aligned}
+                    & \min_{\bm{w}, b, \bm{\xi} } & & \frac{1}{2}\norm{\bm{w}}^2  + C \sum_{j=1}^{\ndata}{\xi_j} \\
+                    & s.t.             & & y_i \cdot (\bm{w}^\top \bm{x}_i + b) \ge 1 - \xi_i, \forall i \\
+                    &                  & & \xi_i \ge 0, \forall i.
+                \end{aligned}
+            \end{equation}
+    Let $\hat{\bm{w}} = (\bm{w}, b, \bm{\xi}) \in \R^{\ndata + 1 + \nfeat}$.
+    The matrix form of the above optimization is as follows:
+            \begin{equation}
+                \begin{aligned}
+                    & \min_{ \hat{\bm{w}} } & & \frac{1}{2} \hat{\bm{w}}^\top \bm{P} \hat{\bm{w}}  + \bm{q}^\top \hat{\bm{w}}\\
+                    & s.t.             & & \bm{G} \hat{\bm{w}} \le \bm{h},
+                \end{aligned}
+            \end{equation}
+    where
+        \begin{equation}
+            \begin{aligned}
+                & \bm{P} = \begin{bmatrix} 
+                                \bm{I}_{(\nfeat \times \nfeat)} &  &  \\
+                                 & 0_{(1 \times 1)} & \\
+                                 & & \bm{0}_{(\ndata \times \ndata)}
+                         \end{bmatrix} \in \R^{(\ndata + 1 + \nfeat) \times (\ndata + 1 + \nfeat)},
+                & \bm{q} = \begin{bmatrix}
+                    \bm{0}_{(\nfeat \times 1)}\\
+                    0_{(1 \times 1)} \\
+                    C \cdot \bm{1}_{(\ndata \times 1)}
+                \end{bmatrix} \in \R^{(\ndata + 1 + \nfeat) \times 1}, \\
+                & \bm{G} = \begin{bmatrix}
+                    -\text{diag}(\bm{y}) \hat{\bm{X}} & -\bm{I}_{(\ndata \times \ndata)} \\
+                    \bm{0}_{(\nfeat + 1) \times (\nfeat + 1)} & -\bm{I}_{(\ndata \times \ndata)}
+                \end{bmatrix} \in \R^{2\ndata \times (\ndata + 1 + \nfeat)},
+                & \bm{h} = \begin{bmatrix} -\bm{1}_{\ndata \times 1} \\ \bm{0}_{\ndata \times 1} \end{bmatrix}\in \R^{2\ndata \times 1}.
+            \end{aligned}
+        \end{equation}
+
+
+        
 \subsection{Boosting}
+    \subsubsection{Boosting under the FSAM Framework}\label{sec:boosting-trees}
+    Boosting is a machine learning framework that generates a strong learner  from a set of weak learners. 
+    It is based on the \textit{Forward Stagewise Additive Modeling} (FSAM) framework described in~\cite{hastie2009elements} at page 342. 
+    FSAM combines a set of weaker learners such that the resulting combination is a strong learner. 
+    In particular, the approach optimizes a loss function $L(\cdot)$  by iteratively training the weaker learners (i.e., obtaining the model parameter $\theta_i$) and picking the associated weights $\beta_i$:
+            \begin{equation}
+                \min_{\SET{\theta_i}_{i=1}^{K}, \SET{\beta_i}_{i=1}^{K} } \sum_{i=1}^{\ndata}{L\left( y_i, \sum_{j=1}^{K}{\beta_j f(\bm{x}_i; \theta_j)} \right)},
+            \end{equation}
+        % where $\SET{\theta_i}_{i=1}^{K}$ are model parameters of the learners and $\SET{\beta_i}_{i=1}^{K}$ the weights to combine the learners together.
+        Iterative greedy approaches are proposed to solve the optimization problem, where at each iteration we learn a single learner and its associated weight. 
+        This approach minimizes the loss function through  incremental steps,  with each step solving for a pair of $(\theta_m, \beta_m)$:
+            \begin{equation}\label{eq:forward-stagewise-add-model}
+                \min_{\theta_m, \beta_m} \sum_{i=1}^{\ndata}{
+                    L\left( y_i, F_{m-1}(\bm{x}_i) + \beta_m f(\bm{x}_i; \theta_m) \right)
+                }.
+            \end{equation}
+        We have $F_{m-1}(\bm{x}_i) = \sum_{j=1}^{m-1}{\beta_m f(\bm{x}_i; \theta_j)}$, combining the $m-1$  trained learners so far.
+        
+        
+
+        
 \subsubsection{AdaBoost}
 The intuition behind AdaBoost is to generate a strong classifier (one with small generalization error) by combining a bunch of weak classifiers. 
 A typical algorithm of boosting is called AdaBoost; it typically consists of $T$ iterations of boosting, where a weak classifier is picked in each iteration; finally, the $T$ weak classifiers are combined in a way that a strong classifier is generated. 
@@ -501,24 +637,8 @@ There are several key questions:
         \item How to set the weight $\alpha_t$ associated with each weak classifier? The values of $\alpha_1, \ldots, \alpha_T$ are selected such that an upper-bound on the empirical error of $g$ is minimized. See the proof of Theorem 6.1 at~\cite{mohri2018foundations}.
     \end{enumerate}
 
-    \subsubsection{Boosting under the FSAM Framework}\label{sec:boosting-trees}
-        Boosting is a framework where the weak learners are either classification or regression trees.
-        Boosting is based on the \emph{Forward Stagewise Additive Modeling}~(FSAM) described in~\cite{hastie2009elements} (p.342), which is a great framework to generate a strong predictor (either classifiers or regressors) from a set of weak predictors.
-        The framework is to find a linear combination of a set of $K$ learners such that some loss is minimized, i.e., 
-            \begin{equation}
-                \min_{\SET{\theta_i}_{i=1}^{K}, \SET{\beta_i}_{i=1}^{K} } \sum_{i=1}^{\ndata}{L\left( y_i, \sum_{j=1}^{K}{\beta_j f(\bm{x}_i; \theta_j)} \right)},
-            \end{equation}
-        where $\SET{\theta_i}_{i=1}^{K}$ are model parameters for the learners and $\SET{\beta_i}_{i=1}^{K}$ are the weights to combine them together.
-        It is usually hard to solve the optimization above; instead, an iterative greedy approach is used, where each iteration learns both a single learner and the weight associated with it, i.e., 
-            \begin{equation}\label{eq:forward-stagewise-add-model}
-                \min_{\theta_m, \beta_m} \sum_{i=1}^{\ndata}{
-                    L\left( y_i, F_{m-1}(\bm{x}_i) + \beta_m f(\bm{x}_i; \theta_m) \right)
-                },
-            \end{equation}
-        where $F_{m-1}(\bm{x}_i) = \sum_{j=1}^{m-1}{\beta_m f(\bm{x}_i; \theta_j)}$ combines the learners that have been learned so far. 
-        As boosting sequentially reduces the training loss, the bias increases---the combined classifier becomes gradually complicated.
-        
-    \subsubsection{AdaBoost}
+
+    
          An instantiation of \eqref{eq:forward-stagewise-add-model} with the loss function $L(\cdot)$ replaced by the exponential loss leads to the AdaBoost algorithm.
         In the $m$-th iteration:
             \begin{equation}
@@ -549,18 +669,18 @@ There are several key questions:
         
         
 \subsubsection{Gradient Boosting (GB)}
-        GB is still under the FSAM framework.
-        In the $m$-th iteration, GB is to solve the following optimization:
+        GB is under the FSAM framework.
+        In the $m$-th iteration, GB is solving the following optimization problem:
             \begin{equation}\label{XGBoost-model}
                 \min_{f^{(m)}} \sum_{i=1}^{\ndata}{
                     \underbrace{\left( y_i - (\hat{y}^{(m-1)}_i + f^{(m)}(\bm{x}_i)) \right)^2}_{:=L(y_i, \hat{y}_i^{(m)}) }.
                 }
             \end{equation}
-        We do a first-order Taylor expansion of $L(y_i, \hat{y}_i^{(m)})$ at $\hat{y}_i^{(m-1)}$:
+        The first-order Taylor expansion of $L(y_i, \hat{y}_i^{(m)})$ at $\hat{y}_i^{(m-1)}$ is:
             \begin{equation}
                 L(y_i, \hat{y}_i^{(m)}) \approx L(y_i, \hat{y}_i^{(m-1)}) + \underbrace{\left[ \frac{\partial L(y_i, z)}{\partial z}\vline_{z = \hat{y}_i^{(m-1)}} \right]}_{g_{i}^{(m)}}  f^{(m)}(\bm{x}_i).
             \end{equation}
-        A natural idea is to let $f^{(m)}(\bm{x}_i)$ be as close as possible to $-g^{(m)}_i$, such that the reduction of $L(y_i, \hat{y}_i^{(m)})$ is along the direction of the steepest descent.
+        A natural idea is to let $f^{(m)}(\bm{x}_i)$ be as close as possible to $-g^{(m)}_i$ such that the reduction of $L(y_i, \hat{y}_i^{(m)})$ is along the direction of steepest descent.
         Thus, the learning problem  in the $m$-th iteration is as follows:
             \begin{itemize}
                 \item  Collect a new dataset $\mathcal{G}=\SET{(\bm{x}_1, -g^{(m)}_1), \ldots, (\bm{x}_\ndata, -g^{(m)}_\ndata)}$, where the supervised information are the gradients.
@@ -577,8 +697,8 @@ There are several key questions:
                     \underbrace{\left( y_i - (\hat{y}^{(m-1)}_i + f^{(m)}(\bm{x}_i)) \right)^2}_{:=L(y_i, \hat{y}_i^{(m)}) } + R(f^{(m)}),
                 }
             \end{equation}
-        where $f^{(m)}$ is the learner that needs to be learned at the current iteration.
-        Notice that XGBoost has an additional regularization term $R(f^{(m)})$ to control the learner's complexity.
+        where $f^{(m)}$ is the learner that needs to be learned at the $m$-th iteration.
+        Notice that XGBoost has an additional regularization term $R(f^{(m)})$ to control the model's complexity.
         We approximate the loss $L(y_i, \hat{y}_i^{(m)})$ with its second-order Taylor expansion at $\hat{y}^{(m-1)}_i$:
             \begin{equation}
                 L(y_i, \hat{y}_i^{(m)}) \approx L(y_i, \hat{y}^{(m-1)}_i) + g_i \cdot f^{(m)}(\bm{x}_i) + \frac{1}{2} h_i \cdot (f^{(m)}(\bm{x}_i))^2,
@@ -586,18 +706,22 @@ There are several key questions:
         where $f^{(m)}(\bm{x}_i) = (\hat{y}_i^{(m)} - \hat{y}_i^{(m-1)})$, $g_i = \frac{\partial L(y_i, \hat{y}_i^{(m-1)})}{\partial \hat{y}_i^{(m-1)} }$, and $h_i = \frac{\partial^2 L(y_i, \hat{y}_i^{(m-1)})}{\partial^2 \hat{y}_i^{(m-1)} }$.
         We regularize the complexity of $f^{(m)}$ by the following:
             \begin{equation}
-                R(f^{(m)}) = \gamma T + \frac{\lambda}{2}\sum_{i=1}^{T}{s_i},
+                R(f^{(m)}) = \gamma T + \frac{\lambda}{2}\sum_{i=1}^{T}{s_i^2},
             \end{equation}
-        where $T$ is the number of leaves and $s_i$ the final score at each leave; for regression problems $s_i$ is the mean of the target values of the points that belong to the region associated with the leave; for classification problems $s_i$ is the probability of the most likely class.
-        Then, the optimization problem of XGBoost (i.e., \eqref{XGBoost-model}) can be approximated by solving the following:
+        where $T$ is the number of leaves and $s_i$ the final score at leaf $i$; for regression problems $s_i$ is the mean of the target values of the points belonging to the region associated with leaf $i$; for classification problems $s_i$ is the probability of the most likely class.
+        Then, the optimization problem of XGBoost (i.e., \eqref{XGBoost-model}) is approximated by the following:
             \begin{equation}
                 \begin{aligned}
                     \tilde{L} & = \sum_{i=1}^{\ndata}{
                         \left[
                             g_i \cdot f^{(m)}(\bm{x}_i) + \frac{1}{2} h_i \cdot (f^{(m)}(\bm{x}_i))^2 
-                        \right] + \gamma T + \frac{\lambda}{2}\sum_{i=1}^{T}{s_i}
+                        \right] + \gamma T + \frac{\lambda}{2}\sum_{i=1}^{T}{s_i^2}
                     } \\
-                    & \quad \quad \text{$s_j = f^{(m)}(\bm{x}_i)$ for any $i \in \mathcal{I}_j$, i.e., all instances belonging to leave $j$ get the same score.} \\
+                    & \text{
+                    All $x_i$ that reside in leaf $j$ (a.k.a  $\mathcal{I}_j$) get the same score,} \\
+                    & \text{so we let the score be $s_j$, i.e., $s_j = f^{(m)}(\bm{x}_i)$ for all $i \in \mathcal{I}_j$.} \\
+                    & \text{This enables us to group the terms in the summation above by leaves,} \\
+                    & \text{which is the key to derive the next step.} \\
                     & = \sum_{j=1}^{T}{
                         \left[ \underbrace{\left(\sum_{i \in \mathcal{I}_j}^{}{g_i} \right)}_{:=G_j} s_j + \frac{1}{2}\left( \underbrace{\sum_{i \in \mathcal{I}_j}^{}{h_i}}_{:=H_j} + \lambda \right)s_j^2
                         \right] + \gamma T 
@@ -609,9 +733,10 @@ There are several key questions:
             \begin{equation}
                 \text{structure score of $f^{(m)}$}= -\frac{1}{2}\sum_{j=1}^{T}{\frac{G_j^2}{H_j + \lambda}} + \gamma T.
             \end{equation}
-        Ideally, in each iteration we would like to enumerate all possible tree structures and pick the one that has the smallest structure score; however, this is too expensive.
+        Ideally, in each iteration we would like to enumerate all possible tree structures and pick the one that has the smallest structure score; however, this is too expensive. \footnote{For reference, the number of possible binary trees with $n$ nodes grows exponentially with respect to $n$. See this blog for details: \url{shorturl.at/BFGZ5}.}
         Instead, XGBoost grows a \emph{single} tree by iteratively splitting a node into the left and right nodes (just as how we splitted in decision trees).
-        We choose the feature $i$ that maximizes the following gain as the splitting feature:
+        Typically, a feature that maximizes information gain or Gini coefficient is picked as the splitting feature.
+        However, XGBoost picks a feature that maximizes the following gain (where the subscripts $L$ and $R$ refer to left and right sub-trees, respectively):
             \begin{equation}
                 \frac{1}{2}\left[ \frac{G_L^2}{H_L + \lambda} + \frac{G_R^2}{H_R + \lambda} - \frac{(G_L + G_R)^2}{H_L +  H_R + \lambda}  \right] - \gamma
             \end{equation}
@@ -620,7 +745,7 @@ There are several key questions:
     
         
         \paragraph{Generic GB v.s. XGBoost.}
-        In each iteration of a generic GB, the first-order gradient of the loss w.r.t. the predictor of the last iteration is used as supervised information to train a weak learner, i.e., $f^{(m)}(\bm{x})$ should be close to $-\frac{\partial L}{\partial f^{(m-1)}(\bm{x})}$.
+        In each iteration of a generic GB, the first-order gradient of the loss w.r.t. the predictor up to the last iteration is used as supervised information to train a weak learner, i.e., $f^{(m)}(\bm{x})$ should be close to $-\frac{\partial L}{\partial f^{(m-1)}(\bm{x})}$.
         However, XGBoost uses both the first- and second-order gradient information as a criterion to split features.
         
     \subsubsection{Missing Values}
@@ -630,6 +755,15 @@ There are several key questions:
                 \item Both the training and testing data have missing values at some features: GBT determines the optimal split of these features based on training data, which is used when handling missing values during testing.
                 \item Only the testing data has missing values: the testing data with missing values is split into the majority class (computed from the training data).
             \end{itemize}
+
+    \subsubsection{Output Probability}
+        In many GBT packages (e.g., XGBoost, LightGBM, etc.), there is a method called \texttt{predict\_proba}, which outputs the probability of an instance belonging to a particular class.
+        The implementation of the method is as follows:
+        \begin{itemize}
+            \item Take the linear combination of the weak learners, i.e., $\sum_{i=1}^{K}{\beta_k f_k}$.
+            \item Transform the combination to $[0, 1]$ through a logistic function, i.e., $\frac{1}{1 + e^{-\sum_{i=1}^{K}{\beta_k f_k}}}$.
+        \end{itemize}
+    Warning: the output probabilities from \texttt{predict\_proba} may not reflect real probability and some form of calibration may be needed.
         
     
     
@@ -664,23 +798,23 @@ Thus, the variance of the bagged model is reduced by a factor of $k$.
             \end{equation}
             where $\bm{c}_1, \ldots, \bm{c}_R$ are the cluster centers that are  randomly initialized.
             
-            \item The K-Means alternates the two steps until convergence: 1) assign each sample to a cluster and 2) update the centers.
-            Formally, the steps are as follows:
+            \item The following two steps are alternated until convergence: 1) assign each sample to a cluster and 2) update the centers.
             \begin{enumerate}
                 \item Assign $\bm{x}_i$ to cluster $k \in \argmin_{j=1,\ldots, R}\norm{\bm{x}_i - \bm{c}_j}_2^2$.
                 \item Update the center of each cluster, i.e., $\bm{c}_k = \frac{\sum_{j \in \mathcal{C}_k}^{}{\bm{x}_j}}{\SetCard{\mathcal{C}_k}}$.
             \end{enumerate}
             \item Notice that K-Means clustering can also be used as a classification algorithm. 
-            \item The above two steps can be thought of as an instantiation of the famous EM algorithm; as a result, the resulting solutions (i.e., the clustering centers) are only sub-optimal w.r.t. the loss function.
+            \item The above two steps can be thought of as an instantiation of the famous EM algorithm.
+            The resulting solutions (i.e., the clustering centers) are only sub-optimal.
             \item How to choose $K$? We can find $K$ by solving $\min_{K} \frac{B(K)}{W(K)}$, where $B(K)$ is the normalized total between-cluster distance and $W(K)$ the normalized total within-cluster distance. 
             A commonly used method to choose $K$ is the elbow method.
         \end{itemize}
     
     \subsubsection{Spectral Clustering}
-        Given an unlabeled data $\mathcal{S}=\SET{\bm{x}_1, \ldots, \bm{x}_\ndata}$, we can think of the \ndata instances as \ndata vertices of a graph.
+        Given an unlabeled dataset $\mathcal{S}=\SET{\bm{x}_1, \ldots, \bm{x}_\ndata}$, we can think of the \ndata instances as \ndata vertices of a graph.
         An edge between a pair of vertices $(i, j)$ represents the similarity measure between $\bm{x}_i$ and $\bm{x}_j$.
         The adjacency matrix $\bm{A}$ of the graph encodes the similarity between points, i.e., $A_{i,j}$ is the similarity between $i$ and $j$.
-        The objective of the spectral clustering is to find $K$ clusters $\mathcal{C}_1, \ldots, \mathcal{C}_K$ of the vertices, such that the within cluster (resp. between cluster) similarity is maximized (resp. minimized).
+        The objective of the spectral clustering is to find $K$ clusters $\mathcal{C}_1, \ldots, \mathcal{C}_K$ of the vertices, such that the within-cluster (resp. between-cluster) similarity is maximized (resp. minimized).
         One way to capture the objective is by minimizing the following loss function:
             \begin{equation}
                 L = \sum_{i=1}^{K}{\frac{1}{\SetCard{\mathcal{C}_i}} \sum_{u \in \mathcal{C}_i, v \notin \mathcal{C}_i}^{}{A_{u, v}}}.
@@ -698,7 +832,7 @@ Thus, the variance of the bagged model is reduced by a factor of $k$.
                       & = \sum_{i=1}^{K}{\frac{1}{\SetCard{\mathcal{C}_i}} \sum_{u \in \mathcal{C}_i, v\notin \mathcal{C}_i}^{}{A_{u,v}}}.
                 \end{aligned}
             \end{equation}
-        Minimizing $L$ directly is usually intractable since it is an integer programming.t
+        Minimizing $L$ directly is intractable since it is an integer programming.
         Instead, we use the following procedure to obtain an approximate solution~\cite{shalev2014understanding}:
             \begin{enumerate}
                 \item Get the SVD of the Laplacian $\bm{L}$ and set $\bm{U} \in \R^{\ndata \times K}$ as the matrix whose columns are the $K$ eigenvectors (ignoring the trivial constant eigenvector) corresponding to the $K$ \emph{smallest} eigenvalues of $\bm{L}$.
@@ -762,9 +896,9 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
     \paragraph{Common Impurity Measures.}
     For a particular node $k$, let $f^k_i$ be the frequency of label $i$ and $C$ the total number of unique labels at the node.
     \begin{itemize}
-        \item Gini impurity (classification): $\sum_{i=1}^{C}{f^k_i (1 - f^k_i)}$.
+        \item Gini impurity (classification): $\sum_{i=1}^{C}{f^k_i (1 - f^k_i)} = 1 - \sum_{i=1}^{c}{(f_i^k)^2}$.
         \item Entropy (classification): $-\sum_{i=1}^{C}{f^k_i \log f^k_i}$.
-        \item Variance (regression): $\frac{1}{N}\sum_{i=1}^{N}{(y^k_i - \mu)^2}$, where $N$ is the total number of instances at node $k$, $y^k_i$ is the label for a particular instance, and $\mu$ is the mean of the labels at the node, i.e., $\frac{1}{N}\sum_{i=1}^{N}{y^k_i}$.
+        \item Variance (regression): $\frac{1}{N}\sum_{i=1}^{N}{(y^k_i - \mu)^2}$, where $N$ is the total number of instances at node $k$, $y^k_i$ is the ground-truth for a particular instance, and $\mu$ is the mean of the labels at the node, i.e., $\frac{1}{N}\sum_{i=1}^{N}{y^k_i}$.
     \end{itemize}
     
     
@@ -788,7 +922,7 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
         \begin{equation}
             \log L(\mathcal{D}) = \sum_{i=1}^{\ndata}{\log P(\bm{x}_i)} = \sum_{i=1}^{\ndata}{\log\left[ (1-\pi)f_1(\bm{x}_i; \theta_1) + \pi f_2(\bm{x}_i; \theta_2) \right]},
         \end{equation}
-    where $\pi$ is the probability that an instance was sampled from the second component; $f_i(\bm{x}_j; \theta_i)$ is just a Gaussian probability density function with $\theta_i$ including the mean and covariance.
+    where $\pi$ is the probability that an instance was sampled from the second component; $f_i(\bm{x}_j; \theta_i)$ is a Gaussian PDF with $\theta_i$ consisting of the mean and covariance.
     The model is latent in the sense that each instance is associated with a latent variable indicating which component it was sampled from, i.e., $m_i$ indicates the component membership of $\bm{x}_i$.
     If we knew $\mathcal{M} = \SET{m_1, \ldots, m_\ndata}$, the resulting log-likelihood function would be:
         \begin{equation}
@@ -829,7 +963,7 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
         In addition, suppose we have a dataset $\mathcal{D}$ at hand, which can be any kind of measurement from the network.
         Similarly, we assume a probabilistic model underlying the data, i.e., $P(\mathcal{D} | \theta)$ parameterized by $\theta$.
         The goal is to estimate both $\gamma$ and $\theta$.
-        From Bayes rule, the posterior distribution of both the parameters and the adjacency matrix is:
+        With Bayes rule, the posterior distribution of both the parameters and the adjacency matrix is:
             \begin{equation}
                 P(\bm{A}, \gamma, \theta | \mathcal{D}) =  \frac{P(\bm{A}|\gamma) P(\mathcal{D} | \theta) P(\theta) P(\gamma)}{P(\mathcal{D})},
             \end{equation}
@@ -839,17 +973,17 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
                 P(\gamma, \theta | \mathcal{D}) = \sum_{\bm{A}}^{}{P(\bm{A}, \gamma, \theta | \mathcal{D})}.
             \end{equation}
             
-        Notice that $P(\gamma, \theta | \mathcal{D})$ is the distribution that we care about, e.g., we can obtain  estimation of the parameters by maximizing the posterior (MAP).
-        However, the marginalization is intractable, which makes directly maximizing $P(\gamma, \theta | \mathcal{D})$ over $\gamma$ and $\theta$ too hard.
-        A more tractable way is to maximize a lower bound on the logarithm of $P(\gamma, \theta | \mathcal{D})$, i.e., 
+        Notice that the posterior $P(\gamma, \theta | \mathcal{D})$ is the distribution that we care about, as we will estimate the parameters by maximizing the posterior (MAP).
+        However, the marginalization is intractable; indeed, the number of candidate network structures is huge; this makes directly maximizing $P(\gamma, \theta | \mathcal{D})$ over $\gamma$ and $\theta$ impossible.
+        Instead, a tractable method is to maximize a lower bound on the logarithm of $P(\gamma, \theta | \mathcal{D})$, i.e., 
             \begin{equation}
                 \log P(\gamma, \theta | \mathcal{D}) = \log \sum_{\bm{A}}^{}{P(\bm{A}, \gamma, \theta | \mathcal{D})} \ge 
                 \underbrace{\sum_{\bm{A}}^{}{q(\bm{A}) \log \left( \frac{P(\bm{A}, \gamma, \theta | \mathcal{D})}{ q(\bm{A}) } \right) }}_{(\ast)},
             \end{equation}
         where $q(\bm{A}) \ge 0$ and $\sum_{\bm{A}}^{}{q(\bm{A})} = 1$.
-        The second inequality utilizes Jensen's inequality.
+        The inequality utilizes Jensen's inequality.
         \footnote{For any set of positive quantities $x_i$: $\log \sum_{i}^{}{x_i} \ge \sum_{i}^{}{q_i \log \frac{x_i}{q_i}}$.}
-        We can use an iterative algorithm to maximize $(\ast)$.
+        The lower bound we need is $(\ast)$, which we maximize with an iterative algorithm.
         The algorithm is to repeat the following steps until convergence:
             \begin{enumerate}
                 \item Holding $\gamma$ and $\theta$ fixed, maximize $(\ast)$ w.r.t. $q(\bm{A})$ by setting
@@ -972,10 +1106,10 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
         
         \paragraph{Algorithm.} 
         We usually use \emph{weighted alternating least square} (WALS) to solve \eqref{eq:matrix-factor}.
-        Intuitively, we alternate between optimizing over either $\bm{U}$ or $\bm{V}$ with the other fixed.
+        Intuitively, the algorithm alternates between optimizing $\bm{U}$ and $\bm{V}$.
         Check out this tutorial: \url{https://cran.r-project.org/web/packages/rrecsys/vignettes/b5_wALS.html}.
     
-    
+\subsection{Factorization Machines (FM)}
     
 \subsection{Kernel Smoothing Methods}
     \subsubsection{Kernel Density Estimation (KDE)}
@@ -1046,6 +1180,9 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
                     \end{equation}
                 One caveat: it is better to have $\SetCard{\Omega_-(u)} > \SetCard{\Omega_+(u)}$, since in practice the number of truly relevant user-item interactions is a lot smaller than that of irrelevant interactions.
             \end{itemize}
+
+    \subsection{Sampling}
+        
             
     
         

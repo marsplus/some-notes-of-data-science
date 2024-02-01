@@ -8,6 +8,27 @@
         \item An LP attains optima at extreme points; see \cite{bertsimas1997introduction} at page 65 for a proof.
         \item In general, the time complexity of solving an LP is $O(n^{3.5})$, where $n$ is the number of variables; see \url{https://en.wikipedia.org/wiki/Karmarkar%27s_algorithm}. 
     \end{itemize}
+
+    \paragraph{Deriving the Dual Form.}
+    An primal LP in standard form is as follows:
+        \begin{equation}
+            \begin{aligned}
+                & \min_{x_1, x_2} & &   \textcolor{blue}{4} x_1 + \textcolor{blue}{3} x_2 \\
+                & s.t.            &  & 2 x_1 + x_2 \ge \textcolor{red}{3} \\
+                &                 &  & x_1 + 2 x_2 \ge \textcolor{red}{2} \\
+                &                 &  & x_1 \ge 0, x_2 \ge 0.
+            \end{aligned}
+        \end{equation}
+    The objective function of the dual problem is a lower bound of the primal objective, which is obtained by linear combination of the primal constraints, i.e., 
+        \begin{equation}
+            \begin{aligned}
+                & \max_{y_1, y_2} & &   \textcolor{red}{3} y_1 + \textcolor{red}{2} y_2\\
+                & s.t.            &  & 2 y_1 + y_2 \le \textcolor{blue}{4} \\
+                &                 &  & y_1 + 2 y_2 \le \textcolor{blue}{3} \\
+                &                 &  & y_1 \ge 0, y_2 \ge 0.
+            \end{aligned}
+        \end{equation}
+    
     
     
     
@@ -75,8 +96,8 @@
             \begin{equation}
                     \bm{x}^t = \text{prox}_{h, t_k}\left( \bm{x}^{t-1} - t_k \nabla g(\bm{x}^{t-1}) \right).
             \end{equation}
-        The intuition of the iterative step is to approximate $g(\bm{\beta})$ with its second-order Taylor expansion evaluaated at $\bm{x}^{t-1}$.
-        See the note for details: \url{https://people.eecs.berkeley.edu/~elghaoui/Teaching/EE227A/lecture18.pdf}.
+        The intuition of the iterative step is to approximate $g(\bm{\beta})$ with its second-order Taylor expansion evaluated at $\bm{x}^{t-1}$.
+        See the notes for details: \url{https://people.eecs.berkeley.edu/~elghaoui/Teaching/EE227A/lecture18.pdf}.
     \end{itemize}
     
 \subsection{Matrix Norms}

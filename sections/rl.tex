@@ -21,14 +21,15 @@ Suppose we have collected a set of trajectories $\SET{\tau_i}_{i=1}^{\ndata}$ by
 %     \end{equation}
 A convenient identify is below:
     \begin{equation}
-        p_{\theta}(\tau)\nabla_{\theta}\log p_{\theta}(\tau) = \nabla_\theta p_\theta(\tau).
+        \nabla_\theta p_\theta(\tau) = p_{\theta}(\tau)\nabla_{\theta}\log p_{\theta}(\tau),
     \end{equation}
+as $p_{\theta}(\tau)\nabla_{\theta}\log p_{\theta}(\tau) = p_\theta(\tau) \left( \frac{1}{p_\theta(\tau)} \nabla_\theta p_\theta(\tau) \right)$.
 Let $J(\theta) = \E_{\tau \sim p_\theta(\tau)}\left[ \sum_{t}^{}{r(s_t, a_t)} \right]$.
 The gradient of $J(\theta)$ w.r.t. $\theta$ is below:
     \begin{equation}
         \begin{aligned}
-        \nabla_\theta J(\theta) = \nabla_\theta \left[ \int p_\theta(\tau) r(\tau) d\tau \right] = \int \nabla_\theta p_\theta(\tau) r(\tau) d\tau  & = \int p_{\theta}(\tau)\nabla_{\theta}\log p_{\theta}(\tau)  r(\tau) d\tau \\
-        & = \E_{\tau \sim p_\theta(\tau)} \left[ \nabla_\theta \log p_\theta(\tau) r(\tau) \right].
+         \nabla_\theta J(\theta) = \nabla_\theta \left[ \int p_\theta(\tau) r(\tau) d\tau \right] = & \underbrace{ \int \nabla_\theta p_\theta(\tau) r(\tau) d\tau    = \int p_{\theta}(\tau)\nabla_{\theta}\log p_{\theta}(\tau)  r(\tau) d\tau }_{\text{utilizing the identity above to get an expectation over $\tau$}} \\
+         & = \E_{\tau \sim p_\theta(\tau)} \left[ \nabla_\theta \log p_\theta(\tau) r(\tau) \right].
         \end{aligned}
     \end{equation}
 The loglikelihood of $\tau$ is as follows (omitting the terms that are irrelevant with $\theta$):

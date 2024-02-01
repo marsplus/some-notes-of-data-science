@@ -1,5 +1,23 @@
 
 
+\subsection{Probability Integral Transform}
+    This transform allows us to sample from \emph{any} continuous distribution by sampling from the uniform distribution on $[0, 1]$.
+    Suppose that a continuous random variable $X$ has CDF $F_X(x)$ that is continuous and strictly increasing. 
+    Define the random variable $Y=F_X(X)$, then $Y$ follows the uniform distribution on $[0, 1]$, i.e., 
+        \begin{equation}
+            Y \sim U[0, 1].
+        \end{equation}
+    This is because 
+        \begin{equation}
+            F_Y(y) = P(Y \le y) = P(F_X(X) \le y) = P(X \le F^{-1}_X(y)) = F_X\left(F^{-1}_X(y) \right) = y,
+        \end{equation}
+    which is the CDF of $U[0, 1]$.
+    A direct implication is that the random variable $F^{-1}_X(Y)$ has the same distribution as $X$.
+    
+    \paragraph{Example 1.}
+        Let $X \sim \text{Exp}(1)$. The CDF is $F_X(x) = 1 - e^{-x}$. The inverse CDF of $X$ is $F^{-1}_X(x) = -\log(1-x)$.
+        To sample $X$  we  first sample $Y \sim U[0, 1]$, then the transformed random variable $-\log(1-Y)$ follows the same distribution as $X$.
+
 \subsection{Two Types of Sampling with Replacement}
 The materials are based on Chapter 1 of~\cite{degroot2012probability}.
 There are two types of ``sampling with replacement":

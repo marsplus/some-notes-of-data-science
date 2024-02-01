@@ -26,12 +26,9 @@
 
 \newtheorem{defn}{Definition}[section]
 \newtheorem{assump}{Assumption}[section]
-\newtheorem{theorem}{Theorem}
-\newtheorem{proposition}[theorem]{Proposition}
-\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{theorem}{Theorem}[section]
 \newtheorem{example}{Example}[section]
 \newtheorem{lemma}{Lemma}[section]
-
 
 \allowdisplaybreaks
 \DeclareMathOperator{\argmax}{arg\,max}
@@ -51,7 +48,9 @@
 \providecommand{\EXP}[1]{\ensuremath{ \text{exp}\left( #1 \right) }\xspace}  % the exponential function
 \providecommand{\E}{\ensuremath{\mathbbm{E}}\xspace}  % the expectation symbol
 \providecommand{\Var}{\ensuremath{\mathbbm{V}}\xspace}  % the variance symbol
+\providecommand{\SE}{\ensuremath{\hat{\text{se}}}\xspace}  % the standard error
 \providecommand{\Cov}{\ensuremath{\text{Cov}}\xspace}  % the covariance symbol
+\providecommand{\Corr}{\ensuremath{\text{Corr}}\xspace}  % the covariance symbol
 \providecommand{\Tr}{\ensuremath{\mathbbm{\text{trace}}}\xspace}  % the trace operator
 \providecommand{\Sign}[1]{\ensuremath{\text{sign}\left(#1 \right)}\xspace}  % the sign function
 \providecommand{\RecallAtK}{\ensuremath{ \text{Recall}@K }\xspace}
@@ -103,6 +102,9 @@
 \input{sections/feature}
 
 
+\section{Causal Inference}
+\input{sections/causal.tex}
+
 \section{Matrix Analysis}
 \input{sections/matrix.tex}
 
@@ -115,6 +117,17 @@
 
 \section{Time Series Analysis}
 \input{sections/time-series.tex}
+
+
+\section{NLP}
+\input{sections/nlp.tex}
+
+\section{ML in Practice}
+\input{sections/practical}
+
+
+\section{Appendix}
+\input{sections/appendix}
 
 
 \bibliographystyle{plainnat}

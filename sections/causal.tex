@@ -1,0 +1,62 @@
+
+
+The focus of this chapter is to estimate the average treatment effect:
+    \begin{equation}
+        \E[Y | do( T:= 1)] - \E[Y | do( T:= 0)].
+    \end{equation}
+
+A key concept in causal inference is \emph{confounding}, formally:
+    \begin{equation}
+        P(Y=y | do(T:=t)) \ne P(Y=y | T=t).
+    \end{equation}
+Intuitively, the above inequality means that the conditional distribution of $Y$ given $T$ doesn't equal to its interventional counterpart. Otherwise, we can directly estimate the average treatment effect from observational data.
+
+\subsection{Propensity Score Matching (PSM)}
+    PSM estimates the effects of treatment from observational data.
+    Let $T \in \SET{0, 1}$ be a binary treatment variable.
+    The propensity score---the probability of being treated given the features $x$---is defined below
+        \begin{equation}
+            e(x) = \E[T | X = x].
+        \end{equation}
+    PSM proceeds as follows:
+        \begin{enumerate}
+            \item Construct a dataset $D = \SET{(x_i, t_i)}_{i=1}^{\ndata}$ from observational data, where $t_i \in \SET{0, 1}$ denotes whether sample $x_i$ got treatment.
+            \item Fit a machine learning model $f$ to predict the propensity score for each $x_i$. This can be done by using cross validation. Specifically, we divide $D$ into multiple folds. We then train $f$ on a single fold and use it to predict the propensity scores for the other folds. 
+            The final propensity scores are the average over the folds. 
+            
+            \item After step 2, we have two datasets with propensity scores: 1) the set of treated samples, i.e., $D_1 = \Set{(x_i, \hat{e}_i)}{t_i=1}$ and 2) the set of controlled samples, i.e., $D_0 = \Set{(x'_i, \hat{e}'_i)}{t_i=0}$.
+            We then match a sample in $D_1$ with the sample in $D_0$ that has the closest propensity score.
+            Formally, this creates a new dataset of matched pairs, i.e., $D_m = \SET{(x_u, x'_v)}$, where $x'_v \in D_0$ has the closest propensity score with $x_u \in D_1$.
+            
+            \item The average treatment effect is the difference between the outcomes of the treated samples and the matched controls.
+        \end{enumerate}
+        
+
+\subsection{Synthetic Control Method (SMC}
+    Suppose we would like to evaluate the effect of a policy on pollution levels. 
+    The policy is applied to region A at time $t_1$. 
+    The regions B, C, D, E and F are not affected by the policy. 
+    SCM constructs a synthetic control group by combining data from multiple untreated units (regions B-F) to create a composite unit that closely resembles the treated unit in the pre-treatment period. 
+
+    Some notations:
+        \begin{itemize}
+            % \item $y_{A}$ is the vector of pre-treatment pollution levels of region A.
+            % \item $y_{i}$ is the vector of pre-treatment pollution level of region $i$.
+            \item $y^\prime_{A}$ is the vector of post-treatment pollution level of region A.
+            \item $y^\prime_{i}$ is the vector of post-treatment pollution level of region $i$.
+            \item $x_A$ is the pre-treatment covariates of region A (may include pre-treatment outcomes).
+            \item $x_i$ is the pre-treatment covariates of region $i$ (may include pre-treatment outcomes).
+            \item $V$ is a matrix to quantify the interactions between the covariates and outcomes. 
+            \item $w$ is a weight vector to combine the untreated units. 
+        \end{itemize}
+    The covariates of the synthetic control is $x_s = \sum_{i}^{}{w_i x_i}$.
+    SMC solves the following problem:
+        \begin{equation}
+            \begin{aligned}
+                 w^\ast \in \argmin_{w} (x_A - x_s)^\top V (x_a - x_s).
+            \end{aligned}
+        \end{equation}
+    The treatment effect is estimated as:
+        \begin{equation}
+            y^\prime_A - \sum_{i}^{}{w^\ast_i y^\prime_i}.
+        \end{equation}

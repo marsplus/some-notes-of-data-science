@@ -1,0 +1,35 @@
+
+
+
+The following would be good check list to go through when formulating a machine learning problem.
+\begin{enumerate}
+    \item Data understanding and preparation.
+        \begin{itemize}
+            \item Data availability: is there enough data to use?
+            \item Data quality: how clean and accurate is the data? Is there any missing value or outlier? What is the ratio of these values? How to handle them?
+            \item Class balance: is the data balanced? If not, what needs to be done?
+            \item Data distribution: is the data representative? For example, does the data cover all the classes (geographical, demographic groups)? Does the data reflect any temporal changes or seasonal shifts in practice? Is there any bias in the data? For example, sampling bias or measurement bias. 
+        \end{itemize}
+    \item Feature engineering.
+        \begin{itemize}
+            \item What features do we use? Do we need to create new features? Any transformations are needed? For example, normalization (make ML models less scale sensitive\footnote{Any machine learning model that needs to compute some distances can be sensitive to the scales of features.}), standardization, log transformation (reducing skewness, stabilizing variance, turn multiplication into addition), etc. 
+            \item Is there any redundancy in the features? Do we need any feature reduction? 
+            \item Any encoding needed? E.g., one-hot encoding.
+            \item Do we need to do discretization? It has the following advantages: 1) better handle outliers by mixing them with other less extreme data; 2) stabilizing variance; 3) prevent overfitting; 4) improve robustness. 
+            \item Is there any correlation between the features? One way to diagnose this is generating a correlation matrix among the features. 
+        \end{itemize}
+
+    \item Model selection and training
+        \begin{itemize}
+            \item Which model best suits the current need? This decision is a trade-off of multiple factors, e.g., data modality (tabular, image, or text data), resource limitations (enough GPU?), the nature of the problem (is the problem time series?), online or off-line model, explainability, latency requirements, etc. 
+            \item What is the baseline model for comparison purposes? For example, one can compare with the previous version of the model. 
+            \item What loss function do we use for training? For example, Focal loss can be used to handle class imbalance issues for classification problems. Huber loss can be used to handle extreme values in regression problems. 
+            \item How to split the data into training, validation and testing?  For non time-series data, we need to consider whether to use random data splitting versus stratified splitting. For time-series data, the splitting has to follow the chronological order.  In addition, the seasonality trends should be well captured by the splitting. 
+        \end{itemize}
+
+
+    \item Evaluation 
+        \begin{itemize}
+            \item What metrics do we use for evaluation purposes?
+        \end{itemize}
+\end{enumerate}

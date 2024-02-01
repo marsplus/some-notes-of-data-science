@@ -36,20 +36,19 @@
     
     \subsubsection{Newton's Method}\label{newton-method}
         Consider a function $f(\bm{x}): \R^\nfeat \rightarrow \R$.
-        We do a second-order Taylor expansion of $f(\bm{x} + \bm{\epsilon})$ at $f(\bm{x})$ as follows:
+        We apply a second-order Taylor expansion around $\bm{x}$:
             \begin{equation}
-                f(\bm{x} + \bm{\epsilon}) \approx f(\bm{x}) + \bm{\epsilon}^{\top} \nabla f(\bm{x}) + \frac{1}{2} \bm{\epsilon}^\top \nabla^2 f(\bm{x}) \bm{\epsilon}.
+                f(\bm{x} + \bm{\epsilon}) \approx f(\bm{x}) + \bm{\epsilon}^{\top} \nabla f(\bm{x}) + \frac{1}{2} \bm{\epsilon}^\top \underbrace{\nabla^2 f(\bm{x}) }_{:=\bm{H}}\bm{\epsilon}.
             \end{equation}
-        At a minimum, we have $\nabla_{\bm{\epsilon}} f(\bm{x}+\bm{\epsilon}) = \bm{0}$; otherwise, there must be a direction $\bm{\epsilon}'$ where we can further minimize the function.
-        Substituting into the Taylor expansion leads to 
+        We have $\nabla_{\bm{\epsilon}} f(\bm{x}+\bm{\epsilon}) = \bm{0}$ at a local minimum; otherwise, there would be a direction $\bm{\epsilon}'$ where we could further minimize the function.
+        Differentiating both sides of the Taylor expansion:
             \begin{equation}
                 \nabla_{\bm{\epsilon}}\left[ f(\bm{x}) + \bm{\epsilon}^{\top} \nabla f(\bm{x}) + \frac{1}{2} \bm{\epsilon}^\top \nabla^2 f(\bm{x}) \bm{\epsilon}\right] = \bm{0} \implies \bm{\epsilon} = -\bm{H}^{-1} \nabla f(\bm{x}).
             \end{equation}
         As a result, the update rule in Newton's method is as follows:
             \begin{equation}
-                \bm{x} \leftarrow \bm{x} - \eta \bm{H}^{-1} \nabla f(\bm{x}),
+                \bm{x} \leftarrow \bm{x} + \bm{\epsilon} = \bm{x} - \eta \bm{H}^{-1} \nabla f(\bm{x}).
             \end{equation}
-        which shows how the Hessian matrix comes into play.
     
     
     
@@ -177,7 +176,7 @@ Check out this fantastic blog for more details: \url{https://lilianweng.github.i
 Another example implementation based on PyTorch is: \url{https://github.com/ethanluoyc/pytorch-vae/blob/master/vae.py}.
 
 \subsection{RNN, GRU and LSTM}
-This section is based on the excellent book: \url{shorturl.at/nwDEL}.
+This section is based on the excellent book: \url{https://d2l.ai/chapter_recurrent-neural-networks/bptt.html#analysis-of-gradients-in-rnns}.
 % Let us first consider a one-dimensional RNN encoded as follows:
 %     \begin{equation}
 %         \begin{aligned}
@@ -242,11 +241,11 @@ When $t < T$, the loss $L$ depends on $\bm{h}_t$ and $\bm{h}_{t+1}$ (and recursi
             & = \bm{W}_{hh}^\top\left( \bm{W}_{hh}^\top \frac{\partial L}{\partial \bm{h}_{t+2}} +  \bm{W}_{qh}^\top \frac{\partial L}{\partial \bm{o}_{t+1}} \right) + \bm{W}_{qh}^\top \frac{\partial L}{\partial \bm{o}_t} \\
             & = \bm{W}_{hh}^\top \bm{W}_{hh}^\top \left( \bm{W}_{hh}^\top \frac{\partial L}{\partial \bm{h}_{t+3}} +  \bm{W}_{qh}^\top \frac{\partial L}{\partial \bm{o}_{t+2}}\right) + \bm{W}_{hh}^\top \bm{W}_{qh}^\top \frac{\partial L}{\partial \bm{o}_{t+1}}  + \bm{W}_{qh}^\top \frac{\partial L}{\partial \bm{o}_t} \\
             & = \left( \bm{W}_{hh}^\top \right)^{T-t} \bm{W}_{qh}^\top \frac{\partial L}{\partial \bm{o}_T} + \left( \bm{W}_{hh}^\top \right)^{T-t-1}\bm{W}_{qh}^\top \frac{\partial L}{\partial \bm{o}_{T-1}} +, \ldots, + \left( \bm{W}_{hh}^\top \right)^{T-T} \bm{W}_{qh}^\top \frac{\partial L}{\partial \bm{o}_t} \\
-            & = \sum_{i=t}^{T}{\left( \bm{W}_{hh}^\top \right)^{T-i} \bm{W}_{qh}^\top  } \left( \frac{\partial L}{\partial \bm{o}_{T+t-i} } \right).
+            & = \sum_{i=t}^{T}{ \underbrace{\left( \bm{W}_{hh}^\top \right)^{T-i}}_{\text{the cause of gradient explosion}} \bm{W}_{qh}^\top  } \left( \frac{\partial L}{\partial \bm{o}_{T+t-i} } \right).
         \end{aligned}
     \end{equation}
 The so-called ``gradient explosion'' and ``gradient vanishing'' manifest themselves from the last step of \eqref{rnn-grad}.
-\emph{When computing the gradients of the loss w.r.t. a hidden state, we need to repeatedly multiply the weight matrix between hidden states.}  
+\emph{When computing the gradients of the loss w.r.t. a hidden state, we need to repeatedly multiply the matrix $\bm{W}_{hh}$.}  
     \begin{itemize}
         \item Gradient explosion: $\left(\bm{W}_{hh}^\top \right)^{T-i}$ will become 
         very large when some eigenvalues of $\bm{W}_{hh}$ have absolute values greater than one, which makes $\frac{\partial L}{\partial \bm{h}_t}$ very large.
@@ -272,30 +271,37 @@ The so-called ``gradient explosion'' and ``gradient vanishing'' manifest themsel
     
 \subsection{Deepwalk and Node2vec}
     \subsubsection{Negative Sampling}
-    Deepwalk and Node2vec are unsupervised methods to learn node embedding.
+    Deepwalk and node2vec are unsupervised methods to learn node embedding.
     Suppose we have a graph $G=(V, E)$ with $\ndata$ nodes.
     We would like to learn an embedding $\bm{z}_i \in \R^\nfeat$ for each node $i$, such that $\bm{z}^{\top}_i \bm{z}_j$ is large when $i$ and $j$ are connected.
     Let $f(i): V \rightarrow \R^\nfeat$ be the function mapping a node to its embedding.
-    We represent the neighborhood (not necessarily 1-hop neighbors) of a node $i$ by $\mathcal{N}_{s}(i)$, where $s$ is some strategy that we use to generate the neighborhood (e.g., random walk).
-    Deepwalk and Node2vec solve the following maximum likelihood estimation problem:
+    We represent the neighborhood (not necessarily 1-hop neighbors) of a node $i$ by $\mathcal{N}_{s}(i)$, where $s$ is some strategy to generate the neighborhood (e.g., random walk).
+    Deepwalk and node2vec solve the following maximum likelihood estimation problem:
         \begin{equation}
-            \max_{f} \left[ \sum_{i=1}^{\ndata}{ \log p\left(\mathcal{N}_s(i) | f(i) \right)} \approx \sum_{i=1}^{\ndata}{ \sum_{j \in \mathcal{N}_s(i)}^{}{\log p(j | f(i))} } \right],
+            \max_{f} \left[ \sum_{i=1}^{\ndata}{ \log p\left(\mathcal{N}_s(i) | f(i) \right)} \right] \approx \max_{f} \left[ \sum_{i=1}^{\ndata}{ \sum_{j \in \mathcal{N}_s(i)}^{}{\log p(j | f(i))} } \right],
         \end{equation}
     where the approximation utilizes the assumption of conditional independence.
-    The probability density function $p(j | f(i))$ is usually parameterized by a softmax:
+    The probability density function $p(j | f(i))$ is usually parameterized by the softmax function:
         \begin{equation}
             p(j | f(i)) = \frac{\EXP{\bm{z}_j^\top \bm{z}_i}}{\sum_{k\in V}^{}{\EXP{\bm{z}_k^\top \bm{z}_i}}}.
         \end{equation}
-    Intuitively, if node $j$ frequently occurs in random walks started from $i$, the two nodes $i$ and $j$ should be similar in some sense.
-    Evaluating the softmax is very expensive due to the summation in the denominator.
-    One solution is to utilize the idea of \emph{negative sampling} to do approximation:
-        \begin{equation}
-            \log \frac{\EXP{\bm{z}_j^\top \bm{z}_i}}{\sum_{k\in V}^{}{\EXP{\bm{z}_k^\top \bm{z}_i}}} \approx \log\left( \sigma(\bm{z}_j^\top \bm{z}_i) \right)  - \sum_{k\in \mathcal{M}}^{}{\log\left( \sigma(\bm{z}_k^\top \bm{z}_i) \right)},
+    Intuitively, if node $j$ appears frequently in random walks started from node $i$, then these two nodes should be considered similar.
+    Computing the softmax function is computationally expensive because of the summation in the denominator. One needs to iterate over every node in $V$ to calculate the summation.
+    \emph{Negative sampling} is to approximate the denominator with the following:
+        \begin{equation}\label{eq:negative_sampling}
+            \log{ p(j | f(i)) } = \log \frac{\EXP{\bm{z}_j^\top \bm{z}_i}}{\sum_{k\in V}^{}{\EXP{\bm{z}_k^\top \bm{z}_i}}} \approx \log\left( \sigma(\bm{z}_j^\top \bm{z}_i) \right)  - \sum_{k\in \mathcal{M}}^{}{\log\left( \sigma(\bm{z}_k^\top \bm{z}_i) \right)},
         \end{equation}
     where $\sigma(\cdot)$ is the sigmoid function.
-    The set $\mathcal{M}$ is a subset of nodes with small cardinality, i.e., $\SetCard{\mathcal{M}} \ll \SetCard{V}$.
-    Typically, the set $\mathcal{M}$ should contain ``negative samples"; in the case of Deepwalk and Node2vec, the negative samples are those nodes that do not belong to any random walk starting from $i$; In practice, the nodes in $\mathcal{M}$ are sampled with probability proportional to the nodes' degrees.\footnote{The definition of negative samples depends on specific application scenarios.}
-    
+    \paragraph{Where does the approximation come from?}
+    The key is to consider a different \emph{sample space}. Originally, we modeled the probability of seeing $j$ given the embedding of $i$, i.e., $f(i)$. The size of the sample space is $\SetCard{V}$.
+    Now we consider a different probabilistic model.
+    Given nodes $i$ and $j$, what is the probability that they are similar, i.e., $p(d=1 | i, j)$, and what is the probability that they are dissimilar, i.e., $p(d=0|i,j)$.
+    Since the underlying probabilistic model changes, the likelihood function also changes:
+        \begin{equation}
+            \underbrace{\prod_{(i,j) \in \mathcal{D}}^{}{p(d=1 | i, j)}}_{\text{$\mathcal{D}$ includes similar nodes.}} \cdot \underbrace{\prod_{(i,j) \in \mathcal{M} }^{}{p(d=0| i,j)}}_{\text{$\mathcal{D}^\prime$ includes dissimilar nodes.}}.
+        \end{equation}
+    In practice, we can use a random walk to find the set $\mathcal{D}$. The first term captures that nodes appearing in the same random walk are more likely to be similar. From the second term,  we only need to find a small set $\mathcal{M}$ including dissimilar (or negative) nodes---nodes that do not appear in the same random walk.
+    Taking logarithm in both sides gives us the approximation in \eqref{eq:negative_sampling}.    
     
     
     \subsection{GNN}
@@ -332,7 +338,7 @@ The so-called ``gradient explosion'' and ``gradient vanishing'' manifest themsel
 \subsection{Dropout}
     Intuitively, we zero out some neurons during training with probability $p$.
     However, we need to adjust the outputs of the remaining neurons such that their expectations do not change.
-    For any neuron $h$, the adjusted output is as follows:
+    For any neuron $h$, the adjusted output is
         \begin{equation}
             h' = \begin{cases}
                     0, & \text{with prob. $p$} \\
@@ -341,6 +347,9 @@ The so-called ``gradient explosion'' and ``gradient vanishing'' manifest themsel
         \end{equation}
     As a result, the expected output is $\mathbbm{E}[h'] = h$, which is the same as if there were no dropout.
     When testing we do not zero out any neuron and the forward pass is the same as usual.
+
+\subsection{Softmax}
+    
     
 \subsection{Batch Normalization (BN)}
     BN is used to center and re-scale the inputs to each layer based on statistics computed from mini-batches, which may speed-up the convergence.
@@ -348,7 +357,19 @@ The so-called ``gradient explosion'' and ``gradient vanishing'' manifest themsel
         \begin{equation}
             \text{BN}(\bm{x}) = \bm{\gamma} \odot \frac{\bm{x} - \hat{\bm{\mu}} }{\hat{\bm{\sigma}}} + \bm{\beta},
         \end{equation}
-    where $\hat{\bm{\mu}}$ and $\hat{\bm{\sigma}}$ are sample mean and standard deviation estimated from the mini-batch; $\bm{\gamma}$ and $\bm{\beta}$ are learnable weight parameters.
-    Notice that during training the mean and standard deviation of BN are computed from mini-batches, however, those statistics are computed from the entire dataset when testing.
-        
+    where $\hat{\bm{\mu}}$ and $\hat{\bm{\sigma}}$ are sample mean and sample standard deviation estimated from the mini-batch; $\bm{\gamma}$ and $\bm{\beta}$ are learnable weight parameters.
+    During training the mean and standard deviation of BN are computed from mini-batches on the fly. 
+    However, a running mean and a running variance are also accumulated across the training through a momentum coefficient. 
+    The running mean and variance are used when testing. 
+
+
+\subsection{Layer Normalization (LN)}
+    Intuitively, LN computes the mean and variance across the features, i.e., 
+        \begin{equation}
+            \text{LN}(\bm{x}) = \bm{\gamma} \odot \frac{\bm{x} - \hat{\mu} }{\hat{\sigma}} + \bm{\beta},
+        \end{equation}
+    where $\hat{\mu} = (1/\nfeat) \sum_{j=1}^{\nfeat}{x_j}$ and $\hat{\sigma} = \sqrt{(1/\nfeat)\sum_{j=1}^{\nfeat}{(x_j - \hat{\mu})^2} }$.
+    LN does not need to maintain the running mean and variance. 
+
+\subsection{Transformer}
     

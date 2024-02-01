@@ -40,6 +40,8 @@
             \item $\alpha = \bm{y}^\top(\bm{z}) \cdot \bm{x}(\bm{z}) \implies \frac{\partial \alpha}{\partial \bm{z}} = \bm{x}^\top \frac{\partial \bm{y}}{\partial \bm{z}} + \bm{y}^\top \frac{\partial \bm{x}}{\partial \bm{z}}$.
             \item $\alpha = \bm{x}^\top(\bm{z}) \cdot \bm{x}(\bm{z}) \implies \frac{\partial \alpha}{\partial \bm{z}} = \bm{x}^\top \frac{\partial \bm{x}}{\partial \bm{z}} + \bm{x}^\top \frac{\partial \bm{x}}{\partial \bm{z}} = 2\bm{x}^\top \frac{\partial \bm{x}}{\partial \bm{z}}$.
         \end{itemize}
+        Zico Kolter from CMU mentioned a very cool hack to compute matrix differentials. 
+        Basically, we first assume everything is scalar (i.e., one-by-one matrices); then, we figure out what the dimensions should be; check out the video \url{shorturl.at/fHRW2}.
         
         
         

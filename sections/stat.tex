@@ -6,7 +6,7 @@
                 \begin{equation}
                     \E\left( \sum_{i=1}^{\ndata}{a_i X_i}\right) = \sum_{i=1}^{\ndata}{a_i \E[X_i]}.
                 \end{equation}
-            It is worth nothing that the summation does not require $X_i$ to be IID.
+            Due to the linearity of the expectation operator, the summation does not require $X_i$ to be IID.
         \end{enumerate}
     \paragraph{One concrete example.} Take a stick of unit length and break it at random.
     Let $Y$ be the length of the longer piece. 
@@ -20,19 +20,24 @@
         \end{equation}
         
 \subsection{Variance}
-    One thing worth mentioning about variance is the summation rule.
-    Specifically, if $X_1, \ldots, X_\ndata$ are \emph{independent} (not necessarily identically distributed) and $a_1, \ldots, a_\ndata$ are constants, then
+    Assume $X_1, \ldots, X_\ndata$ are \emph{uncorrelated} (not necessarily independent) and $a_1, \ldots, a_\ndata$ are constants, then
         \begin{equation}
             \Var\left( \sum_{i=1}^{\ndata}{a_i X_i} \right) = \sum_{i=1}^{\ndata}{a_i^2 \Var(X_i)}.
         \end{equation}
-    If we remove the independence assumption, the summation becomes:
+    If they are correlated the summation becomes:
         \begin{equation}
             \Var\left( \sum_{i=1}^{\ndata}{a_i X_i}\right) = \sum_{i=1}^{\ndata}{a_i^2 \Var(X_i)} + 2 \sum_{i < j}^{}{a_i a_j \Cov(X_i, X_j)}.
         \end{equation}
+
+\subsection{Covariance and Correlation}
+    \begin{itemize}
+        \item $\Cov(X, Y) = \E\left[ (X - \E[X]) (Y - \E[Y])\right]$.
+        \item $\Corr(X, Y) = \frac{\Cov(X, Y)}{\sigma_X \sigma_Y}$, a normalized version of covariance.
+    \end{itemize}
     
 \subsection{Conditional Expectation}
     $\E[X]$ is a \emph{number}, while $\E[X | Y]$ is a function of $Y$.
-    We can think of $\E[X|Y]$ as a random variable, which can be realized by fixing the value of $Y$, i.e., $\E[X | Y=y]$.
+    We can think of $\E[X|Y]$ as a random variable, which can be realized by fixing a value for $Y$, i.e., $\E[X | Y=y]$.
     \paragraph{The rule of iterated expectations:} $\E[\E[Y | X]] = \E[Y]$.
     The proof is interesting
         \begin{equation}
@@ -43,46 +48,240 @@
                     & = \E[Y].
             \end{aligned}
         \end{equation}
+
+\subsection{Moment Generating Functions}
+    
     
 
     \subsection{Some Estimators}
         \begin{itemize}
             \item Sample variance: $\hat{\sigma}^2 = \frac{1}{\ndata-1} \sum_{i=1}^{\ndata}{(x_i - \bar{x})^2}$.
             \item Sample standard deviation: $\hat{\sigma} = \sqrt{\frac{1}{\ndata-1} \sum_{i=1}^{\ndata}{(x_i - \bar{x})^2}}$.
-            \item Sample standard error (standard deviation of the sample mean): $\hat{\text{se}} = \frac{\hat{\sigma}}{\sqrt{\ndata}}$.
+            \item Variance of the sample mean: $V(\bar{X}) = V\left( \frac{1}{\ndata}\sum_{i=1}^{\ndata}{X_i} \right) = \frac{1}{\ndata^2}\sum_{i=1}^{\ndata}{V(X_i)} = \sigma^2 / \ndata \approx \hat{\sigma}^2 / \ndata$.
+            \item Sample standard error (standard deviation of the sampling distribution of $\bar{x}$): $\text{se} = \sqrt{V(\bar{X})} =  \frac{\sigma}{\sqrt{\ndata}} \approx \frac{\hat{\sigma}}{\sqrt{\ndata}}$.
         \end{itemize}
+
+        \paragraph{The $N-1$ denominator in the sample variance.}
+            Let $\mathcal{S}^n=\SET{X_1, \ldots, X_n}$ be a sample from the entire population, i.e., $\mathcal{S}^n \sim \mathcal{P}$.
+            The sample variance of $\mathcal{S}^n$ is $\hat{\sigma}^2(\mathcal{S}^n)$, a random variable induced by the randomness of sampling.
+            The expectation of the sample variance is:
+                \begin{equation}
+                    \begin{aligned}
+                    \E_{\mathcal{S}^n \sim \mathcal{P}}[\hat{\sigma}^2(\mathcal{S}^n)] & = \E\left[ \frac{1}{n} \left( \sum_{i=1}^{n}{X_i - \frac{1}{n}\sum_{j=1}^{n}{X_j}}\right)^2 \right] \\
+                    & = \frac{1}{n} \sum_{i=1}^{n}{ \E\left[ X_i^2 - \frac{2}{n}X_i \sum_{j=1}^{n}{X_j} + \frac{1}{n^2}\sum_{j=1}^{n}{X_j\sum_{k=1}^{n}{X_k}} \right]} \\
+                    & = \frac{1}{n} \sum_{i=1}^{n}{ \E\left[ X_i^2 - \frac{2}{n}X_i^2 - \frac{2}{n}\sum_{j\ne i}^{}{X_i X_j}  + \frac{1}{n^2}\sum_{j=1}^{n}{X_j^2} + \frac{1}{n^2}\sum_{j=1}^{n}{\sum_{k\ne j}^{n}{X_jX_k}} \right]} \\
+                    & = \frac{1}{n}\sum_{i=1}^{n}{\frac{n-2}{n}\E[X_i^2]} + \frac{1}{n}\sum_{i=1}^{n}{\frac{1}{n^2} \sum_{j=1}^{n}{\E[X_j^2]}} - \frac{2}{n^2}\sum_{i=1}^{n}{\sum_{j\ne i}^{}{\E[X_i X_j]}} + \frac{1}{n^3}\sum_{i=1}^{n}{\sum_{j=1}^{n}{\sum_{k \ne j}^{}{X_j X_k}}} \\
+                    & = \frac{n-2}{n}(\sigma^2 + \mu^2) + \frac{1}{n}(\sigma^2+\mu^2) - \frac{2}{n^2} \underbrace{\E_{i \sim \mathcal{P}} \left[ \sum_{i=1}^{n} X_i \sum_{j \neq i}^{} \E_{j \sim \mathcal{P}}[X_j] \right]}_{n(n-1)\mu^2} + \frac{1}{n^2} \E_{i \sim \mathcal{P}} \left[ \sum_{i=1}^{n} X_i \sum_{j \neq i}^{} \E_{j \sim \mathcal{P}}[X_j] \right] \\
+                    & = \frac{n-2}{n}(\sigma^2 + \mu^2) + \frac{1}{n}(\sigma^2+\mu^2) - \frac{2\mu^2(n-1)}{n} + \frac{\mu^2(n-1)}{n} \\
+                    & = \frac{n-1}{n}\sigma^2,
+                    \end{aligned}
+                \end{equation}
+            where $\sigma$ and $\mu$ are the population variance and mean, respectively. 
+            Thus, we need to multiply a factor $\frac{n}{n-1}$ in front of the sample variance to get an unbiased estimator of the $\sigma$, i.e., $\frac{n}{n-1} \left( \frac{1}{n}\sum_{i=1}^{n}{\left(X_i - \bar{X_i} \right)^2} \right) = \frac{1}{n-1}\sum_{i=1}^{n}{\left(X_i - \bar{X_i} \right)^2}$. 
         
 
 \subsection{Hypothesis Testing (HT)}
+    \subsection{Some Background}
+        We use $H_0$ and $H_1$ to denote the null and the alternative hypothesis, respectively.
+            \begin{equation}
+                H_0: \theta \in  \Theta_0 \text{ versus } H_1: \theta \in \Theta_1. 
+            \end{equation}
+        Let $\mathcal{X} = \SET{x_1, \ldots, x_\ndata}$  be a sample of data.
+        The test statistic $T(\mathcal{X})$ is computed from $\mathcal{X}$.
+        Define the rejection region $\mathcal{R}$ as follows:
+            \begin{equation}
+                \mathcal{R}  = \Set{(x_1, \ldots, x_\ndata)}{T(\mathcal{X}) \ge c},
+            \end{equation}
+        where $c$ is called the critical value.
+        Intuitively, if the data falls into the rejection region (manifested by the fact that $T(\mathcal{X}) \ge c$), we reject $H_0$.
+
+        The \emph{power function} $\beta(\theta)$ of a test with rejection region $\mathcal{R}$ is defined below:
+            \begin{equation}
+                \beta(\theta) = P_\theta(\mathcal{X} \in \mathcal{R}).
+            \end{equation}
+        In the context of A/B testing, when the true value of $\theta_\ast \ne \theta_0$, the \emph{power} of a test is $\beta(\theta_\ast)$, i.e., the probability of correctly rejecting the null hypothesis when it is false.
+        
+        The \emph{size}  of a test is defined as $\alpha$. 
+        Specifically, assuming the null hypothesis is true, the size is the largest possible probability that the data belongs to the rejection region.  
+        A test is said to have level $\alpha$ if its size is less than or equal to $\alpha$.
+            \begin{equation}
+                \alpha  = \sup_{\theta \in \Theta_0} \beta(\theta).
+            \end{equation}
+        The size is a function of the critical value, so the rejection region is a function of the size, i.e., $\mathcal{R}_\alpha$.
 
         
+        A size $\alpha$ test has the following form:
+            \begin{equation}
+                \text{reject $H_0$ iff $T(X^n) \ge c_\alpha$}.
+            \end{equation}
+        The \emph{p-value} is defined as
+            \begin{equation}
+                \text{p-value} = \sup_{\theta \in \Theta_0} P_\theta(T(X^n) \ge T(x^n)),
+            \end{equation}
+        where $x^n$ is the observed value of $X^n$.
+        Intuitively, the p-value is the probability (under the null hypothesis) of observing a value of the test statistic the same or more extreme than what was actually observed. 
+
+        An important theorem for continuous test statistics:
+            \begin{theorem}
+                If the test statistic has a continuous distribution, then under $H_0: \theta = \theta_0$, the p-value has a Uniform $(0, 1)$ distribution. Therefore, if we reject $H_0$ when the p-value is less than $\alpha$, the probability of a type I error is $\alpha$.
+            \end{theorem}
+
+        When we conduct a large number of tests, the chance of at least one false rejection is high. This is the so called multiple testing problem. 
+        The Bonferroni method (BM) is designed to mitigate this issue. 
+        Specifically, consider $m$ hypothesis tests $H_{0i}, \ldots, H_{0m}$ and let $P_1, \ldots, P_m$ denote the $m$ p-values for the tests.
+        We reject $H_{im}$ if $P_i < \frac{\alpha}{m}$.
         
-    \subsubsection{P-Value}
-    A key step of HT is to choose a test statistic.
-    Given a set of data $\mathcal{X} = \SET{x_1, \ldots, x_\ndata}$, 
-    Let $T(\mathcal{X})$ be the test statistic computed on $\mathcal{X}$.
-    The null hypothesis and the alternative hypothesis are $H_0$ and $H_1$, respectively.
-    \begin{itemize}
-        \item P-value: the probability of observing (under $H_0$) a value of the test statistic that is the same or more extreme than the test statistic computed from the data (i.e., $T(\mathcal{X})$), i.e., $P_{H_0}(T \ge T(\mathcal{X}))$. 
-        For the purpose of computing p-values, we need to know the distribution of the test statistic.
-        \item Interpreting a p-value: the smaller the p-value is, the stronger the evidence will be to reject the null hypothesis. However, the other direction is not true, i.e., we do not have strong evidence to support the null hypothesis when the p-value is large.
-    \end{itemize}
+        
+        
+        
+        
+    % \subsubsection{P-value}
+    % A key step of HT is to choose a test statistic.
+    % Given a set of data $\mathcal{X} = \SET{x_1, \ldots, x_\ndata}$, 
+    % Let $T(\mathcal{X})$ be the test statistic computed on $\mathcal{X}$.
+    % The null hypothesis and the alternative hypothesis are $H_0$ and $H_1$, respectively.
+    % \begin{itemize}
+    %     \item P-value: assuming $H_0$ is true and we are running a two-sided test, the probability of observing a value of the test statistic that is the same or larger  than the absolute value of the test statistic i.e., $P_{H_0}(T \ge \Abs{T(\mathcal{X}) })$. 
+    %     For the purpose of computing p-values, we need to know the distribution of the test statistic.
+    %     \item Interpreting a p-value: the smaller the p-value is, the stronger the evidence will be to reject the null hypothesis. However, the other direction is not true, i.e., we do not have strong evidence to support the null hypothesis when the p-value is large.
+    % \end{itemize}
+
+    \subsection{A/B testing}
+        Two key concepts:
+            \begin{itemize}
+                \item Type I error: the false positive error, i.e., wrongly rejecting the null hypothesis when it is true.
+                \item Type II error: the false negative error, i.e., wrongly accepting the null hypothesis when it is false. 
+            \end{itemize}
+        Some important quantities when designing a test are listed below.
+            \begin{enumerate}
+                \item Significance $\alpha$: this is the probability of having a type I error, i.e., $P(\text{reject $H_0$} | \text{$H_0$ is true} )$. Typical values are $0.05$ and $0.01$. We reject the null hypothesis if the p-value is less than $\alpha$.
+                
+                \item Power: this is the probability of correctly rejecting the null hypothesis when it is false. Formally, it is defined as $1 - \eta$, where $\eta$ is the probability of having a type II error, i.e., $P(\text{accept $H_0$} | \text{$H_0$ is false})$. Typical values include $0.8$, $0.9$.
+                
+                \item Effect size: this is the magnitude of the difference you expect or want to detect between the control and treatment groups. It's often expressed as a percentage change in. e.g.,  the conversion rate or other key metric. A rule of thumb is $1\%$.
+
+                
+                \item Variance: the variance of a metric, such as conversion rate, helps determine the variability of the data. A higher variance requires a larger sample size. For certain metrics, the variance may not have an analytical form, such as the ratio of two means. In such cases, the Delta Method can be used to approximate the variance.
+
+                
+            \end{enumerate}
+        Some common questions to ask when designing a test:
+            \begin{enumerate}
+                \item Sample size: this depends on the significance, power, effect size, and variance. When the significance level is 0.05 and the power is 0.8, a rule of thumb is to use $\frac{16 \sigma^2}{\text{effect size}^2}$ as an estimate.
+
+                \item Randomization unit: for example, in A/B testing for an e-commerce website, a user can be considered as an experimental subject. On the other hand, in a switchback test, a region-time unit is a subject.
+                
+                \item Duration of the test: this is influenced by the sample size. Additionally, the duration should take into account factors such as the day of the week, holidays, etc.
+
+                \item Are the variances of the treatment and control groups equal: F test can be used to assess if the variances $\sigma_1^2$ and $\sigma_2^2$ are statistically different. The F statistic is $F = \frac{\sigma_1^2}{\sigma_2^2}$.
+                
+                \item What test to use. This can be approached from two angles: 1) is the underlying random variable continuous or discrete and 2) what distribution does the metric follow.
+                    \begin{itemize}
+                        \item (Approximate) normal distribution: this assumes that the underlying random variable (e.g., the time spent on an app) is continuous. T test (or Welch's t-test when the variances are different) is typically used. The test statistic is below
+                            \begin{itemize}
+                                \item Same variance: $t = \frac{\bar{X}_1 - \bar{X}_2}{\sqrt{s^2(\frac{1}{n_1} + \frac{1}{n_2})}}$, where $s^2$ is the pooled variance (i.e., $s^2 = \frac{(n_1-1)s_1^2 + (n_2-1)s_2^2}{n_1 + n_2 - 2}$). $\bar{X}_1$ and $\bar{X}_2$ are the sample averages of the control and treament groups respectively; $n_1$ and $n_2$ are the respective sample sizes. The degrees of freedom is $n_1 + n_2 - 2$. 
+                                \item Different variance: $t = \frac{\bar{X}_1 - \bar{X}_2}{\sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}}$, where $s_1^2$ and $s_2^2$ are the sample variances for the two groups. 
+                                The computation of the degrees of freedom is different from the case of equal variance. 
+                            \end{itemize}
+                        \item Multinomial distribution: the Chi-square test is typically used to decide the goodness of fit of observed data to a hypothetical distribution. For example, to decide whether a die is fair, we test whether each number appears with probability $1/6$.
+                            \begin{itemize}
+                                \item Test statistic: $\chi^2 = \sum_{i}^{}{\frac{(O_i - E_i)^2}{E_i}}$, where $O_i$ is the observed frequency of the $i$-th category and $E_i$ is the expected frequency under the null hypothesis. The degree of freedoms is the number of possible outcomes minus one. 
+                            \end{itemize}
+                        \item Binomial distribution: the two-proportion Z-test is used. This covers common metrics like: click/no click, success/fail, conversion/no conversion, etc.
+                            \begin{itemize}
+                                \item Test statistic: $Z = \frac{p_1 - p_2}{\sqrt{\frac{p_1(1-p_1)}{n_1} + \frac{p_2(1-p_2)}{n_2}} }$, where $p_1$ and $p_2$ are the sample proportions (e.g., the success rate).
+                                We can also assume the same variance and use the pooled variance $p = \frac{s_1 + s_2}{n_1+n_2}$ where $s_1$ and $s_2$ are the number of successes and $n_1$ and $n_2$ are the sample sizes respectively. 
+                                \item The testing distribution is the standard normal distribution. 
+                            \end{itemize}
+                        \item Highly skewed/heavy-tailed data: Mann-Whitney U test is typically used. Alternatively, a log-transformation can be used to make the data approximately normal. 
+                    \end{itemize}
+                \item Check imbalance: this is done to guarantee that the features of the control and treatment groups are comparable. For instance, it's important that the age attributes of the groups do not show significant differences. For discrete features, we use a Chi-square test to confirm this comparability. In contrast, for continuous features, the t-test is utilized.
+            \end{enumerate}
+    
     
     \subsection{Some Common Tests}
-        \begin{itemize}
-            \item Welch's t-test: this is usually used to test if the means of two samples are equal.
-            The test statistic is: $T(\mathcal{D}) = \frac{\hat{\mu}_1 - \hat{\mu}_2}{\sqrt{ \hat{\text{se}}_1^2 +  \hat{\text{se}}_2^2  }}$, where $\hat{\mu}_1$ and $\hat{\mu}_2$ are sample means; $\hat{\text{se}}_1$ and $\hat{\text{se}}_2$ are estimated standard errors.
-            \item Pearson's $\chi^2$ test: this test is for multinomial data.
-        \end{itemize}
+        
+        % Given a sample $\theta_1, \ldots, \theta_n$, the following tests make different assumptions about the underlying distribution:
+        %     \begin{itemize}
+        %         % \item Wald Test:  $W = \frac{\hat{\theta} - \theta_0}{\hat{\text{se}}}$; reject $H_0=\theta_0$ when $\Abs{W} > z_{\alpha/2}$, where $z_{\alpha/2} = \Phi^{-1}(1 - \alpha/2)$.
+        %         \item Student's t-test:  test statistic $T = \frac{\hat{\theta} - \theta_0}{\hat{\text{se}}}$. 
+        %         The test assumes that the data is normally distributed, the variances of the two samples are equal, and the samples have equal size.
+        %         \item Welch's test: a variation of the Student's t-test. 
+        %         It handles the case where the two samples have different variances. Consider the following example: Let $X_1, \ldots, X_m$ and $Y_1, \ldots, Y_n$ be two independent samples from populations with means $\mu_1$ and $\mu_2$, resp. Define $\delta=\mu_1 - \mu_2$. The null hypothesis is $H_0: \delta = 0$ and the alternate is that $H_1: \delta \ne 0$. The test statistic is:
+        %             \begin{equation}
+        %                 \begin{aligned}
+        %                 T = \frac{\hat{\delta} - 0}{\hat{\text{se}}} = \frac{\hat{\delta} - 0}{\sqrt{V(\hat{\delta})}} = \frac{\hat{\delta} - 0}{\sqrt{V(\hat{\mu}_1 - \hat{\mu}_2)}} & = \frac{\hat{\delta} - 0}{\sqrt{V(\hat{\mu}_1) - V(\hat{\mu}_2)}} \\
+        %                 & = \frac{\hat{\delta}}{\sqrt{\frac{\hat{\sigma}_X^2}{m} - \frac{\hat{\sigma}_Y^2}{n}}}.
+        %                 \end{aligned}
+        %             \end{equation}
+        %         \item Mann-Whitney U test: it's considered the nonparametric alternative to the independent samples t-test. The data distribution doesn't have to be normal.
+        %     \end{itemize}
+
+    
     
     \subsubsection{Test Two Distributions}
-     \emph{Kolmogorov-Smirnov test} is used to check if two arbitrary distributions are the same.
-     
+        \paragraph{Permutation Test.}
+
+        \paragraph{Kolmogorov-Smirnov (KS) Test.}
+     % Kolmogorov-Smirnov (KS) test can be used to determine if two independent  samples are drawn from the same distribution.
+
+     % \subsection{Test Normality}
+     %    In many cases we would like to test if the data $\mathcal{D}$ was generated from a normal distribution.
+     %    There are many ways to do the testing. 
+     %    One method is to draw the Quantile-Quantile (QQ) plot, i.e., we plot the quantiles of the standardized data against that of the standard normal distribution; 
+     %    the QQ plot also provides additional information about what the underlying distribution of $\mathcal{D}$ might be;
+     %    see \url{shorturl.at/ABFPY} for details.
+     %    Another method is resorting to hypothesis testing; several tests are introduced here: \url{shorturl.at/bGOY7}.
+      
     
-    \subsection{Central Limit Theorem}
-        Let $X_1, \ldots, X_n$ be IID with mean $\mu$ and variance $\sigma^2$. 
-        Define $\bar{X}_n = \frac{\sum_{i=1}^{n}{X_i}}{n}$.
-        The distribution of $Z_n=\frac{\bar{X}_n - \mu}{\sqrt{V(\bar{X}_n)}}$ converges to the standard normal distribution $\mathcal{N}(0, 1)$ in distribution.
+    \subsection{Central Limit Theorem (CLT)}\label{sec:CLT}
+        Let $X_1, \ldots, X_n$ be IID with finite mean $\mu$ and finite variance $\sigma^2$. 
+        Let $\bar{X}_n = \frac{\sum_{i=1}^{n}{X_i}}{n}$.
+        The distribution of $Z_n=\frac{\bar{X}_n - \mu}{\color{red}\sqrt{V(\bar{X}_n)}} = \frac{\bar{X}_n - \mu}{\color{red}\frac{\sigma}{\sqrt{n}}}$ converges to the standard normal distribution $\mathcal{N}(0, 1)$ in distribution. 
+        The true variance $\sigma^2$ is typically unknown. 
+        We use the sample variance $\bar{\sigma}_n^2 = \frac{1}{n-1}\sum_{i=1}^{n}{(X_i - \bar{X}_n)^2}$ instead, i.e.,
+        \begin{equation}
+            \frac{\bar{X}_n - \mu}{\bar{\sigma}_n / \sqrt{n}} \rightarrow \mathcal{N}(0, 1) \text{ in distribution}.
+        \end{equation}
+
+        \paragraph{Multivariate CLT.}
+            Consider $n$-dimensional random variables $\bm{X}_1, \ldots, \bm{X}_n$, with mean $\bm{\mu} \in \R^n$ and covariance matrix $\bm{\Sigma} \in \R^{n \times n}$.
+            Define the CDF of $\bm{X}$ as $F_{\bm{X}}(\bm{x}) = P( \bm{X} \preceq \bm{x})$.
+            The CLT says that $\sqrt{n}(\hat{\bm{\mu}} - \bm{\mu}) \rightarrow \mathcal{N}(\bm{0}, \bm{\Sigma})$ in distribution.
+    
+
+    \subsection{The Delta Method}
+        Suppose we have IID samples $X_1, \ldots, X_n$ from a distribution with mean $\mu$ and variance $\sigma^2$ (both are finite).
+        CLT implies that $\sqrt{n}\left( \frac{ \bar{X}_n - \mu }{\sigma} \right) \sim \mathcal{N}(0, 1)$, where $\bar{X}_n$ is the sample average. 
+        \emph{Let $g$ be a smooth function where $g'(\mu) \ne 0$.
+        The delta method allows us to make probabilistic statements about the random variable $g(\bar{X}_n)$}, i.e., 
+        \begin{equation}
+            \sqrt{n}\left( \frac{ g(\bar{X}_n) - g(\mu) }{\sigma} \right) \rightarrow \mathcal{N}(0, [g'(\mu)]^2) \text{ in distribution}.
+        \end{equation}
+
+        \paragraph{Example.}
+        Suppose we would like to construct a confidence interval for $g(\mu)$, i.e., finding a set $\mathcal{C}$ such that
+            \begin{equation}
+                P(g(\mu) \in \mathcal{C}) \ge 1 - \alpha.
+            \end{equation}
+        The sample estimator of $g(\mu)$ is $g(\bar{X}_n)$.
+        We would like to find $t$ such that
+            \begin{equation}
+                P\left( \Abs{g(\mu) - g(\bar{X}_n)} \le t \right) \ge 1 - \alpha,
+            \end{equation}
+        where the confidence interval is just $[g(\bar{X}_n) -t, g(\bar{X}_n)+t]$.
+        This leads to
+            \begin{equation}
+                \begin{aligned}
+                P\left( \Abs{g(\mu) - g(\bar{X}_n)} \le t \right) = P(-t \le g(\bar{X}_n) - g(\mu) \le t) & = P(-t\frac{\sqrt{n}}{\sigma} \le \frac{g(\bar{X}_n) - g(\mu)}{\frac{\sigma}{\sqrt{n}}} \le t\frac{\sqrt{n} }{\sigma}) \\
+                & = P\left(-t\frac{\sqrt{n}}{\sigma}\frac{1}{g'(\mu)} \le \frac{1}{g'(\mu)}\underbrace{\left( \frac{g(\bar{X}_n) - g(\mu)}{\frac{\sigma}{\sqrt{n}}} \right)}_{Z} \le t\frac{\sqrt{n} }{\sigma}\frac{1}{g'(\mu)}\right) \\
+                & \quad \text{by CLT and the delta method: $\frac{1}{g'(\mu)}Z \sim \mathcal{N}(0, 1)$} \\
+                & \approx P\left(-t\frac{\sqrt{n}}{\sigma}\frac{1}{g'(\mu)} \le Z \le t\frac{\sqrt{n}}{\sigma}\frac{1}{g'(\mu)} \right) \\
+                \end{aligned}
+            \end{equation}
+        Let $z_{\alpha} = \Phi^{-1}(1 - \alpha)$. It follows that $P(Z \ge z_{\alpha / 2}) = \frac{\alpha}{2}$.
+        So $P\left(-t\frac{\sqrt{n}}{\sigma}\frac{1}{g'(\mu)} \le Z \le t\frac{\sqrt{n}}{\sigma}\frac{1}{g'(\mu)} \right) \ge 1 - \alpha$ if we let $t\frac{\sqrt{n}}{\sigma}\frac{1}{g'(\mu)} = z_{\alpha/2}$, which implies that $t = \frac{\sigma z_{\alpha/2}g'(\mu)}{\sqrt{n}}$.
+        
     
     \subsection{The Weak Law of Large Number}
         If $X_1, \ldots, X_n$ are IID with mean $\mu$, then $\bar{X}_n \xrightarrow{P} \mu$, i.e., $P(\Abs{\bar{X}_n - \mu} > \epsilon) \rightarrow 0$.
@@ -97,32 +296,34 @@
     Given a dataset $\mathcal{D} = \SET{x_1, \ldots, x_\ndata}$, suppose $\hat{\theta}_{\mathcal{D}}$ is the estimation of $\theta$.
     \begin{itemize}
         \item Unbiased: $\mathbbm{E}_{\mathcal{D}}[\hat{\theta}_\mathcal{D} ] = \theta$.
-        \item Consistent: $\hat{\theta}_\mathcal{D} \rightarrow \theta$ in probability as $\SetCard{\mathcal{D}} \rightarrow \infty$.
+        \item Consistent: $\hat{\theta}_\mathcal{D} \rightarrow \theta$ in probability as the amount of data $\SetCard{\mathcal{D}} \rightarrow \infty$.
         \item Sampling distribution: $\hat{\theta}_\mathcal{D}$ is a random variable due to the randomness of sampling $\mathcal{D}$.
         The distribution underlying $\hat{\theta}_\mathcal{D}$ is called the \emph{sampling distribution}.
-        \item Standard error (se) of $\hat{\theta}_\mathcal{D}$: the standard deviation of the sampling distribution.
+        \item Standard error (se) of $\hat{\theta}_{\mathcal{D}}$: also known as the standard deviation of the sampling distribution. 
         \item Asymptotically normal (AN): if $\frac{\hat{\theta}_\mathcal{D} - \theta}{\text{se}} \rightarrow \mathcal{N}(0, 1)$ in distribution, then $\hat{\theta}_\mathcal{D}$ is called AN.
         AN is useful when we need to compute a confidence interval of $\hat{\theta}_\mathcal{D}$.
     \end{itemize}
 
-\subsubsection{MLE}
+\subsubsection{Maximum Likelihood Estimation (MLE)}
     The MLE estimator is \emph{consistent} and \emph{asymptotically normal} (AN).
-    The AN property makes it easy to compute the confidence interval of an estimation, i.e., with an approximate $95\%$ confidence  the true $\theta$ belongs to the following interval
+    The AN property makes it convinent to compute the confidence interval of an estimator. For instance, we can make a probabilistic statement like this: with an approximate $95\%$ confidence  the true $\theta$ belongs to the following interval
         \begin{equation}
             \left( \hat{\theta} - 2\hat{\text{se}},  \hat{\theta} + 2\hat{\text{se}} \right),
         \end{equation}
     where $\hat{\text{se}}$ is the estimated standard error.
-    The confidence interval comes from the AN, which we now discuss.
-    Define the fisher information of a parameter as follows:
+    The confidence interval results from the AN, which we  discuss below.
+    Define the fisher information of a parameter $\theta$ as follows:
         \begin{equation}
             I(\theta) = -\int \left( \frac{\partial^2 \log f(x; \theta)}{\partial \theta^2} f(x; \theta) \right) d x,
         \end{equation}
     where $f(x; \theta)$ is the PDF of $x$.
-    The estimated standard error is computed as follows:
+    Notice that the fisher information is a function of $\theta$, since the $x$ is integrated out. 
+    The estimated standard error is:
         \begin{equation}
             \hat{\text{se}} = \sqrt{\frac{1}{\ndata \cdot I(\hat{\theta})}}.
         \end{equation}
-    Finally, the AN means that $\hat{\theta} \sim \mathcal{N}(\theta, \hat{\text{se}}^2 )$ approximately.
+    Due to the AN property, it follows that $\hat{\theta} \sim \mathcal{N}(\theta, \hat{\text{se}}^2 )$ approximately.
+    Thus, according to the 65-95-99.7 rule of normal distributions\footnote{See \url{shorturl.at/cJLW4} for details.}, the confidence interval above is readily obtained. 
     
 
 \subsection{Nonparametric Inference}
@@ -138,32 +339,85 @@
     
     
 \subsection{Sampling Techniques}
+    \subsubsection{Monte Carlo Integration}
+        The evaluation of the integral is approximated as follows
+            \begin{equation}
+                I = \int_{a}^{b}{h(x) \, dx} \approx \int_{a}^{b}{w(x) f(x) \, dx},
+            \end{equation}
+        where $w(x) = h(x)(b-a)$ and $f(x) = \frac{1}{b-a}$.
+        We can sample \ndata random variables $X_1, \ldots, X_{\ndata}$ from the uniform distribution on $[a, b]$ and compute the integral by $\hat{I} = \frac{1}{\ndata}\sum_{i=1}^{\ndata}{w(X_i)}$.
+        The standard error of $\hat{I}$ is estimated by
+            \begin{equation}
+                \SE = \frac{s}{\sqrt{\ndata}} = \frac{ \frac{1}{\ndata-1}\sum_{i=1}^{\ndata}{(X_i - \hat{I} )^2}}{\sqrt{N}}.
+            \end{equation}
+        The $1-\alpha$ confidence interval of $\hat{I}$ is constructed by
+            \begin{equation}
+                \left( \hat{I} - z_{\alpha/2}\SE, \hat{I}+ z_{\alpha/2}\SE \right).
+            \end{equation}
+        
     \subsubsection{Importance Sampling}
         Suppose we would like to compute the following expectation:
             \begin{equation}
                 I = \int h(x) f(x) d x,
             \end{equation}
-        where $f(x)$ is the PDF and $h(x)$ is the function that we are interested in.
+        where $f(x)$ is the probability density function (PDF) of $x$ and  $h(x)$ is the function that we want to compute its expectation. 
         Instead of estimating $I$ by directly sampling from $f(x)$, we can estimate $I$ by sampling from a different distribution $g(x)$ as follows:
             \begin{equation}\label{eq:importance_sampling}
-                I = \int \frac{h(x) f(x)}{g(x)}  d g(x).
+                I = \int \frac{h(x) f(x)}{g(x)} g(x) dx,
             \end{equation}
+        which is equivalent to compute the expectation of $\frac{h(x) f(x)}{g(x)}$ under the distribution of $g(x)$, i.e., $\E_{g(x)}[\frac{h(x) f(x)}{g(x)}]$.
             
-        \paragraph{One Example.}
+        \paragraph{Example.}
         Suppose $X \sim \mathcal{N}(0, 1)$ and we want to estimate $P(X > 5)$.
-        If we were to use the Monte Carlo method to estimate $P(X>5)$, it is very likely that we never sample any $x$ in the set \SET{X > 5}, which makes us wrongly conclude that $P(X > 5) = 0$.
+        If we were to use the Monte Carlo method to estimate $P(X>5)$, it is very likely that we never sample any $x$ in the set \SET{X > 5}\footnote{Over $99.7\%$ chance that a sample $x$ resides in $[-3, 3]$.}, which makes us wrongly conclude that $P(X > 5) = 0$.
         Instead, we can let $g(x)$ be $\mathcal{N}(4, 1)$ and $h(x) = \mathbbm{1}[x > 5]$, and run the following:
             \begin{itemize}
                 \item[1.] Sample from $g(x): x_1, \ldots, x_n \sim \mathcal{N}(4, 1) $.
                 \item[2.] Estimate $I = \frac{1}{\ndata} \sum_{i=1}^{\ndata}{\frac{\mathbbm{1}[x_i > 5] \cdot \mathcal{N}(x_i; 0, 1)}{\mathcal{N}(x_i; 4, 1)}}$.
             \end{itemize}
+
+    \subsubsection{Rejection Sampling}
+        Suppose we would like to sample from a complicated distribution $f$.
+        Instead of directly sampling from $f$, the rejection sampling is to sample from a tractable distribution $g$ (e.g., one has tractable inverse CDF).
+        The specific procedure is as follows:
+        \begin{enumerate}
+            \item Find $k$ such that $k g(x) \ge f(x)$ for any $x$. Intuitively, we can think of $k g(x)$ as an envelop above $f(x)$ everywhere.
+            \item Sample $y \sim g$. One way to do this is by leveraging the probability integral transform.
+            \item Sample $r$ from the uniform distribution on $[0, kg(y)]$. Thus, we have a pair $(y, r)$.
+            \item Keep the sample $y$ if $r \le f(y)$.
+        \end{enumerate}
+        The remaining samples $y_1, \ldots, y_n$ are distributed according to $f$.
+
+    \subsubsection{Metropolis-Hastings (MH) Algorithm}
+        This algorithm is still to evalaute the integral
+            \begin{equation}
+                I = \int h(x) f(x) \, d x.
+            \end{equation}
+        The key idea is to construct a Markov chain where the stationary distribution is $f(x)$.
+        When we sample from the Markov chain for long enough, the samples $X_i$ will be from $f$.
+        By the law of large number for a Markov chain, the following holds as $\ndata \rightarrow \infty$: 
+            \begin{equation}
+                \frac{1}{\ndata}\sum_{i=1}^{\ndata}{h(X_i)} \stackrel{P}{\rightarrow} \E_{f}[h(X)] = I.
+            \end{equation}
+
+        Given an arbitrary $X_0$, suppose we have generated $X_0, X_1, \ldots, X_i$.
+        The MH algorithm works as follows:
+            \begin{enumerate}
+                \item Pick a proposal distribution $q(y|x)$ that is easy\footnote{Typically, it is easy to sample from a distribution $f$ if the inverse CDF has analytical form. 
+                Instead of directly sampling from $f$, we can sample $Y$ from $U[0, 1]$ and then transform it with $F^{-1}(Y)$. The transformed random variable distributes with $f$ (due to the probability integral transform). } to sample from, e.g., a normal distribution. 
+                \item Generate a proposal $Y \sim q(y | X_i)$.
+                \item Evaluate $r=r(X_i, Y)$, where $r(x, y) = \min\left\{ \frac{f(y)}{f(x)}\frac{q(x|y)}{q(y|x)}, 1\right\}$.
+                \item $X_{i+1} = \begin{cases} Y & \text{with prob. } r \\ X_i & \text{with prob. } 1-r  \end{cases}$
+            \end{enumerate}
+
+        If we select $q$ as a normal distribution (i.e., $q(y|x) = \mathcal{N}(x, b^2)$), then  $r(x, y) = \min \left\{ \frac{f(y)}{f(x)}, 1 \right\}$ due to the symmetry of the normal distribution.
             
-\subsection{Common Inequalities}
+\subsection{Concentration Inequalities}
     \subsubsection{Markov Inequality}
      Let $X$ be a \emph{non-negative} random variable and suppose that $\E[X]$ exists. 
      For any $t > 0$,
         \begin{equation}
-            P(X > t) \le \frac{\E[X]}{t}.
+            P(X \ge t) \le \frac{\E[X]}{t}.
         \end{equation}
     \begin{proof}
         \begin{equation}
@@ -185,7 +439,7 @@
         \end{equation}
     \end{proof}
     
-    \paragraph{One Example.}
+    \paragraph{Example 1.}
     Suppose we test a neural network on \ndata testing samples.
     Let $X_i=1$ (resp. $X_i = 0$) represent that the $i$-th instance is wrongly (resp. correctly) classified.
     The error rate is estimated as $\bar{X}_\ndata = \frac{1}{\ndata} \sum_{i=1}^{\ndata}{X_i}$.
@@ -197,10 +451,21 @@
         \begin{equation}
             P(\Abs{\bar{X}_\ndata - p} \ge \epsilon) \le \frac{\Var[\bar{X}_\ndata]}{\epsilon^2} = \frac{\Var[\frac{1}{\ndata} \sum_{i=1}^{\ndata}{X_i}]}{\sigma^2} = \frac{\frac{\ndata \Var[X_i]}{\ndata^2}}{\sigma^2} = \frac{\Var[X_i]}{\ndata \sigma^2} = \frac{p (1 - p)}{N \sigma^2} \le \frac{1}{4\ndata \sigma^2}.
         \end{equation}
+
+    \paragraph{Example 2.}
+    Let $\bar{X}_n = \frac{1}{n}\sum_{i=1}^{n}{X_i}$ be the sample average of the random variables $X_i$ with mean and variance $\mu$ and $\sigma^2$.
+    We have $\E[\bar{X}_n] = \mu$ and $\Var[\bar{X}_n]=\sigma^2/n$.
+    Applying Chebyshev's inequality leads to:
+        \begin{equation}
+            P(\Abs{\bar{X}_n - \mu} \ge \epsilon) \le \frac{\sigma^2}{n\epsilon}.
+        \end{equation}
+    Setting $\frac{\sigma^2}{n\epsilon} = 0.01$, we have $\epsilon = \frac{\sigma^2}{0.01 n}$.
+    So we know that $P(\Abs{\bar{X}_n - \mu} \le \frac{\sigma^2}{0.01 n}) \ge 0.99$.
     
     
-    \subsection{Hoeffding's Inequality}
-        Hoeffding's inequality is usually a lot tighter than Chebyshev's inequality.
+    
+    \subsubsection{Hoeffding's Inequality}
+        Hoeffding's inequality is usually tighter than Chebyshev's inequality.
         Let $X_1, \ldots, X_\ndata$ be independent observations (not necessarily identically distributed) such that $\E[X_i] = 0$ and $a_i \le X_i \le b_i$.
         Let $\epsilon > 0$.
         Then for any $t > 0$:
@@ -218,9 +483,11 @@
         Some important facts:
             \begin{itemize}
                 \item $T(\bm{x})$ is called the sufficient statistics; it provides all information with regard to the unknown parameter $\bm{\theta}$. 
-                For example, given a set of i.i.d. data $\mathcal{X}=\SET{x_1, \ldots, x_\ndata}$, the sufficient statistics $T(\mathcal{X})$ is all we need to compute the posterior of $\bm{\theta}$ given $\mathcal{X}$.
+                For example, given a set of i.i.d. data $\mathcal{X}=\SET{x_1, \ldots, x_\ndata}$, the sufficient statistics for the data is $T(\mathcal{X})$. It is all we need to compute the posterior of $\bm{\theta}$ given $\mathcal{X}$.
                 \item $\eta(\bm{\theta})$ is called the natural parameter.
                 \item $A(\bm{\theta})$ is called the log-partition function; it plays the role of a normalization constant to ensure that $f(\bm{x}; \bm{\theta})$ is a valid PDF.
             \end{itemize}
+
+    \subsection{What Distribution to Use?}
         
     

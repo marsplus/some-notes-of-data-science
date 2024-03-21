@@ -14,7 +14,7 @@ Intuitively, the above inequality means that the conditional distribution of $Y$
 \subsection{Propensity Score Matching (PSM)}
     PSM estimates the effects of treatment from observational data.
     Let $T \in \SET{0, 1}$ be a binary treatment variable.
-    The propensity score---the probability of being treated given the features $x$---is defined below
+    The propensity score---the probability of being treated given the feature $x$---is as follows
         \begin{equation}
             e(x) = \E[T | X = x].
         \end{equation}
@@ -32,7 +32,7 @@ Intuitively, the above inequality means that the conditional distribution of $Y$
         \end{enumerate}
         
 
-\subsection{Synthetic Control Method (SMC}
+\subsection{Synthetic Control Method (SMC)}
     Suppose we would like to evaluate the effect of a policy on pollution levels. 
     The policy is applied to region A at time $t_1$. 
     The regions B, C, D, E and F are not affected by the policy. 
@@ -44,9 +44,9 @@ Intuitively, the above inequality means that the conditional distribution of $Y$
             % \item $y_{i}$ is the vector of pre-treatment pollution level of region $i$.
             \item $y^\prime_{A}$ is the vector of post-treatment pollution level of region A.
             \item $y^\prime_{i}$ is the vector of post-treatment pollution level of region $i$.
-            \item $x_A$ is the pre-treatment covariates of region A (may include pre-treatment outcomes).
-            \item $x_i$ is the pre-treatment covariates of region $i$ (may include pre-treatment outcomes).
-            \item $V$ is a matrix to quantify the interactions between the covariates and outcomes. 
+            \item $x_A$ is the pre-treatment covariates of region A (may include pre-treatment pollution levels).
+            \item $x_i$ is the pre-treatment covariates of region $i$ (may include pre-treatment pollution levels).
+            \item $V$ is a matrix to quantify the interactions between the covariates.
             \item $w$ is a weight vector to combine the untreated units. 
         \end{itemize}
     The covariates of the synthetic control is $x_s = \sum_{i}^{}{w_i x_i}$.

@@ -91,16 +91,16 @@
         The two-tower model has wide applications in: 1) embedding learning, 2) candidate retrieval and 3) ranking. 
 
         \paragraph{Positive Samples.}
-            These are the items that were shown to the users and were clicked.
-            It is possible that most of such items are popular items. 
-            Thus, when constructing the set of positives, we need to downsample these popular items (e.g., sampling probability inversely proportional to the popularity) and upsample not-so-popular items. 
+            These are the items that were shown to the users and clicked on.
+            It is likely that many of these items are popular.
+            Therefore, when creating the set of positive items, we should downsample these popular items (e.g., by sampling with a probability inversely proportional to their popularity) and upsample less popular items.
 
         \paragraph{Negative Samples.}
                 \begin{enumerate}
-                    \item Easy negatives: sampling  from the entire dataset with probability: $P(\text{sample item $i$ as a negative}) \propto (\text{popularity of $i$})^{0.75}$. The sampling is not uniform, and this is specifically designed for sampling more popular items as negatives. 
+                    \item Easy negatives: sampling from the entire dataset with probability: $P(\text{sample item $i$ as a negative}) \propto (\text{popularity of $i$})^{0.75}$. The sampling is not uniform, and it is specifically designed to sample more popular items as negatives.
                     
                     \item Batch negatives: given a batch of positives $\SET{(\bm{u}_i, \bm{v}_i^+)}_{i=1}^n$, all $\bm{v}_k^+$ where $k \ne i$ can be treated as the negatives for $\bm{u}_i$. 
-                    Notice that the training objective is adapted to $\text{cos}(\bm{u}_i, \bm{v}_k^-) \textcolor{red}{- \log p_k}$, where $p_k$ is the probability of sampling $\bm{v}_k^-$ from the entire dataset.
+                    Notice that the training objective is adapted to: $\text{cos}(\bm{u}_i, \bm{v}_k^-) \textcolor{red}{- \log p_k}$, where $p_k$ is the probability of sampling $\bm{v}_k^-$ from the entire dataset.
                     \item Hard negatives: these items that are retrieved by the candidate retrieval model but are ranked low by the ranking model. 
                 \end{enumerate}
     
@@ -112,7 +112,6 @@
                 The ratio of positives versus negatives is typically $1:2$ or $1:3$.
                 
                 \item Pairwise training: each training sample is a triplet, i.e., $(\bm{u}_i, \bm{v}_j^+, \bm{v}_j^-)$. Use triplet hinge/logistic loss to do the training. 
-                Notice that the network architecture needs to be adapted to have three towers, one for each sample in the triplet. 
                 
                 \item Listwise: each training sample is a list $(\bm{u}_i, \bm{v}_j^+, \bm{v}_1^-, \ldots, \bm{v}_j^-)$. The resulting problem is a multi-classification problem.
             \end{itemize}
@@ -123,7 +122,7 @@
         
         These features are concatenated into a long vector, i.e., $\bm{x} = [\bm{u}, \bm{c}, \bm{s}, \bm{v}]$.
         The ranking model $f$ has a couple of heads. Each head is a neural network (e.g., an MLP with a sigmoid output) that learns a particular target.
-        For example, the targets can be $f(\bm{x}) = [y_1, y_2, y_3]$, where $y_1$ is the rate of likes, $y_2$ is the rate of shares, and $y_3$ is the rate of conversion, etc. 
+        For example, the targets can be $f(\bm{x}) = [y_1, y_2, y_3]$, where $y_1$ is the rate of clicks, $y_2$ is the rate of shares, and $y_3$ is the rate of conversion, etc. \footnote{The rate of clicks is: $\frac{\text{\#clicks}}{\text{\#impressions}}$.}
         Finally, the three quantities are combined to generate a final score for the item, e.g., by a linear combination of $y_1$, $y_2$ and $y_3$.
 
         \paragraph{Training.}

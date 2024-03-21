@@ -10,7 +10,7 @@
         \end{enumerate}
     \paragraph{One concrete example.} Take a stick of unit length and break it at random.
     Let $Y$ be the length of the longer piece. 
-    What is the mean of $Y$?
+    What is the expectation of $Y$?
     Let $X$ be the break point.
     It follows that $X \sim U[0, 1]$ and $Y = \max\SET{X, 1- X}$.
     If $0 \le X \le 1/2$, then $Y = 1 - X$; if $1/2 < X \le 1$, then $Y = X$.
@@ -108,6 +108,7 @@
                 \alpha  = \sup_{\theta \in \Theta_0} \beta(\theta).
             \end{equation}
         The size is a function of the critical value, so the rejection region is a function of the size, i.e., $\mathcal{R}_\alpha$.
+        In the context of A/B testing, when the size is fixed the rejection region is fixed. Assume the null hypothesis is true, the number of data does not affect the probability of having a type I error, i.e., $\beta(\theta_0)$.
 
         
         A size $\alpha$ test has the following form:
@@ -158,7 +159,7 @@
                 
                 \item Power: this is the probability of correctly rejecting the null hypothesis when it is false. Formally, it is defined as $1 - \eta$, where $\eta$ is the probability of having a type II error, i.e., $P(\text{accept $H_0$} | \text{$H_0$ is false})$. Typical values include $0.8$, $0.9$.
                 
-                \item Effect size: this is the magnitude of the difference you expect or want to detect between the control and treatment groups. It's often expressed as a percentage change in. e.g.,  the conversion rate or other key metric. A rule of thumb is $1\%$.
+                \item Effect size: this is the magnitude of the difference we expect or want to detect between the control and treatment groups. It's often expressed as a percentage change in. e.g.,  the conversion rate or other key metric. A rule of thumb is $1\%$.
 
                 
                 \item Variance: the variance of a metric, such as conversion rate, helps determine the variability of the data. A higher variance requires a larger sample size. For certain metrics, the variance may not have an analytical form, such as the ratio of two means. In such cases, the Delta Method can be used to approximate the variance.
@@ -171,13 +172,13 @@
 
                 \item Randomization unit: for example, in A/B testing for an e-commerce website, a user can be considered as an experimental subject. On the other hand, in a switchback test, a region-time unit is a subject.
                 
-                \item Duration of the test: this is influenced by the sample size. Additionally, the duration should take into account factors such as the day of the week, holidays, etc.
+                \item Duration of the test: this is influenced by the sample size. Additionally, the duration should take into account factors such as day of the week, holidays, etc.
 
-                \item Are the variances of the treatment and control groups equal: F test can be used to assess if the variances $\sigma_1^2$ and $\sigma_2^2$ are statistically different. The F statistic is $F = \frac{\sigma_1^2}{\sigma_2^2}$.
+                \item Are the variance of the treatment and control groups equal: F test can be used to assess if the variance $\sigma_1^2$ and $\sigma_2^2$ are statistically different. The F statistic is $F = \frac{\sigma_1^2}{\sigma_2^2}$, following an F distribution. 
                 
                 \item What test to use. This can be approached from two angles: 1) is the underlying random variable continuous or discrete and 2) what distribution does the metric follow.
                     \begin{itemize}
-                        \item (Approximate) normal distribution: this assumes that the underlying random variable (e.g., the time spent on an app) is continuous. T test (or Welch's t-test when the variances are different) is typically used. The test statistic is below
+                        \item (Approximate) normal distribution:  the underlying random variable (e.g., the time spent on an app) is continuous. T test (or Welch's t-test when the variances are different) is typically used. The test statistic is below
                             \begin{itemize}
                                 \item Same variance: $t = \frac{\bar{X}_1 - \bar{X}_2}{\sqrt{s^2(\frac{1}{n_1} + \frac{1}{n_2})}}$, where $s^2$ is the pooled variance (i.e., $s^2 = \frac{(n_1-1)s_1^2 + (n_2-1)s_2^2}{n_1 + n_2 - 2}$). $\bar{X}_1$ and $\bar{X}_2$ are the sample averages of the control and treament groups respectively; $n_1$ and $n_2$ are the respective sample sizes. The degrees of freedom is $n_1 + n_2 - 2$. 
                                 \item Different variance: $t = \frac{\bar{X}_1 - \bar{X}_2}{\sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}}$, where $s_1^2$ and $s_2^2$ are the sample variances for the two groups. 
@@ -195,7 +196,7 @@
                             \end{itemize}
                         \item Highly skewed/heavy-tailed data: Mann-Whitney U test is typically used. Alternatively, a log-transformation can be used to make the data approximately normal. 
                     \end{itemize}
-                \item Check imbalance: this is done to guarantee that the features of the control and treatment groups are comparable. For instance, it's important that the age attributes of the groups do not show significant differences. For discrete features, we use a Chi-square test to confirm this comparability. In contrast, for continuous features, the t-test is utilized.
+                \item Check imbalance: this is to guarantee that the features of the control and treatment groups are comparable. For instance, it's important that the age attributes of the groups do not show significant differences. For discrete features, we use a Chi-square test to confirm this comparability. In contrast, for continuous features, the t-test is utilized.
             \end{enumerate}
     
     
@@ -361,7 +362,7 @@
                 I = \int h(x) f(x) d x,
             \end{equation}
         where $f(x)$ is the probability density function (PDF) of $x$ and  $h(x)$ is the function that we want to compute its expectation. 
-        Instead of estimating $I$ by directly sampling from $f(x)$, we can estimate $I$ by sampling from a different distribution $g(x)$ as follows:
+        Instead of estimating $I$ by directly sampling from $f(x)$, we estimate $I$ by sampling from a different distribution $g(x)$ as follows:
             \begin{equation}\label{eq:importance_sampling}
                 I = \int \frac{h(x) f(x)}{g(x)} g(x) dx,
             \end{equation}
@@ -411,6 +412,18 @@
             \end{enumerate}
 
         If we select $q$ as a normal distribution (i.e., $q(y|x) = \mathcal{N}(x, b^2)$), then  $r(x, y) = \min \left\{ \frac{f(y)}{f(x)}, 1 \right\}$ due to the symmetry of the normal distribution.
+
+
+    \subsubsection{Reservoir Sampling (RS)}
+        Suppose we have a data stream that can not be stored in memory. 
+        We want to sample $k$ instances from the stream with equal probability, i.e., every instance in the reservoir got sampled with probability $\frac{k}{n}$ when we stop at the $n$-th instance.
+        The algorithm of RS is as follows:
+            \begin{enumerate}
+                \item For $i=1, \ldots, k$, put the first $k$ instance into the reservoir.
+                \item For each subsequent item $i=k+1, \ldots$, with probability $\frac{k}{i}$ we replace a randomly chose instance in the reservoir with item $i$.
+                \item Repeat step 2 until the stream is over. 
+            \end{enumerate}
+        
             
 \subsection{Concentration Inequalities}
     \subsubsection{Markov Inequality}

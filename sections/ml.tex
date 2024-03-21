@@ -35,6 +35,7 @@ In this section, we focus on two discrete distributions $p$ and $q$ , defined on
         Note that $H(Y|X) = \mathbbm{E}_{P(X, Y)}[f(X, Y)]$, where $f(X, Y)=-\log\left(\frac{P(X, Y)}{P(X)}\right)$ measures the amount of information needed to encode $Y$ given $X$.
         Thus, the conditional entropy measures the average amount of information needed to encode $Y$ given $X$.
         \item Mean squared error: $\frac{1}{\ndata}\sum_{i=1}^{\ndata}{(y_i - \hat{y}_i)^2}$.
+        \item Mean absolute error: $\frac{1}{\ndata}\sum_{i=1}^{\ndata}{\Abs{y_i - \hat{y}_i}}$
         \item Upper-bounds on 0-1 loss:
             \begin{itemize}
                 \item Exponential loss: $e^{-y \cdot f(\bm{x})}$.
@@ -47,7 +48,7 @@ In this section, we focus on two discrete distributions $p$ and $q$ , defined on
 \subsection{Common Data Preprocessing}
     \begin{itemize}
         \item Standardization: subtract the mean and divided by the standard deviation. The processed features have zero mean and unit variance. With Central Limit Theorem (Section~\ref{sec:CLT}), this processing makes the resulting data follow a standard normal distribution.
-        \item Whitening: do a PCA and then project the data to the principal components, eliminating correlation between features and reducing the number of feature dimensions. 
+        \item Whitening: use a PCA and then project the data to the principal components, eliminating correlation between features and reducing the number of feature dimensions. 
     \end{itemize}
     
 
@@ -146,8 +147,8 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
             \end{equation}
         From the above derivation we have the following conclusions:
             \begin{itemize}
-                \item Variance: capturing how much the hypothesis changes w.r.t. different training data, which quantifies overfitting, i.e., the hypothesis is too specialized to a particular training data.
-                \item Bias: capturing the inherent difference between the hypothesis and the expected label even with infinite data.
+                \item Variance: capturing the variability of the hypothesis w.r.t. training data, which quantifies overfitting, i.e., the hypothesis is too specialized to a particular training data.
+                \item Bias: capturing the inherent difference between the hypothesis and the true label.
             \end{itemize}
         Check out this lecture: \url{https://www.cs.cornell.edu/courses/cs4780/2018fa/lectures/lecturenote12.html}.
         
@@ -169,7 +170,7 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
 
 
 \subsection{Cross-Validation}
-    We usually use $K$-fold cross-validation to choose the hyper-parameters of the model, in order to avoid overfitting.
+    We usually use $K$-fold cross-validation to choose the hyper-parameters of the model for mitigating overfitting.
     To select the value of $K$, we can generate a curve where the size of each fold is plotted against the prediction accuracy. 
     The curve should have some diminishing return property, that is, at some point increasing the size of a fold (or equivalently decreasing $K$) does not benefit prediction; we then settle to the point; see~\cite{hastie2009elements}(p.243) for more details.
 
@@ -261,7 +262,7 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
     \begin{itemize}
         \item Given a mean-centered data matrix $\bm{X} \in \R^{\ndata \times \nfeat}$, i.e., the features have zero means.
         The correlation between features is captured by the unnormalized sample covariance matrix $\bm{X}^\top \bm{X}$, i.e., $X_{ij}$ quantifies the correlation between features $i$ and $j$.
-        PCA is to do en  eigen-decomposition of $\bm{X}^\top \bm{X}$ as follows\footnote{A real symmetric matrix is always diagonalizable; see \url{http://maecourses.ucsd.edu/~mdeolive/mae280a/lecture11.pdf}.}:
+        PCA applies an eigen-decomposition of $\bm{X}^\top \bm{X}$ as follows\footnote{A real symmetric matrix is always diagonalizable; see \url{http://maecourses.ucsd.edu/~mdeolive/mae280a/lecture11.pdf}.}:
             \begin{equation}
                 \bm{X}^\top \bm{X} = \left( \bm{U}\bm{D}\bm{V}^\top \right)^\top \left( \bm{U}\bm{D}\bm{V}^\top \right) = \bm{V} \bm{D}^2 \bm{V}^\top = d_1^2 \cdot \bm{v}_1 \bm{v}_1^\top +, \ldots, +  d_p^2 \cdot \bm{v}_p \bm{v}_p^\top,
             \end{equation}
@@ -318,8 +319,8 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
             \item The optimization problem: $\hat{\bm{\beta}} \in \argmin_{\bm{\beta}} \norm{\bm{X} \bm{\beta} - \bm{y}}_2^2 + \lambda\norm{\bm{\beta}}_2^2$.
             \item The objective function: $L = \bm{\beta}^\top \bm{X}^\top \bm{X} \bm{\beta} - 2 \bm{\beta}^\top \bm{X}^\top \bm{y} - \bm{y}^\top \bm{y} + \lambda \bm{\beta}^\top \bm{\beta}$.
             \item The objective function is convex w.r.t. $\bm{\beta}$. So setting the first-order derivative to zero leads to: $\hat{\bm{\beta}} = (\bm{X}^\top \bm{X} + \lambda \bm{I})^{-1} \bm{X}^\top \bm{y}$.
-            \item NOTICE: when solving a ridge regression, we need to standardize (e.g., divided each column with the corresponding largest value)  and center the input $\bm{X}$. In addition, the intercept term is usually left out when solving the optimization problem and estimated separately by $\beta_0 = \frac{1}{\ndata}\sum_{i=1}^{\ndata}{y_i}$.
-            \item Intuitively, the solution $\hat{\bm{\beta}}$ of a ridge regression shrinks the solution of a vanilla linear regression.
+            \item NOTICE: when solving a ridge regression, we need to standardize the input $\bm{X}$. In addition, the intercept term is usually left out when solving the optimization problem and estimated separately by $\beta_0 = \frac{1}{\ndata}\sum_{i=1}^{\ndata}{y_i}$.
+            % \item Intuitively, the solution $\hat{\bm{\beta}}$ of a ridge regression shrinks the solution of a vanilla linear regression.
             \item The $L_2$ regularization has two benefits: 1) control model complexity (i.e., low variance); 2) improve robustness of $\bm{\beta}$ to the data. Further discussion: Chapter 3.4 of~\cite{hastie2009elements}.
         \end{itemize}
         
@@ -371,9 +372,9 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
         
 
     \subsection{Robust Regression}
-        One common case in practice is that the targets $y_1, \ldots, y_{\ndata}$ follow a power-law distribution. 
+        One issue in practice is that the targets $y_1, \ldots, y_{\ndata}$ follow a power-law distribution. 
         Intuitively, this means that extreme target values are more likely to appear, which makes the regression too sensitive to them.
-        Instead, we can use a loss function called Huber loss to reduce the impact of the the extreme values.
+        One can use a loss function called Huber loss to reduce the impact of the the extreme values.
         Formally, the Huber loss is defined as follows:
             \begin{equation}
                 L(a) = \begin{cases}
@@ -381,7 +382,7 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
                             \delta (\Abs{a} - \frac{1}{2}\delta) , & o.w.
                        \end{cases}
             \end{equation}
-        The loss behaves like the $L_2$ loss when $a$ is small, instead it behaves like the $L_1$ loss when $a$ becomes larger. 
+        The loss behaves like the $L_2$ loss when $a$ is small, and  like the $L_1$ loss when $a$ becomes larger. 
         
 
         
@@ -592,14 +593,14 @@ The generalization error of an ERM predictor $h \in \mathcal{H}$ is denoted by $
                 \min_{\SET{\theta_i}_{i=1}^{K}, \SET{\beta_i}_{i=1}^{K} } \sum_{i=1}^{\ndata}{L\left( y_i, \sum_{j=1}^{K}{\beta_j f(\bm{x}_i; \theta_j)} \right)},
             \end{equation}
         % where $\SET{\theta_i}_{i=1}^{K}$ are model parameters of the learners and $\SET{\beta_i}_{i=1}^{K}$ the weights to combine the learners together.
-        Iterative greedy approaches are proposed to solve the optimization problem, where at each iteration we learn a single learner and its associated weight. 
-        This approach minimizes the loss function through  incremental steps,  with each step solving for a pair of $(\theta_m, \beta_m)$:
+        A greedy approach is used to solve the optimization problem, where we learn a single learner and its associated weight  at each iteration. 
+        Specifically, we minimizes the loss function through  incremental steps,  with each step solving for a pair $(\theta_m, \beta_m)$ based on a linear combination of the trained learners so far, that is $F_{m-1}(\bm{x}_i) = \sum_{j=1}^{m-1}{\beta_m f(\bm{x}_i; \theta_j)}$.
             \begin{equation}\label{eq:forward-stagewise-add-model}
                 \min_{\theta_m, \beta_m} \sum_{i=1}^{\ndata}{
                     L\left( y_i, F_{m-1}(\bm{x}_i) + \beta_m f(\bm{x}_i; \theta_m) \right)
                 }.
             \end{equation}
-        We have $F_{m-1}(\bm{x}_i) = \sum_{j=1}^{m-1}{\beta_m f(\bm{x}_i; \theta_j)}$, combining the $m-1$  trained learners so far.
+    
         
         
 
@@ -669,42 +670,42 @@ There are several key questions:
         
         
 \subsubsection{Gradient Boosting (GB)}
-        GB is under the FSAM framework.
-        In the $m$-th iteration, GB is solving the following optimization problem:
+        At the $m$-th iteration, GB solves the following optimization problem:
             \begin{equation}\label{XGBoost-model}
                 \min_{f^{(m)}} \sum_{i=1}^{\ndata}{
-                    \underbrace{\left( y_i - (\hat{y}^{(m-1)}_i + f^{(m)}(\bm{x}_i)) \right)^2}_{:=L(y_i, \hat{y}_i^{(m)}) }.
+                    \underbrace{\left( y_i - (\textcolor{red}{\hat{y}^{(m-1)}_i + f^{(m)}(\bm{x}_i) } )  \right)^2}_{:=L(y_i, \hat{y}_i^{(m)}) },
                 }
             \end{equation}
+        where the highlighted part is the prediction obtained by combining 1) the prediction from the previous $m-1$ learners and 2) the prediction of the $m$-th learner. 
         The first-order Taylor expansion of $L(y_i, \hat{y}_i^{(m)})$ at $\hat{y}_i^{(m-1)}$ is:
             \begin{equation}
                 L(y_i, \hat{y}_i^{(m)}) \approx L(y_i, \hat{y}_i^{(m-1)}) + \underbrace{\left[ \frac{\partial L(y_i, z)}{\partial z}\vline_{z = \hat{y}_i^{(m-1)}} \right]}_{g_{i}^{(m)}}  f^{(m)}(\bm{x}_i).
             \end{equation}
-        A natural idea is to let $f^{(m)}(\bm{x}_i)$ be as close as possible to $-g^{(m)}_i$ such that the reduction of $L(y_i, \hat{y}_i^{(m)})$ is along the direction of steepest descent.
-        Thus, the learning problem  in the $m$-th iteration is as follows:
+        A natural idea is making $f^{(m)}$ generate a prediction that is as close as possible to $-g^{(m)}_i$, such that the reduction of $L(y_i, \hat{y}_i^{(m)})$ is along the steepest direction.
+        Therefore the learning problem  at the $m$-th iteration is as follows:
             \begin{itemize}
-                \item  Collect a new dataset $\mathcal{G}=\SET{(\bm{x}_1, -g^{(m)}_1), \ldots, (\bm{x}_\ndata, -g^{(m)}_\ndata)}$, where the supervised information are the gradients.
-                \item  Train a regression/classification tree on $\mathcal{G}$, which gives us $f^{(m)}(\cdot)$. 
-                \item  Find the weight associated with $f^{(m)}(\cdot)$ by solving $\min_{\gamma} \sum_{i=1}^{\ndata}{L\left(y_i, \hat{y}_i^{(m-1)} + \gamma f^{(m)}(\bm{x}_i)\right)}$.
+                \item  Collect a new dataset $\mathcal{G}=\SET{(\bm{x}_1, -g^{(m)}_1), \ldots, (\bm{x}_\ndata, -g^{(m)}_\ndata)}$, where the supervised information for the $m$-th learner are the negative gradients $-g_i^{(m)}$.
+                \item  Train a regression/classification model (typically, a tree) on $\mathcal{G}$, giving us $f^{(m)}(\cdot)$. 
+                \item  Find the weight associated with $f^{(m)}(\cdot)$ by solving: $\min_{\gamma} \sum_{i=1}^{\ndata}{L\left(y_i, \hat{y}_i^{(m-1)} + \gamma f^{(m)}(\bm{x}_i)\right)}$.
             \end{itemize}
 
 
     \subsubsection{XGBoost}
         This is another instantiation of the FSAM framework.
-        The optimization problem that XGBoost solves at iteration $m$ is as follows:
+        The main differences with GB are: 1) a regularization term is added to the loss function; 2) a second-order Taylor expansion is used. 
+        The optimization problem at iteration $m$ is as follows:
             \begin{equation}\label{XGBoost-model}
                 \min_{f^{(m)}} \sum_{i=1}^{\ndata}{
                     \underbrace{\left( y_i - (\hat{y}^{(m-1)}_i + f^{(m)}(\bm{x}_i)) \right)^2}_{:=L(y_i, \hat{y}_i^{(m)}) } + R(f^{(m)}),
                 }
             \end{equation}
         where $f^{(m)}$ is the learner that needs to be learned at the $m$-th iteration.
-        Notice that XGBoost has an additional regularization term $R(f^{(m)})$ to control the model's complexity.
-        We approximate the loss $L(y_i, \hat{y}_i^{(m)})$ with its second-order Taylor expansion at $\hat{y}^{(m-1)}_i$:
+        We approximate the loss $L(y_i, \hat{y}_i^{(m)})$ with the second-order Taylor expansion at $\hat{y}^{(m-1)}_i$:
             \begin{equation}
                 L(y_i, \hat{y}_i^{(m)}) \approx L(y_i, \hat{y}^{(m-1)}_i) + g_i \cdot f^{(m)}(\bm{x}_i) + \frac{1}{2} h_i \cdot (f^{(m)}(\bm{x}_i))^2,
             \end{equation}
         where $f^{(m)}(\bm{x}_i) = (\hat{y}_i^{(m)} - \hat{y}_i^{(m-1)})$, $g_i = \frac{\partial L(y_i, \hat{y}_i^{(m-1)})}{\partial \hat{y}_i^{(m-1)} }$, and $h_i = \frac{\partial^2 L(y_i, \hat{y}_i^{(m-1)})}{\partial^2 \hat{y}_i^{(m-1)} }$.
-        We regularize the complexity of $f^{(m)}$ by the following:
+        The regularization term $R(f^{(m)})$ is below
             \begin{equation}
                 R(f^{(m)}) = \gamma T + \frac{\lambda}{2}\sum_{i=1}^{T}{s_i^2},
             \end{equation}
@@ -733,7 +734,7 @@ There are several key questions:
             \begin{equation}
                 \text{structure score of $f^{(m)}$}= -\frac{1}{2}\sum_{j=1}^{T}{\frac{G_j^2}{H_j + \lambda}} + \gamma T.
             \end{equation}
-        Ideally, in each iteration we would like to enumerate all possible tree structures and pick the one that has the smallest structure score; however, this is too expensive. \footnote{For reference, the number of possible binary trees with $n$ nodes grows exponentially with respect to $n$. See this blog for details: \url{shorturl.at/BFGZ5}.}
+        Ideally, in each iteration we would like to enumerate all possible tree structures and pick the one that has the smallest structure score; however, this is too expensive. \footnote{The number of possible binary trees with $n$ nodes grows exponentially with respect to $n$. See this blog for details: \url{shorturl.at/BFGZ5}.}
         Instead, XGBoost grows a \emph{single} tree by iteratively splitting a node into the left and right nodes (just as how we splitted in decision trees).
         Typically, a feature that maximizes information gain or Gini coefficient is picked as the splitting feature.
         However, XGBoost picks a feature that maximizes the following gain (where the subscripts $L$ and $R$ refer to left and right sub-trees, respectively):
@@ -744,33 +745,36 @@ There are several key questions:
         The Wikipedia has a good introduction for generic GB: \url{https://en.wikipedia.org/wiki/Gradient_boosting}.
     
         
-        \paragraph{Generic GB v.s. XGBoost.}
-        In each iteration of a generic GB, the first-order gradient of the loss w.r.t. the predictor up to the last iteration is used as supervised information to train a weak learner, i.e., $f^{(m)}(\bm{x})$ should be close to $-\frac{\partial L}{\partial f^{(m-1)}(\bm{x})}$.
-        However, XGBoost uses both the first- and second-order gradient information as a criterion to split features.
+        % \paragraph{Generic GB v.s. XGBoost.}
+        % In each iteration of a generic GB, the first-order gradient of the loss w.r.t. the predictor up to the last iteration is used as supervised information to train a weak learner, i.e., $f^{(m)}(\bm{x})$ should be close to $-\frac{\partial L}{\partial f^{(m-1)}(\bm{x})}$.
+        % However, XGBoost uses both the first- and second-order gradient information as a criterion to split features.
         
     \subsubsection{Missing Values}
-        A major advantage of gradient boosting trees (GBT) is the capability of dealing with missing values.
+        A major advantage of gradient boosting decision trees (GBDT) is the capability of handling missing values.
         Consider the following two settings:
             \begin{itemize}
-                \item Both the training and testing data have missing values at some features: GBT determines the optimal split of these features based on training data, which is used when handling missing values during testing.
+                \item Both the training and testing data have missing values at some features: GBDT determines the optimal split of these features based on training data, which is used when handling missing values during testing.
                 \item Only the testing data has missing values: the testing data with missing values is split into the majority class (computed from the training data).
             \end{itemize}
 
     \subsubsection{Output Probability}
-        In many GBT packages (e.g., XGBoost, LightGBM, etc.), there is a method called \texttt{predict\_proba}, which outputs the probability of an instance belonging to a particular class.
+        In many GBDT packages (e.g., XGBoost, LightGBM, etc.), there is a method called \texttt{predict\_proba}, which outputs the probability of an instance belonging to a particular class.
         The implementation of the method is as follows:
         \begin{itemize}
             \item Take the linear combination of the weak learners, i.e., $\sum_{i=1}^{K}{\beta_k f_k}$.
             \item Transform the combination to $[0, 1]$ through a logistic function, i.e., $\frac{1}{1 + e^{-\sum_{i=1}^{K}{\beta_k f_k}}}$.
         \end{itemize}
-    Warning: the output probabilities from \texttt{predict\_proba} may not reflect real probability and some form of calibration may be needed.
+    Warning: the output probabilities from \texttt{predict\_proba} may not reflect real probability and some calibration may be needed.
+
+    \subsubsection{Calibration}
+        
         
     
     
     
 \subsection{Bagging}
 
-Another technique with the idea of combining weak learners to generate a strong learner is \emph{bagging}.
+This is another idea to combine weak learners to generate a strong learner. 
 Intuitively, given a dataset $\mathcal{S}$ with \ndata samples, bagging consists of three steps:
     \begin{enumerate}
         \item Bootstrap: sample $k$ subsets of $\mathcal{S}$ with replacement. 
@@ -790,13 +794,13 @@ Thus, the variance of the bagged model is reduced by a factor of $k$.
     \subsubsection{K-Means Clustering}
         \begin{itemize}
              
-            \item Given an unlabeled data $\mathcal{S}=\SET{\bm{x}_1, \ldots, \bm{x}_\ndata}$, the loss function that K-Means clustering minimizes is:
+            \item The optimization problem is as follows:
             \begin{equation}
                 \min_{\bm{c}_1, \ldots, \bm{c}_R} \sum_{i=1}^{R}{
                     \sum_{j \in \mathcal{C}_i}^{}{\norm{\bm{x}_j - \bm{c}_i}}
                 },
             \end{equation}
-            where $\bm{c}_1, \ldots, \bm{c}_R$ are the cluster centers that are  randomly initialized.
+            where $\bm{c}_1, \ldots, \bm{c}_R$ are the cluster centers. 
             
             \item The following two steps are alternated until convergence: 1) assign each sample to a cluster and 2) update the centers.
             \begin{enumerate}
@@ -842,7 +846,7 @@ Thus, the variance of the bagged model is reduced by a factor of $k$.
         
         
 \subsection{K-Nearest Neighbor (KNN)}
-One thing worth noting about the KNN model is that the parameter $K$ is inversely related to the model complexity, i.e., 
+    The parameter $K$ is inversely related to the model complexity, i.e., 
     \begin{itemize}
         \item When $K$ is small, e.g., $K=1$, the model complexity is high. So the bias is small; however, the variance will be large, that is, the prediction of a testing instance varies a lot when the training data changes. 
         \item When $K$ is large, the bias is large and the variance is small.
@@ -883,17 +887,17 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
     \paragraph{Regression Tree (or CART).} 
     When features are of continuous values, a regression tree is different from a decision tree in two major ways:
         \begin{itemize}
-            \item The way we split a node: suppose we split feature $j$ with threshold $\theta_j$.
+            \item Splitting: suppose we split feature $j$ with threshold $\theta_j$.
             Let $\mathcal{X}_l$ and $\mathcal{X}_r$ be the splitted subsets. 
             The target value associated with a sample $i$ is represented by $y_i$.
             The gain of this split is called \emph{variance reduction}:
             $\text{Var}(y_i | i \in \mathcal{X}) - \left( \text{Var}(y_i | i \in \mathcal{X}_l) + \text{Var}(y_i | i \in \mathcal{X}_r) \right)$; for example, $\text{Var}(y_i | i \in \mathcal{X}) = \frac{1}{\SetCard{\mathcal{X}}}\sum_{i \in \mathcal{X}}^{}{(y_i - \bar{y}_i)^2}$. Intuitively, we want to choose the feature $j$ as the splitting feature such that the resulting variance reduction is maximized.
-            \item The way we predict the target value of a testing sample: given a testing sample, the prediction is done by traversing the sample from the root down to a leaf.
+            \item Predicting: given a testing sample, the prediction is done by traversing the sample from the root down to a leaf.
             The leaf corresponds to a subset of samples; thus, the prediction is the average of the samples' target values.
             Check out the detailed implementations of decision trees: \url{https://github.com/ddbourgin/numpy-ml/blob/master/numpy_ml/trees/dt.py}.
         \end{itemize}
         
-    \paragraph{Common Impurity Measures.}
+    \paragraph{Common Impurity/Gain Measures.}
     For a particular node $k$, let $f^k_i$ be the frequency of label $i$ and $C$ the total number of unique labels at the node.
     \begin{itemize}
         \item Gini impurity (classification): $\sum_{i=1}^{C}{f^k_i (1 - f^k_i)} = 1 - \sum_{i=1}^{c}{(f_i^k)^2}$.
@@ -903,11 +907,10 @@ One thing worth noting about the KNN model is that the parameter $K$ is inversel
     
     
     
-    \paragraph{Random Forests (RF).} It is worth noting that RF is similar to Boosting Trees (BT) from a modeling perspective, i.e., they are both an ensemble of decision trees.
+    \paragraph{Random Forests (RF).} It is worth noting that RF is similar to Gradient Boosting Decision Trees (GBDT) from a motivational perspective, i.e., they are both an ensemble of decision trees.
     The difference is in the training method:
         \begin{itemize}
-            \item Training BT is more complicated than training RF, the former uses a framework called \emph{Forward Stagewise Additive Modeling}; see \ref{sec:boosting-trees} for details.
-            % In addition, BT usually trains a single tree.
+            \item Training GBDT uses a framework called \emph{Forward Stagewise Additive Modeling}; see \ref{sec:boosting-trees} for details.
             \item RF is trained by bootstrapping subsets from the original data and training a decision tree on every subset. 
             The final output is the average of the decision trees.
         \end{itemize}

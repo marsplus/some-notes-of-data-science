@@ -22,3 +22,21 @@ Some transformations can be applied to convert non-stationary sequences to stati
     \end{itemize}
 
 
+\paragraph{Autocorrelation coefficient.}
+    \begin{equation}
+        r_k = \frac{\sum_{t=k+1}^{T}{(y_t - \bar{y})(y_{t-k} - \bar{y})}}{\sum_{t=1}^{T}{(y_t - \bar{y})^2}}.
+    \end{equation}
+
+
+\paragraph{The coefficient of determination.}
+    Notice that this coefficient only measure how well the model fits the historical data. 
+    \begin{equation}
+        R^2 = \frac{\sum_{}^{}{(\hat{y}_t - \bar{y})^2 }}{\sum_{}^{}{(y_t - \bar{y})^2}}.
+    \end{equation}
+    One issue with $R^2$ is that it always increase when adding extra features to the model. The adjusted $R^2$ below avoids this issue.
+    \begin{equation}
+        \text{Adjusted $R^2$} = 1 - (1 - R^2)\frac{T-1}{T-k-1},
+    \end{equation}
+    where $T$ is the number of observations and $k$ is the number of features. 
+    
+

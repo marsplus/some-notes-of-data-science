@@ -681,8 +681,9 @@ There are several key questions:
             \begin{equation}
                 L(y_i, \hat{y}_i^{(m)}) \approx L(y_i, \hat{y}_i^{(m-1)}) + \underbrace{\left[ \frac{\partial L(y_i, z)}{\partial z}\vline_{z = \hat{y}_i^{(m-1)}} \right]}_{g_{i}^{(m)}}  f^{(m)}(\bm{x}_i).
             \end{equation}
-        A natural idea is making $f^{(m)}$ generate a prediction that is as close as possible to $-g^{(m)}_i$, such that the reduction of $L(y_i, \hat{y}_i^{(m)})$ is along the steepest direction.
-        Therefore the learning problem  at the $m$-th iteration is as follows:
+        A natural idea is making $f^{(m)}$ generate a prediction that is as close as possible to $-g^{(m)}_i$, such that the reduction of the loss $L(y_i, \hat{y}_i^{(m)})$ is along the steepest direction.
+        \textcolor{red}{The specific formula for $-g^{(m)}_i$ is $y_i - \left( \hat{y}_i^{(m-1)} + f^{(m)}(\bm{x}_i)  \right)$, which is also called the residual in some context.}
+        Thus, the learning problem  at the $m$-th iteration is training $f^{(m)}$ to fit the residuals as close as possible:
             \begin{itemize}
                 \item  Collect a new dataset $\mathcal{G}=\SET{(\bm{x}_1, -g^{(m)}_1), \ldots, (\bm{x}_\ndata, -g^{(m)}_\ndata)}$, where the supervised information for the $m$-th learner are the negative gradients $-g_i^{(m)}$.
                 \item  Train a regression/classification model (typically, a tree) on $\mathcal{G}$, giving us $f^{(m)}(\cdot)$. 

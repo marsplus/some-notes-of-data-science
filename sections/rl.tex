@@ -1,17 +1,61 @@
+\subsection{Some Math Background}
+
+\subsubsection{Convergence}
+    \textbf{Pointwise convergence}.
+    A sequence of functions $ \{ f_n(x) \} $ defined on a domain $D$ converges pointwise to a function $f(x)$ if for every $x \in D$ and for every $ \epsilon > 0 $, there exists an integer $ N = N(x, \epsilon) $ such that for all $ n > N$:
+        \begin{equation}
+                |f_n(x) - f(x)| < \epsilon.
+        \end{equation}
+    The key point is that the integer $N$ depends on the $x$, i.e., $N = N(x, \epsilon)$.
+
+    \textbf{Uniform convergence}.
+    A sequence of functions $\{ f_n(x) \} $ defined on a domain $D $ converges uniformly to a function $f(x)$ if for every $\epsilon > 0$, there exists an integer $N = N(\epsilon)$ such that for all $ n > N $ and for all $x \in D$:
+    \begin{equation}
+        \sup_{x \in D} |f_n(x) - f(x)| < \epsilon.        
+    \end{equation}
+    Notice that the $N$ does not depend on the $x$. 
+
+    \subsubsection*{Example}
+    Consider the sequence of functions $ f_n(x) = \frac{x}{n} $ defined on the interval $ [0, 1] $, where $ n $ is a positive integer. We want to analyze the convergence of $ f_n(x) $ as $ n \to \infty $, and compare pointwise and uniform convergence.
+    
+    \textbf{Pointwise Convergence}.
+    Fix any particular point $ x \in [0, 1] $. As $ n \to \infty $, $ f_n(x) = \frac{x}{n} $ clearly converges to 0 for every $ x \in [0, 1] $, because $ \frac{x}{n} \to 0 $ as $ n $ increases.
+    Thus, for every fixed $ x $, $ f_n(x) $ converges pointwise to the zero function $ f(x) = 0 $.
+    \begin{equation}
+    \forall \epsilon > 0, \, \exists N(x, \epsilon) \in \mathbb{N} \, \text{such that} \, \forall n > N, \, |f_n(x) - 0| = \left|\frac{x}{n}\right| < \epsilon.
+    \end{equation}
+    
+    So, the sequence converges pointwise to 0 for each $ x $. However, note that the speed of convergence depends on $ x $: for $ x = 1 $, convergence is slower than for $ x = 0.1 $, since larger values of $ x $ require larger values of $ n $ to make $ \frac{x}{n} $ small.
+    
+    \textbf{Uniform Convergence}.
+    Uniform convergence requires that the function sequence $ f_n(x) $ converges to 0 not only pointwise but also in a way that is independent of $ x $. Specifically, the difference between $ f_n(x) $ and the limiting function (which is 0 here) must become small uniformly across the entire domain.
+    To check for uniform convergence, we consider the supremum of the absolute error $ |f_n(x) - 0| = \frac{x}{n} $ over the entire interval $ x \in [0, 1] $.
+    The supremum is achieved when $ x = 1 $, so:
+    \begin{equation}
+    \sup_{x \in [0, 1]} |f_n(x) - 0| = \frac{1}{n}.
+    \end{equation}
+    As $ n \to \infty $, this supremum $ \frac{1}{n} \to 0 $.
+    Since this supremum tends to zero as $ n \to \infty $, the sequence of functions $ f_n(x) $ converges uniformly to the zero function.
+    
+    \begin{equation}
+    \forall \epsilon > 0, \, \exists N(\epsilon) \in \mathbb{N} \, \text{such that} \, \forall n > N \, \text{and} \, \forall x \in [0, 1], \, |f_n(x) - 0| = \frac{x}{n} < \epsilon.
+    \end{equation}
+    Here, the convergence is uniform because the error $ \frac{x}{n} $ becomes small uniformly for all $ x \in [0, 1] $, not just for fixed values of $ x $.
+    
 
 
 
     
 \subsection{Policy Gradient}
-Let $\tau$ be a trajectory, i.e., $\tau = (s_1, a_1, \ldots, s_T, a_T)$.
+Let $\tau$ be a trajectory $\tau = (s_1, a_1, \ldots, s_T, a_T)$, a sequence of state and action pairs. 
 The probability of generating $\tau$ is:
     \begin{equation}
-        p_{\theta}(\tau) = p(s_1) \prod_{t=1}^{T}{\pi_{\theta}(a_t | s_t) p(s_{t+1} | s_t, a_t)},
+        p_{\theta}(\tau) = \underbrace{p(s_1)}_{\text{initial probability}} \prod_{t=1}^{T}{ \underbrace{\pi_{\theta}(a_t | s_t)}_{\text{the output of the policy;}} \underbrace{p(s_{t+1} | s_t, a_t)}_{\text{the transition probability}}},
     \end{equation}
-where $\pi_{\theta}$ is the policy parameterized by $\theta$.
+where $\pi_{\theta}$ is the policy parameterized by $\theta$, e.g., a neural network with weights $\theta$.
 The goal of \emph{policy gradient} is to find an optimal $\theta^\ast$ such that:
     \begin{equation}
-        \theta^\ast = \argmax_{\theta} \E_{\tau \sim p_\theta(\tau)}\left[ \sum_{t}^{}{r(s_t, a_t)} \right].
+        \theta^\ast = \argmax_{\theta} \E_{\tau \sim p_\theta(\tau)}\left[ \sum_{t}^{\infty}{r(s_t, a_t)} \right].
     \end{equation}
     
 Suppose we have collected a set of trajectories $\SET{\tau_i}_{i=1}^{\ndata}$ by running the policy $\pi_{\theta}$ multiple times.
@@ -21,48 +65,93 @@ Suppose we have collected a set of trajectories $\SET{\tau_i}_{i=1}^{\ndata}$ by
 %     \end{equation}
 A convenient identify is below:
     \begin{equation}
-        \nabla_\theta p_\theta(\tau) = p_{\theta}(\tau)\nabla_{\theta}\log p_{\theta}(\tau),
+        \nabla_\theta p_\theta(\tau) = p_{\theta}(\tau)\nabla_{\theta}\log p_{\theta}(\tau) =  p_\theta(\tau) \left( \frac{1}{p_\theta(\tau)} \nabla_\theta p_\theta(\tau) \right).
     \end{equation}
-as $p_{\theta}(\tau)\nabla_{\theta}\log p_{\theta}(\tau) = p_\theta(\tau) \left( \frac{1}{p_\theta(\tau)} \nabla_\theta p_\theta(\tau) \right)$.
-Let $J(\theta) = \E_{\tau \sim p_\theta(\tau)}\left[ \sum_{t}^{}{r(s_t, a_t)} \right]$.
-The gradient of $J(\theta)$ w.r.t. $\theta$ is below:
+Let $J(\theta) = \E_{\tau \sim p_\theta(\tau)}\left[ \sum_{t}^{\infty}{r(s_t, a_t)} \right]$ be the reward of the policy.
+Our objective is to maximize $J(\theta)$.
+The gradient of $J(\theta)$ w.r.t. $\theta$ is:
     \begin{equation}
         \begin{aligned}
-         \nabla_\theta J(\theta) = \nabla_\theta \left[ \int p_\theta(\tau) r(\tau) d\tau \right] = & \underbrace{ \int \nabla_\theta p_\theta(\tau) r(\tau) d\tau    = \int p_{\theta}(\tau)\nabla_{\theta}\log p_{\theta}(\tau)  r(\tau) d\tau }_{\text{utilizing the identity above to get an expectation over $\tau$}} \\
+         \nabla_\theta J(\theta) = \nabla_\theta \left[ \int p_\theta(\tau) r(\tau) d\tau \right] = & \underbrace{ \int \nabla_\theta p_\theta(\tau) r(\tau) d\tau    = \int \textcolor{red}{p_{\theta}(\tau)} \nabla_{\theta}\log p_{\theta}(\tau)  r(\tau) d\tau }_{\text{get an expectation w.r.t. the distribution $p_{\theta}(\tau)$ }} \\
          & = \E_{\tau \sim p_\theta(\tau)} \left[ \nabla_\theta \log p_\theta(\tau) r(\tau) \right].
         \end{aligned}
     \end{equation}
-The loglikelihood of $\tau$ is as follows (omitting the terms that are irrelevant with $\theta$):
+Note that the log-likelihood of $\tau$ is as follows (omitting $p(s_1)$ because it does not involve $\theta$):
     \begin{equation}
-        \log p_\theta(\tau) \approx \sum_{t=1}^{T}{\log \pi_{\theta}(a_t | s_t)}.
+        \log p_\theta(\tau) \approx \sum_{t=1}^{\infty}{\log \pi_{\theta}(a_t | s_t)}.
     \end{equation}
 Thus, we have:
-    \begin{equation}
-        \nabla_\theta J(\theta) = \E_{\tau \sim p_\theta(\tau)}\left[ \left( \sum_{t=1}^{T}{\nabla_\theta \log\pi_{\theta}(a_t | s_t)}\right) \left( \sum_{t=1}^{T}{r(s_t, a_t)} \right)\right].
-    \end{equation}
-    
-\subsubsection{On-Policy Policy Gradient}
-The classic algorithm to implement the online policy gradient is called \emph{REINFORCE}:
-    \begin{itemize}
-        \item[1.] Sample $\SET{\tau_i}_{i=1}^{\ndata}$ by running $\pi_{\theta}$ for \ndata times.
-        \item[2.] Compute $\nabla_\theta J(\theta) \approx \frac{1}{\ndata}\sum_{i=1}^{\ndata}{
-        \left(\sum_{t=1}^{T}{\nabla_\theta\log \pi_\theta(a_t^i | s_t^i)}\right)
-        \left(\sum_{t=1}^{T}{r(s_t^i, a_t^i)} \right)
-        }$.
-        \item[3.] Update $\theta \leftarrow \theta + \alpha \nabla_\theta J(\theta)$.
-    \end{itemize}
-    
-    
-    
-\subsubsection{Off-Policy Policy Gradient}
-Recall that \emph{Importance Sampling} is a useful technique to sample from a intractable distribution $p(x)$ by using an auxiliary distribution $q(x)$, i.e., 
-    \begin{equation}
-        \E_{x \sim p(x)}[f(x)] = \E_{x \sim q(x)}\left[ \frac{p(x)}{q(x)}f(x) \right].
-    \end{equation}
+\begin{equation}
+    \begin{aligned}
+        \nabla_\theta J(\theta) & = \mathbb{E}_{\tau \sim p_\theta(\tau)}\left[ \left( \sum_{t=1}^{\infty} \nabla_\theta \log \pi_{\theta}(a_t | s_t) \right) \left( \sum_{t=1}^{\infty} \gamma^t r(s_t, a_t) \right) \right] \\
+        & = \mathbb{E}_{\tau \sim p_\theta(\tau)}\left[ \sum_{t=1}^{\infty} \nabla_\theta \log \pi_{\theta}(a_t | s_t) \left( \sum_{t=1}^{\infty} \gamma^t r(s_t, a_t) \right) \right] \\
+        & \text{The action $a_t$ at step $t$ only affects subsequent rewards at steps $t^\prime \ge t$.} \\ 
+        & = \mathbb{E}_{\tau \sim p_\theta(\tau)}\left[ \sum_{t=1}^{\infty} \nabla_\theta \log \pi_{\theta}(a_t | s_t) \left( \sum_{t^\prime = t}^{\infty} \gamma^{t^\prime} r(s_{t^\prime}, a_{t^\prime}) \right) \right].
+    \end{aligned}
+\end{equation}
+
+
+Look at the summamation involving the rewards:
+\begin{equation}
+    \begin{aligned}
+        & \sum_{t^\prime = t}^{\infty} \gamma^{t^\prime} r(s_{t^\prime}, a_{t^\prime}) \\
+        & \text{Let $k = t^\prime - t$} \\
+        & = \sum_{k=0}^{\infty} \gamma^{k+t} r(s_{k+t}, a_{k+t}) \\
+        & = \gamma^t \sum_{k=0}^{\infty} \gamma^k r(s_{k+t}, a_{k+t}) \\
+        & \text{Recall that $Q^{\pi_\theta}(s_t, a_t):= \sum_{k=0}^{\infty} \gamma^k r(s_{k+t}, a_{k+t})$} \\
+        & = \gamma^t Q^{\pi_\theta}(s_t, a_t)
+    \end{aligned}
+\end{equation}
+
+Substitute $ \gamma^t Q^{\pi_\theta}(s_t, a_t)$ back to $\nabla_\theta J(\theta)$:
+\[
+         \nabla_\theta J(\theta) = \mathbb{E}_{\tau \sim p_\theta(\tau)}\left[ \sum_{t=1}^{\infty} \nabla_\theta \log \pi_{\theta}(a_t | s_t)   \textcolor{red}{\gamma^t} Q^{\pi_\theta}(s_t, a_t)  \right].
+\]
+
+We now use a concept called \textit{discounted state visitation distribution} to remove the \textcolor{red}{$\gamma^t$} term from the above gradient. 
+\[
+    d^\pi(s_t) = (1 - \gamma) \sum_{t=0}^{\infty}{\gamma^t p(s_t | \pi)},
+\]
+where $p(s_t | \pi)$ is the probability of being in state $s_t$ under the policy $\pi$. 
+With $d^\pi$ we can convert the policy gradient as follows
+\begin{equation}
+    \begin{aligned}
+         \nabla_\theta J(\theta) &  = \mathbb{E}_{\tau \sim p_\theta(\tau)}\left[ \sum_{t=1}^{\infty} \nabla_\theta \log \pi_{\theta}(a_t | s_t)   \highlight{\gamma^t} Q^{\pi_\theta}(s_t, a_t)  \right] \\
+         & = \sum_{t=0}^{\infty}{ \highlight{\gamma^t} \mathbb{E}_{s_t \sim p(s_t | \pi_\theta), a_t \sim \pi_\theta}{\left[ \nabla_\theta \log \pi_{\theta}(a_t | s_t) Q^{\pi_\theta}(s_t, a_t)\right]}} \\
+         & \text{$\mathcal{S}$ is the state space} \\
+         & = \sum_{t=0}^{\infty}{\sum_{s_t \in \mathcal{S}}^{}{    \highlight{\gamma^t} p(s_t | \pi_\theta)  \mathbb{E}_{a_t \sim \pi_\theta}\left[  \nabla_\theta \log \pi_{\theta}(a_t | s_t) Q^{\pi_\theta}(s_t, a_t) \right]       }} \\
+         & = \frac{1}{1 - \gamma} \sum_{s_t \in \mathcal{S}}^{}{} \underbrace{  \sum_{t=0}^{\infty}{    (1 - \gamma) \highlight{\gamma^t} p(s_t | \pi_\theta)  \mathbb{E}_{a_t \sim \pi_\theta}\left[  \nabla_\theta \log \pi_{\theta}(a_t | s_t) Q^{\pi_\theta}(s_t, a_t) \right]}      }_{\text{the state $s_t$ is fixed inside this term.}} \\
+         & = \frac{1}{1 - \gamma} \sum_{s_t \in \mathcal{S}}^{}{ d^{\pi_\theta}(s_t)  \mathbb{E}_{a_t \sim \pi_\theta}\left[  \nabla_\theta \log \pi_{\theta}(a_t | s_t) Q^{\pi_\theta}(s_t, a_t) \right]} \\
+         & = \frac{1}{1 - \gamma} \mathbb{E}_{s_t \sim d^{\pi_\theta}, a_t \sim \pi_{\theta}}\left[  \nabla_\theta \log \pi_{\theta}(a_t | s_t) Q^{\pi_\theta}(s_t, a_t) \right] \\
+         & \text{Omitting the constant $\frac{1}{1 - \gamma}$} \\
+         & \approx \mathbb{E}_{s_t \sim d^{\pi_\theta}, a_t \sim \pi_{\theta}}\left[  \nabla_\theta \log \pi_{\theta}(a_t | s_t) Q^{\pi_\theta}(s_t, a_t) \right]
+    \end{aligned}
+\end{equation}
 
 
 
-\subsubsection{Trust Region Policy Optimization (TRPO)}
+% \subsubsection{On-Policy Policy Gradient}
+% The classic algorithm to implement the online policy gradient is called \emph{REINFORCE}:
+%     \begin{itemize}
+%         \item[1.] Sample $\SET{\tau_i}_{i=1}^{\ndata}$ by running $\pi_{\theta}$ for \ndata times.
+%         \item[2.] Compute $\nabla_\theta J(\theta) \approx \frac{1}{\ndata}\sum_{i=1}^{\ndata}{
+%         \left(\sum_{t=1}^{T}{\nabla_\theta\log \pi_\theta(a_t^i | s_t^i)}\right)
+%         \left(\sum_{t=1}^{T}{r(s_t^i, a_t^i)} \right)
+%         }$.
+%         \item[3.] Update $\theta \leftarrow \theta + \alpha \nabla_\theta J(\theta)$.
+%     \end{itemize}
+    
+    
+    
+% \subsubsection{Off-Policy Policy Gradient}
+% Recall that \emph{Importance Sampling} is a useful technique to sample from a intractable distribution $p(x)$ by using an auxiliary distribution $q(x)$, i.e., 
+%     \begin{equation}
+%         \E_{x \sim p(x)}[f(x)] = \E_{x \sim q(x)}\left[ \frac{p(x)}{q(x)}f(x) \right].
+%     \end{equation}
+
+
+
+% \subsubsection{Trust Region Policy Optimization (TRPO)}
 
 
 

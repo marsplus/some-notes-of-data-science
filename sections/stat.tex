@@ -34,6 +34,7 @@
         \item $\Cov(X, Y) = \E\left[ (X - \E[X]) (Y - \E[Y])\right]$.
         \item $\Corr(X, Y) = \frac{\Cov(X, Y)}{\sigma_X \sigma_Y}$, a normalized version of covariance.
     \end{itemize}
+NOTE: correlation specifically measures the linear relationship between two random variables. 
     
 \subsection{Conditional Expectation}
     $\E[X]$ is a \emph{number}, while $\E[X | Y]$ is a function of $Y$.
@@ -58,7 +59,7 @@
             \item Sample variance: $\hat{\sigma}^2 = \frac{1}{\ndata-1} \sum_{i=1}^{\ndata}{(x_i - \bar{x})^2}$.
             \item Sample standard deviation: $\hat{\sigma} = \sqrt{\frac{1}{\ndata-1} \sum_{i=1}^{\ndata}{(x_i - \bar{x})^2}}$.
             \item Variance of the sample mean: $V(\bar{X}) = V\left( \frac{1}{\ndata}\sum_{i=1}^{\ndata}{X_i} \right) = \frac{1}{\ndata^2}\sum_{i=1}^{\ndata}{V(X_i)} = \sigma^2 / \ndata \approx \hat{\sigma}^2 / \ndata$.
-            \item Sample standard error (standard deviation of the sampling distribution of $\bar{x}$): $\text{se} = \sqrt{V(\bar{X})} =  \frac{\sigma}{\sqrt{\ndata}} \approx \frac{\hat{\sigma}}{\sqrt{\ndata}}$.
+            \item Sample standard error of the mean: $\text{se} = \sqrt{V(\bar{X})} =  \frac{\sigma}{\sqrt{\ndata}} \approx \frac{\hat{\sigma}}{\sqrt{\ndata}}$.
         \end{itemize}
 
         \paragraph{The $N-1$ denominator in the sample variance.}
@@ -81,7 +82,7 @@
         
 
 \subsection{Hypothesis Testing (HT)}
-    \subsection{Some Background}
+    \subsubsection{Some Background}
         We use $H_0$ and $H_1$ to denote the null and the alternative hypothesis, respectively.
             \begin{equation}
                 H_0: \theta \in  \Theta_0 \text{ versus } H_1: \theta \in \Theta_1. 
@@ -239,8 +240,8 @@
         Let $X_1, \ldots, X_n$ be IID with finite mean $\mu$ and finite variance $\sigma^2$. 
         Let $\bar{X}_n = \frac{\sum_{i=1}^{n}{X_i}}{n}$.
         The distribution of $Z_n=\frac{\bar{X}_n - \mu}{\color{red}\sqrt{V(\bar{X}_n)}} = \frac{\bar{X}_n - \mu}{\color{red}\frac{\sigma}{\sqrt{n}}}$ converges to the standard normal distribution $\mathcal{N}(0, 1)$ in distribution. 
-        The true variance $\sigma^2$ is typically unknown. 
-        We use the sample variance $\bar{\sigma}_n^2 = \frac{1}{n-1}\sum_{i=1}^{n}{(X_i - \bar{X}_n)^2}$ instead, i.e.,
+        The true variance $\sigma^2$ is usually unknown, so $\frac{\sigma}{\sqrt{n}}$ is unknown. 
+        Instead, we can use the sample variance $\bar{\sigma}_n^2 = \frac{1}{n-1}\sum_{i=1}^{n}{(X_i - \bar{X}_n)^2}$, i.e.,
         \begin{equation}
             \frac{\bar{X}_n - \mu}{\bar{\sigma}_n / \sqrt{n}} \rightarrow \mathcal{N}(0, 1) \text{ in distribution}.
         \end{equation}
@@ -369,13 +370,32 @@
         which is equivalent to compute the expectation of $\frac{h(x) f(x)}{g(x)}$ under the distribution of $g(x)$, i.e., $\E_{g(x)}[\frac{h(x) f(x)}{g(x)}]$.
             
         \paragraph{Example.}
-        Suppose $X \sim \mathcal{N}(0, 1)$ and we want to estimate $P(X > 5)$.
-        If we were to use the Monte Carlo method to estimate $P(X>5)$, it is very likely that we never sample any $x$ in the set \SET{X > 5}\footnote{Over $99.7\%$ chance that a sample $x$ resides in $[-3, 3]$.}, which makes us wrongly conclude that $P(X > 5) = 0$.
-        Instead, we can let $g(x)$ be $\mathcal{N}(4, 1)$ and $h(x) = \mathbbm{1}[x > 5]$, and run the following:
-            \begin{itemize}
-                \item[1.] Sample from $g(x): x_1, \ldots, x_n \sim \mathcal{N}(4, 1) $.
-                \item[2.] Estimate $I = \frac{1}{\ndata} \sum_{i=1}^{\ndata}{\frac{\mathbbm{1}[x_i > 5] \cdot \mathcal{N}(x_i; 0, 1)}{\mathcal{N}(x_i; 4, 1)}}$.
-            \end{itemize}
+        Suppose \( X \sim \mathcal{N}(0, 1) \), and we aim to estimate \( P(X > 5) \), which is the probability that a standard normal variable exceeds 5. This probability can be expressed as an expectation:
+        
+        \[
+        P(X > 5) = \mathbb{E}_{p}[\mathbbm{1}(X > 5)] = \int \mathbbm{1}(x > 5) p(x) \, dx,
+        \]
+        
+        where \( p(x) \) is the probability density function of \( X \sim \mathcal{N}(0, 1) \), and \( \mathbbm{1}(x > 5) \) is an indicator function that equals 1 when \( x > 5 \) and 0 otherwise.
+        
+        Using a standard Monte Carlo approach to estimate this integral directly would involve drawing samples from \( p(x) \). However, because \( X \sim \mathcal{N}(0,1) \) rarely produces values in the tail region \( x > 5 \), this method is likely to yield very few or even zero samples where \( x > 5 \). This lack of data can lead us to incorrectly conclude that \( P(X > 5) = 0 \).
+        
+        To overcome this limitation, we apply \emph{importance sampling}. In this technique, we introduce a new distribution \( g(x) \), known as the proposal distribution, from which we can more easily sample values in the tail region \( x > 5 \). We then rewrite the integral in terms of \( g(x) \) as follows:
+        
+        \[
+        P(X > 5) = \int \mathbbm{1}(x > 5) p(x) \, dx = \int \mathbbm{1}(x > 5) \frac{p(x)}{g(x)} g(x) \, dx = \mathbbm{E}_{g} \left[ \mathbbm{1}(x > 5) \frac{p(x)}{g(x)} \right].
+        \]
+        
+        This equation shows that we can obtain an unbiased estimate of \( P(X > 5) \) by sampling from \( g(x) \) instead of \( p(x) \) and applying the \emph{importance weight} \( \frac{p(x)}{g(x)} \) to each sample.
+        
+        In practice, we can approximate \( P(X > 5) \) by drawing \( N \) samples \( x_i \) from \( g(x) = \mathcal{N}(4, 1) \), which has a mean shifted toward the region of interest. We then compute the following weighted average:
+        
+        \[
+        P(X > 5) \approx \frac{1}{N} \sum_{i=1}^{N} \mathbbm{1}(x_i > 5) \frac{p(x_i)}{g(x_i)},
+        \]
+        
+        where \( p(x) \) is the density of \( \mathcal{N}(0,1) \), and \( g(x) \) is the density of \( \mathcal{N}(4,1) \). By sampling from \( g(x) \), this method allows us to obtain more samples in the \( x > 5 \) region, providing a more accurate estimate of \( P(X > 5) \).
+
 
     \subsubsection{Rejection Sampling}
         Suppose we would like to sample from a complicated distribution $f$.
@@ -414,13 +434,14 @@
         If we select $q$ as a normal distribution (i.e., $q(y|x) = \mathcal{N}(x, b^2)$), then  $r(x, y) = \min \left\{ \frac{f(y)}{f(x)}, 1 \right\}$ due to the symmetry of the normal distribution.
 
 
-    \subsubsection{Reservoir Sampling (RS)}
-        Suppose we have a data stream that can not be stored in memory. 
-        We want to sample $k$ instances from the stream with equal probability, i.e., every instance in the reservoir got sampled with probability $\frac{k}{n}$ when we stop at the $n$-th instance.
-        The algorithm of RS is as follows:
+    \subsubsection{Reservoir Sampling}
+        Suppose we want to sample $k$ uniformly random data points from a data stream of length $N \gg k$.
+        Two issues exist: 1) $N$ might be huge and we can not store all of them into memory and 2) we might not know the length $N$ ahead of time.
+        The reservoir sampling (RS) algorithms solves the two issues. 
+        Algorithmically, the algorithm works as follow
             \begin{enumerate}
-                \item For $i=1, \ldots, k$, put the first $k$ instance into the reservoir.
-                \item For each subsequent item $i=k+1, \ldots$, with probability $\frac{k}{i}$ we replace a randomly chose instance in the reservoir with item $i$.
+                \item Put the first $k$ data points (i.e., $x_1, \ldots, x_k$) into a list. 
+                \item For subsequent data points $x_i$ where $i=k+1, \ldots, N$, we replace a randomly picked data point from the reservoir with probability $k/i$.
                 \item Repeat step 2 until the stream is over. 
             \end{enumerate}
         

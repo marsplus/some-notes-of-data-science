@@ -55,10 +55,10 @@ The probability of generating $\tau$ is:
 where $\pi_{\theta}$ is the policy parameterized by $\theta$, e.g., a neural network with weights $\theta$.
 The goal of \emph{policy gradient} is to find an optimal $\theta^\ast$ such that:
     \begin{equation}
-        \theta^\ast = \argmax_{\theta} \E_{\tau \sim p_\theta(\tau)}\left[ \sum_{t}^{\infty}{r(s_t, a_t)} \right].
+        \theta^\ast = \argmax_{\theta} \E_{\tau \sim p_\theta(\tau)}\left[ \sum_{t}^{\infty}{\underbrace{r(s_t, a_t)}_{\text{the gain of executing $a_t$ at $s_t$}}} \right].
     \end{equation}
     
-Suppose we have collected a set of trajectories $\SET{\tau_i}_{i=1}^{\ndata}$ by running the policy $\pi_{\theta}$ multiple times.
+Suppose that we have collected a set of trajectories $\SET{\tau_i}_{i=1}^{\ndata}$ by running the policy $\pi_{\theta}$ multiple times.
 % We approximate the expected reward as follows:
 %     \begin{equation}
 %         \E_{\tau \sim p_\theta(\tau)}\left[ \sum_{t}^{}{r(s_t, a_t)} \right] \approx \frac{1}{\ndata}\sum_{i=1}^{\ndata}{  \sum_{t=1}^{T}{ r(s_{i,t}, a_{i,t})}      }.
@@ -68,7 +68,7 @@ A convenient identify is below:
         \nabla_\theta p_\theta(\tau) = p_{\theta}(\tau)\nabla_{\theta}\log p_{\theta}(\tau) =  p_\theta(\tau) \left( \frac{1}{p_\theta(\tau)} \nabla_\theta p_\theta(\tau) \right).
     \end{equation}
 Let $J(\theta) = \E_{\tau \sim p_\theta(\tau)}\left[ \sum_{t}^{\infty}{r(s_t, a_t)} \right]$ be the reward of the policy.
-Our objective is to maximize $J(\theta)$.
+The objective is to maximize $J(\theta)$.
 The gradient of $J(\theta)$ w.r.t. $\theta$ is:
     \begin{equation}
         \begin{aligned}
@@ -76,7 +76,7 @@ The gradient of $J(\theta)$ w.r.t. $\theta$ is:
          & = \E_{\tau \sim p_\theta(\tau)} \left[ \nabla_\theta \log p_\theta(\tau) r(\tau) \right].
         \end{aligned}
     \end{equation}
-Note that the log-likelihood of $\tau$ is as follows (omitting $p(s_1)$ because it does not involve $\theta$):
+Note that the log-likelihood of $\tau$ is as follows (omitting $p(s_1)$ since it does not involve $\theta$):
     \begin{equation}
         \log p_\theta(\tau) \approx \sum_{t=1}^{\infty}{\log \pi_{\theta}(a_t | s_t)}.
     \end{equation}
@@ -86,12 +86,12 @@ Thus, we have:
         \nabla_\theta J(\theta) & = \mathbb{E}_{\tau \sim p_\theta(\tau)}\left[ \left( \sum_{t=1}^{\infty} \nabla_\theta \log \pi_{\theta}(a_t | s_t) \right) \left( \sum_{t=1}^{\infty} \gamma^t r(s_t, a_t) \right) \right] \\
         & = \mathbb{E}_{\tau \sim p_\theta(\tau)}\left[ \sum_{t=1}^{\infty} \nabla_\theta \log \pi_{\theta}(a_t | s_t) \left( \sum_{t=1}^{\infty} \gamma^t r(s_t, a_t) \right) \right] \\
         & \text{The action $a_t$ at step $t$ only affects subsequent rewards at steps $t^\prime \ge t$.} \\ 
-        & = \mathbb{E}_{\tau \sim p_\theta(\tau)}\left[ \sum_{t=1}^{\infty} \nabla_\theta \log \pi_{\theta}(a_t | s_t) \left( \sum_{t^\prime = t}^{\infty} \gamma^{t^\prime} r(s_{t^\prime}, a_{t^\prime}) \right) \right].
+        & = \mathbb{E}_{\tau \sim p_\theta(\tau)}\left[ \sum_{t=1}^{\infty} \nabla_\theta \log \pi_{\theta}(a_t | s_t) \left( \sum_{ \highlight{t^\prime = t} }^{\infty} \gamma^{t^\prime} r(s_{t^\prime}, a_{t^\prime}) \right) \right].
     \end{aligned}
 \end{equation}
 
 
-Look at the summamation involving the rewards:
+Look at the summation involving the rewards:
 \begin{equation}
     \begin{aligned}
         & \sum_{t^\prime = t}^{\infty} \gamma^{t^\prime} r(s_{t^\prime}, a_{t^\prime}) \\
@@ -108,11 +108,12 @@ Substitute $ \gamma^t Q^{\pi_\theta}(s_t, a_t)$ back to $\nabla_\theta J(\theta)
          \nabla_\theta J(\theta) = \mathbb{E}_{\tau \sim p_\theta(\tau)}\left[ \sum_{t=1}^{\infty} \nabla_\theta \log \pi_{\theta}(a_t | s_t)   \textcolor{red}{\gamma^t} Q^{\pi_\theta}(s_t, a_t)  \right].
 \]
 
-We now use a concept called \textit{discounted state visitation distribution} to remove the \textcolor{red}{$\gamma^t$} term from the above gradient. 
+We now use a measure called \textit{discounted state visitation distribution} to remove the \textcolor{red}{$\gamma^t$} term from the above gradient. 
 \[
     d^\pi(s_t) = (1 - \gamma) \sum_{t=0}^{\infty}{\gamma^t p(s_t | \pi)},
 \]
-where $p(s_t | \pi)$ is the probability of being in state $s_t$ under the policy $\pi$. 
+where $p(s_t | \pi)$ is the probability of being in state $s_t$ under policy $\pi$. 
+Intuitively, the probability $d^\pi(s_t)$ captures the weighted (by $\gamma$) frequency of visiting $s_t$ under the policy $\pi$.
 With $d^\pi$ we can convert the policy gradient as follows
 \begin{equation}
     \begin{aligned}

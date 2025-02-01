@@ -397,17 +397,60 @@ NOTE: correlation specifically measures the linear relationship between two rand
         where \( p(x) \) is the density of \( \mathcal{N}(0,1) \), and \( g(x) \) is the density of \( \mathcal{N}(4,1) \). By sampling from \( g(x) \), this method allows us to obtain more samples in the \( x > 5 \) region, providing a more accurate estimate of \( P(X > 5) \).
 
 
-    \subsubsection{Rejection Sampling}
-        Suppose we would like to sample from a complicated distribution $f$.
-        Instead of directly sampling from $f$, the rejection sampling is to sample from a tractable distribution $g$ (e.g., one has tractable inverse CDF).
-        The specific procedure is as follows:
-        \begin{enumerate}
-            \item Find $k$ such that $k g(x) \ge f(x)$ for any $x$. Intuitively, we can think of $k g(x)$ as an envelop above $f(x)$ everywhere.
-            \item Sample $y \sim g$. One way to do this is by leveraging the probability integral transform.
-            \item Sample $r$ from the uniform distribution on $[0, kg(y)]$. Thus, we have a pair $(y, r)$.
-            \item Keep the sample $y$ if $r \le f(y)$.
-        \end{enumerate}
-        The remaining samples $y_1, \ldots, y_n$ are distributed according to $f$.
+\subsubsection{Rejection Sampling}
+
+Rejection sampling is a Monte Carlo method used to generate samples from a complex probability distribution \( f(x) \) when direct sampling is difficult. Instead of drawing samples directly from \( f(x) \), we use a simpler, tractable proposal distribution \( g(x) \), from which sampling is easier. The key idea is to sample from \( g(x) \) and accept or reject samples based on a criterion that ensures the accepted samples follow \( f(x) \). The procedure is as follows:
+
+\begin{enumerate}
+    \item Find a constant \( k > 1 \) such that 
+    \[
+    k g(x) \geq f(x), \quad \forall x.
+    \]
+    Intuitively, \( k g(x) \) serves as an envelope that bounds \( f(x) \) from above.
+    
+    \item Sample \( y \sim g(x) \). One common way to achieve this is to take advantage of the integral transform of probability.
+    
+    \item Sample \( r \sim \text{Uniform}(0, k g(y)) \).
+    
+    \item Accept \( y \) if \( r \leq f(y) \). Otherwise, reject and repeat the process.
+\end{enumerate}
+
+The remaining accepted samples \( y_1, \ldots, y_n \) follow the target distribution \( f(x) \).
+To prove that rejection sampling correctly produces samples from \( f(x) \), we analyze the probability of acceptance and the resulting distribution of accepted samples.
+
+\paragraph{Step 1: Probability of Acceptance}
+For a given sample \( y \sim g(x) \), the probability of accepting \( y \) is:
+\[
+P(\text{accept} \mid y) = \frac{f(y)}{k g(y)}.
+\]
+Thus, the joint probability of generating \( y \) and accepting it is:
+\[
+P(\text{generate } y \text{ and accept}) = g(y) \cdot \frac{f(y)}{k g(y)} = \frac{f(y)}{k}.
+\]
+\paragraph{Step 2: Acceptance Rate}
+The total probability of accepting any sample is given by:
+\[
+P(\text{accept}) = \int P(\text{generate } y \text{ and accept}) \, dy = \int g(y) \frac{f(y)}{k g(y)} \, dy = \int \frac{f(y)}{k} \, dy.
+\]
+Since \( f(x) \) is a valid probability density function, we know:
+\[
+\int f(y) \, dy = 1.
+\]
+Thus, the overall acceptance rate simplifies to:
+\[
+P(\text{accept}) = \frac{1}{k}.
+\]
+\paragraph{Step 3: Distribution of Accepted Samples}
+To show that the accepted samples follow \( f(x) \), we condition on the event that a sample is accepted. The probability density of an accepted sample being \( y \) is:
+\[
+P(y \mid \text{accepted}) = \frac{P(\text{generate } y \text{ and accept})}{P(\text{accept})}.
+\]
+Substituting the computed values:
+\[
+P(y \mid \text{accepted}) = \frac{\frac{f(y)}{k}}{\frac{1}{k}} = f(y).
+\]
+Since this matches the desired distribution \( f(y) \), rejection sampling correctly produces samples from \( f(x) \).
+
 
     \subsubsection{Metropolis-Hastings (MH) Algorithm}
         This algorithm is still to evalaute the integral

@@ -9,13 +9,45 @@ In this section, we focus on two discrete distributions $p$ and $q$ , defined on
         \item KL divergence: $D_\text{KL}(p || q) = \sum_{i \in \mathcal{X}}^{}{p(i) \log \frac{p(i)}{q(i)}}$.
         \item Entropy:  $H(p) = -\sum_{i \in \mathcal{X}}^{}{p(i) \log p(i)}$, which captures the uncertainty of the random variable. 
         A higher entropy corresponds to a more uniform or spread-out distribution, implying less certainty about the outcome of a random variable.
-        \item Cross entropy:
-            \begin{equation*}
-               H(p, q) = H(p) + D_\text{KL}(p || q) =  -\sum_{i \in \mathcal{X}}^{}{p(i) \log p(i)} + \sum_{i \in \mathcal{X}}^{}{p(i) \log \frac{p(i)}{q(i)}} =  -\sum_{i \in \mathcal{X}}^{}{p(i) \log q(i)}.
-            \end{equation*}
-        Suppose $p$ is the real distribution generating the data and $q$ is from some parametric model (e,g., a logistic regression or a neural network) that we are learning.
-        Minimizing the cross entropy $H(p, q)$ is equivalent to maximizing the log-likelihood of the observed data (i.e., $\sum_{x \sim p}^{}{\log q(x)}$). That is, updating the model's parameters by minimizing the cross entropy can be equivalently achieved by maximizing the log-likelihood.
-        \footnote{Given a dataset with $k \ge 2$ classes, the random classification rule (i.e., flipping a fair coin with $k$ sides) has cross entropy loss $-\log{\frac{1}{k}} = \log{k}$.}
+\item Cross-Entropy
+\begin{equation*}
+   H(p, q) = H(p) + D_\text{KL}(p || q) =  -\sum_{i \in \mathcal{X}} p(i) \log p(i) + \sum_{i \in \mathcal{X}} p(i) \log \frac{p(i)}{q(i)} =  -\sum_{i \in \mathcal{X}} p(i) \log q(i).
+\end{equation*}
+
+Let \( p \) be the true data-generating distribution, and let \( q \) be a parametric model (e.g., a logistic regression or a neural network) that we aim to learn. The cross-entropy measures how well the model distribution \( q \) approximates the true distribution \( p \). Minimizing the cross-entropy \( H(p, q) \) is equivalent to minimizing the KL divergence \( D_{\text{KL}}(p \| q) \), as the entropy term \( H(p) \) is independent of \( q \).
+Since the cross-entropy is defined in terms of the full data distribution \( p(x) \), it can be rewritten as:
+\begin{equation*}
+   H(p, q) = -\mathbb{E}_{x \sim p} [\log q(x)],
+\end{equation*}
+where the expectation is taken over all possible values of \( x \) weighted by their true probabilities under \( p(x) \). \highlight{This formulation assumes access to the entire underlying distribution}.
+
+However, in practice, we do not have direct access to \( p(x) \). Instead, we observe a finite dataset \( \mathcal{D} = \{x_1, x_2, \dots, x_N\} \) sampled from \( p(x) \). Given these observed samples, we approximate the expectation by summing over the dataset, leading to the empirical log-likelihood:
+\begin{equation*}
+   \mathcal{L}(\theta) = \sum_{i=1}^{N} \log q(x_i; \theta).
+\end{equation*}
+While the cross-entropy considers the entire distribution \( p(x) \), the log-likelihood is computed based only on the observed data points, making it a sample-based approximation of the expectation in the cross-entropy definition.
+
+
+% Thus, updating the model parameters \( \theta \) to minimize cross-entropy is equivalent to maximizing the log-likelihood.
+
+% \paragraph{Gradient of Cross-Entropy:}  
+% Taking the gradient of the cross-entropy with respect to \( \theta \):
+
+% \begin{equation*}
+%    \nabla_{\theta} H(p, q) = -\mathbb{E}_{x \sim p} [\nabla_{\theta} \log q(x; \theta)].
+% \end{equation*}
+
+
+% \paragraph{Gradient of Log-Likelihood:}  
+% Similarly, for the log-likelihood function:
+
+% \begin{equation*}
+%    \nabla_{\theta} \mathcal{L}(\theta) = \mathbb{E}_{x \sim p} [\nabla_{\theta} \log q(x; \theta)].
+% \end{equation*}
+
+
+% Minimizing the cross-entropy is exactly equivalent to maximizing the log-likelihood, up to a negative sign. This means that the optimization process for both objectives follows the same trajectory, with the difference being that one is a minimization problem while the other is a maximization problem.
+% \footnote{Given a dataset with $k \ge 2$ classes, the random classification rule (i.e., flipping a fair coin with $k$ sides) has cross entropy loss $-\log{\frac{1}{k}} = \log{k}$.}
         \item Information gain from $q$ to $p$ (a.k.a. the reduction of uncertainty): $H(q) - H(p)$.
         \item Mutual information (in discrete spaces): 
             \begin{equation*}
